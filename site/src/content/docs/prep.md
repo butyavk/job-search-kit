@@ -1,6 +1,6 @@
 ---
 title: Preparing for an interview
-description: From the invitation to the debrief — what to run, what to learn, and how to learn it.
+description: From the invitation to the offer — what to run, what to learn, and how to learn it.
 ---
 
 Every stage goes through one cycle:
@@ -16,6 +16,12 @@ You need a pack first (`/start`): answers are built from your own answer blocks.
 4. **Two days before: a full mock** at the hour of the interview — `/mock manager <company>`, `/mock system-design`, `/mock live-coding`… by voice where you can. From then on, nothing new: only drills.
 5. **The interview day.** Rewrite the map by hand from memory — first sentences only — and the two questions for the interviewer. Check the link, the time zone, the sound.
 6. **Right after: `/debrief <company> <stage>`** with the transcript or your notes. New facts go into the pack, answers that worked into blocks, misses into «what to say instead», the next step and the follow-up date into the tracker. Lessons go straight into the next stage's prep.
+
+## A take-home task
+Say «a take-home from <company>» with the task. Claude finds out the time box, what is evaluated and the rule on AI tools, plans the work inside the time box, keeps everything running and writes the README with you: assumptions, how to run, what was left out and why. You submit; then you prepare the review call the same way as any stage.
+
+## An offer
+Say «<company> made an offer» and paste it. Claude reads it whole, compares it with your floor (never said to anyone) and your other processes, and drafts the answer: no decision in the moment, a counter with one number, a review date with metrics if the base is capped. Before signing — the contract against the offer, line by line. After the decision — withdrawals from other processes, thanks to references, the tracker closed and a retro. Every message is yours to send.
 
 ## How to learn
 - **Stories, not answers.** Almost any question is a first sentence plus one of 5–7 stories. A story is an anchor in four steps: the answer in one sentence → the situation → what I did → the number and the lesson.

@@ -1,6 +1,6 @@
 ---
 name: interview-prep
-description: Prepare a candidate for an interview process at one company — format and people, topic weights, a day-by-day plan, answers from the pack, values, trainers, mocks, audits, the final round, references and the same-day debrief. Use for /prep, /mock and /debrief, and when a company invites the candidate to any stage.
+description: Prepare a candidate for an interview process at one company — format and people, topic weights, a day-by-day plan, answers from the pack, learning them, trainers, mocks, take-home tasks, the final round, references, the same-day debrief and the offer. Use for /prep, /mock and /debrief, when a company invites the candidate to any stage, sends a take-home or makes an offer.
 ---
 
 # Interview preparation
@@ -104,8 +104,26 @@ The same day, from the transcript or notes (`templates/debrief.md`): who the int
 ## A live response from a company
 A person from the company invites to a call, asks for a slot, sends a take-home, invites to a stage or makes an offer → a separate prep session at once (`templates/live-response-session-prompt.md`): the role and company with sources, a draft reply, the slot from the calendar, the prep plan. The candidate sends the reply.
 
+## Take-home task
+- **Before starting:** the time box, what is evaluated, whether AI tools are allowed, the language and stack, how to submit, whether there is a review call. Anything unclear → questions for the recruiter (a draft; the candidate sends).
+- **A plan by the time box:** the core that answers the task first, extras only after it works. Stop at the time box: going far over it reads as not managing scope.
+- **The README is part of the answer:** assumptions, how to run, what was left out and why, what comes next with more time, where AI was used if it was allowed.
+- **Everything runs:** tests, the example from the task, a clean checkout. The candidate understands every line and follows the company's rule on AI; Claude does not hand in work the candidate could not explain.
+- **The candidate submits.** Then prepare the review call: a 5-minute walk-through, the trade-offs, «what would you change», likely follow-up changes done live. Debrief after it as usual.
+
+## Offer
+An offer is a live response: a separate session at once (above). Claude prepares; every reply, counter and acceptance is the candidate's. Template: `templates/offer.md`.
+1. **Read it whole** into the context file: base and currency, contract form and country, bonus and its conditions, equity (type, number, vesting, cliff, strike, last valuation if known), start date, probation, notice, non-compete, IP and confidentiality, remote or relocation terms, the date of the first review. What is unclear → a list of questions for the recruiter.
+2. **Compare** with `money.floor` and `money.say_aloud` in `me/profile.yaml`, with the other open processes in the tracker, and with what the frame says matters. The floor is never said to anyone.
+3. **Never decide in the moment:** «Thank you — I need a day to look at the whole package.» A deadline shorter than 2–3 working days is worth asking to move.
+4. **Counter with one number,** tied to the role and its scope, not to needs, without a range. If the base is capped: a review in N months against agreed metrics, with the number and the date in the offer; a signing bonus; equity. Non-cash parts come on top of the cash, not instead of it.
+5. **Other processes:** companies at a final stage hear that there is an offer and its deadline (drafts; the candidate sends). Earlier stages — only if the candidate wants to speed them up.
+6. **Before signing:** the contract against the offer, line by line; terms that limit future work (non-compete, IP on «ideas discussed», governing law) are flagged with a plain explanation. Claude is not a lawyer: for unusual terms, suggest one.
+7. **After the decision:** accept or decline in the candidate's words (drafts); on acceptance — polite withdrawals from the other processes, thanks to references, the tracker closed out, the scheduled tasks paused (`schedules/README.md`), a retro (`templates/retro.md`).
+
 ## Checklist
 Start: project and context file · guide, reviews, interviewers · weights and plan · references warned · recording rules.
 Prep: story split · minute answers with a timer · first line for every value · the learning sheet and a drill a day with marks · trainers by format · 2–3 full mocks · an audit every couple of days.
 Day before: nothing new · the one-page plan by hand · questions for the end.
 After the call: debrief the same day · lessons into the next stage.
+Offer: read it whole · compare with the floor and other processes · no decision in the moment · one number · contract against the offer · withdrawals, references, schedules, retro.

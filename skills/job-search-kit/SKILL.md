@@ -41,7 +41,7 @@ Say which pack is connected, in one line, in the first reply of a session.
 | 8. after a call | `/debrief` | `interview-prep`, `answer-blocks` |
 | 9. the monthly review | `/review` | `job-search`, `answer-blocks` |
 
-Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y». Map the words to the skill.
+Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y», «drill <company>», «a take-home from X», «X made an offer». Map the words to the skill (take-homes and offers: `interview-prep`).
 
 ## 5. Autonomy: Claude prepares, the candidate sends
 By default Claude asks before every outward action and the candidate does it: submitting a form, sending an email, a LinkedIn note or InMail, accepting or booking a meeting, publishing anything.
