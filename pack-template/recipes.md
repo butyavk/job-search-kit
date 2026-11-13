@@ -222,9 +222,9 @@ The 13 archetypes from the bank («Minimum story set») → your stories. Onboar
 
 | ID | First line | Short | Long | Notes |
 | --- | --- | --- | --- | --- |
-| X01 | — | — | — | |
-| X02 | — | — | — | |
-| X03 | — | — | — | |
+| X01 | `LOG-1` | `LOG-1` | `LOG-1` | |
+| X02 | `LOG-4` | `LOG-4` | `LOG-4` | sponsorship: one sentence from `work_authorization` in the profile |
+| X03 | `LOG-6` | `LOG-6` | `LOG-6` | |
 | X04 | — | — | — | |
 | X05 | — | — | — | |
 | X06 | — | — | — | |

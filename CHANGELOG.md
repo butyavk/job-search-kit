@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1 — 2026-11-14
+
+Fixed (found in two test runs with made-up candidates)
+- Onboarding: the pack goes to the search folder, never inside the plugin's folder, which is replaced on every update.
+- `check_pack.py`: questions for the interviewer (Z) count as covered only by a confirmed `ASK-` block, not a template draft; draft and placeholder blocks no longer count towards the English register numbers; no line about a project copy for candidates who keep none.
+- The pack template links the logistics questions X01–X03 to the `LOG-` blocks.
+- The learning sheet says which language the first sentences are learned in; the debrief sends new questions and weak answers into the next stage's sheet and drill.
+
 ## 1.1.0 — 2026-11-14
 
 Added

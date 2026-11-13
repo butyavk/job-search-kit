@@ -13,7 +13,7 @@ The prep document is the reserve; this sheet is what you learn. You learn anchor
 The drill: `/mock drill <company>` (or the words «drill <company>»). Claude asks in random order, marks each answer and writes the marks below.
 
 ## The map: question → first sentence → story
-12–16 of the most likely questions for this stage and these people. The first sentence is learned word for word.
+12–16 of the most likely questions for this stage and these people. The first sentence is learned word for word, in the language of the interview (the block's `EN:` line, or its native-language line for an interview in that language).
 
 | # | Question | First sentence | Story |
 | --- | --- | --- | --- |

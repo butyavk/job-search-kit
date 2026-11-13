@@ -270,9 +270,10 @@ def main() -> int:
     long_words = 0
     for b in blocks.values():
         w, s, longest, contr = register(b["en"])
-        total_words += w
-        total_sents += max(s, 1)
-        long_words += sum(1 for x in WORD_RE.findall(b["en"]) if len(x) >= 8)
+        if not b["draft"]:  # drafts and template placeholders do not count towards the register
+            total_words += w
+            total_sents += max(s, 1)
+            long_words += sum(1 for x in WORD_RE.findall(b["en"]) if len(x) >= 8)
         where = f"{b['file']}:{b['line']} {b['id']}"
         if longest > 30:
             warnings.append(f"{where}: a sentence of {longest} words (target under 30)")
@@ -307,7 +308,7 @@ def main() -> int:
 
     drafts = {q for q, refs in recipes.items() if refs and any(blocks.get(r, {}).get("draft") for r in refs)}
     covered = {q for q, refs in recipes.items() if refs} - drafts
-    if any(q.startswith("Z") for q in questions) and any(b.startswith("ASK-") for b in blocks):
+    if any(q.startswith("Z") for q in questions) and any(k.startswith("ASK-") and not v["draft"] for k, v in blocks.items()):
         covered |= {q for q in questions if q.startswith("Z")}
     missing = [q for q in questions if q not in covered]
     core = [q for q in questions if questions[q] == "★"]
@@ -356,8 +357,7 @@ def main() -> int:
             print("changed since the last copy to the project (update it, then --mark-synced): " + ", ".join(changed))
         else:
             print("project copy: in sync")
-    else:
-        print("project copy: never marked (after copying the pack to the project, run with --mark-synced)")
+    # no manifest: the candidate keeps no project copy, or has not marked it yet — say nothing
     for e in errors:
         print("ERROR  " + e)
     for w in warnings:

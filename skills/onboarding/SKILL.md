@@ -12,7 +12,7 @@ The main rule: **invent nothing.** A draft from a CV is a guess, not a fact. Wha
 Talk to the candidate in their language. Blocks are written in English (the interview language) plus their native language on the second line.
 
 ## Step 0. Create the pack
-- With a shell (Claude Code, Cowork): copy `pack-template/` from the kit to `me/` next to the kit.
+- With a shell (Claude Code, Cowork): copy `pack-template/` from the kit to `me/` in the candidate's search folder — next to `kit/` in folder mode, the working folder with the plugin. Never inside the plugin's own folder: it is replaced on every update. Keep a project copy in claude.ai too? Then run `check_pack.py --mark-synced` after each copy, and the check will list what changed since.
 - claude.ai without a shell: Claude cannot create project files itself. It gives the pack files one by one and the candidate uploads them to the project, with flat names that carry the path: `me__facts.md`, `me__blocks__00-who.md` (the kit understands both). After each change Claude gives the whole changed file and says which one to replace.
 
 Tell the candidate where the pack is and that it is private: it never goes into a public repository.

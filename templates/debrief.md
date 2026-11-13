@@ -25,3 +25,4 @@ Length, format, source (transcript / notes). Recognition errors: «…» = «…
 Each goes to `me/facts.md` (date, «said on <date>»), then into a block; a new question goes to the bank and `me/recipes.md`.
 
 ## For the next stage
+Questions that came up and are not on the learning sheet → its map; answers that came out weak → the drill (✗) for the next stage.
