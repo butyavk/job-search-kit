@@ -1,0 +1,6 @@
+# The candidate pack is personal: it never goes into this repository.
+me/
+*.tracker-mcp.toml
+*.xlsx
+.DS_Store
+__pycache__/

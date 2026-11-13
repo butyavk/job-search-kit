@@ -1,0 +1,15 @@
+{
+  "name": "job-search-kit",
+  "description": "The whole job search with Claude, from the search frame to the offer.",
+  "owner": {
+    "name": "Ivan Rykov",
+    "url": "https://github.com/butyavk"
+  },
+  "plugins": [
+    {
+      "name": "job-search-kit",
+      "source": "./",
+      "description": "Search, rank, apply, track, follow up, prepare, mock and debrief — 9 commands; your data in a separate pack."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+# Candidate profile — personal data. Never publish.
+name: <First Last>
+contacts:
+  email: <email>
+  phone: <+country code number>
+  linkedin: <linkedin.com/in/...>
+  github: <for «project / portfolio» fields, if any>
+location:
+  city: <city>
+  country: <country>
+  timezone: <UTC+N>
+  line_cv: "<City, Country (UTC+N) · Remote, open to relocation>"
+target:
+  track: <manager / engineer / product>   # check_pack counts the ◆ questions of this track
+  roles: <roles and levels I look for>
+status:
+  employed_now: <true/false>
+  start_date: <Immediately / 2 weeks / ...>
+  citizenship: <country>
+  residence_country: <country>
+  contract: "<how I work: employee, contractor, own company>"
+work_authorization:                 # per country where I search; true = I have the right, no sponsor needed
+  home_country: <country of citizenship or residence: I have the right there>
+  eu: <true/false>
+  uk: <true/false>
+  us: <true/false>
+  needs_sponsorship_where: <countries where I need an employer visa>
+forms:                              # only what I am willing to give; leave the rest empty
+  gender: <>
+  ethnicity: <>
+  veteran: <>
+  criminal_convictions: <>
+  recording_consent: <true/false>
+money:                              # said aloud only through blocks LOG-*
+  say_aloud:                        # the number or range I name myself (block LOG-6)
+    <level or country>: "<about ... a month/year, gross>"
+  floor:                            # I do not go below; never said aloud — for decisions and numeric form fields
+    <level or country>: "<from ... gross>"
+  current_or_last: "<current or last salary; say it only if asked directly>"
+  form_numeric_field: floor of the level in the form's currency
+languages:
+  native: <native language: the second line of every block>
+  english: <B2 / C1 / C2>          # sets the register targets in english-register
+  <other language>: <level>
+paths:                              # large sources that are not copied into the pack
+  pack: <path to this me/ folder on my computer>
+  master_cv: <path>
+  tracker: <path, or Google Sheets URL>
+
+fact_sources:                       # what the fact check compares blocks against, strongest first
+  - <story bank with confirmations and dates>
+  - <prep documents and interview debriefs>
+  - <the CV — lowest>
+
+autonomy:                           # default: Claude prepares, I send. Rules only in my own words, with date
+  default: ask
+  rules: []
+  # - action: send_followup         # send_followup | send_note | submit_form | other (say which)
+  #   when: "follow-up 1 in an existing ATS thread, from the template, no new facts"
+  #   checks: "english-register passed; nothing from never-say; the gate line unchanged"
+  #   since: <date>
+  #   said: "<my words>"
