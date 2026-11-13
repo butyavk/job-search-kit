@@ -1,6 +1,6 @@
 # Job search kit
 
-[Русская версия](README.ru.md)
+[Русская версия](README.ru.md) · **Site:** [butyavk.github.io/job-search-kit](https://butyavk.github.io/job-search-kit/)
 
 The whole job search with Claude, from «I want a new job» to the offer. Claude finds and ranks vacancies, finds the people to write to, builds every application, keeps the tracker and the follow-ups, checks your mail every morning, prepares you for each stage, runs mocks and debriefs. **Claude prepares; you send.**
 
@@ -88,6 +88,7 @@ scripts/          check_pack.py (pack check), english_check.py (English register
 tools/            Apple Notes export (a source for the fact check)
 examples/         one made-up story cut into blocks
 docs/             how it works, in English and Russian
+site/             the GitHub Pages site (Astro Starlight), built from docs/ and the sources list
 ```
 
 ## How it works

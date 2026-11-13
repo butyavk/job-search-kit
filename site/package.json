@@ -1,0 +1,19 @@
+{
+  "name": "job-search-kit-site",
+  "version": "1.0.0",
+  "description": "Site of Job search kit: the whole job search with Claude (EN/RU).",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "sync": "node scripts/sync-docs.mjs",
+    "dev": "npm run sync && astro dev",
+    "build": "npm run sync && astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.42.5",
+    "astro": "^7.3.7",
+    "sharp": "^0.35.5"
+  }
+}

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+Added
+- A site on GitHub Pages, in English and Russian: install, the path, answer blocks, sources, autonomy, how it works — https://butyavk.github.io/job-search-kit/
+
 ## 1.0.1 — 2026-11-13
 
 Added

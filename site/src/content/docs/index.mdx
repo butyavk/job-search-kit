@@ -1,0 +1,37 @@
+---
+title: Job search kit
+description: The whole job search with Claude, from «I want a new job» to the offer. Claude prepares; you send.
+template: splash
+hero:
+  tagline: The whole job search with Claude, from «I want a new job» to the offer. Claude finds and ranks vacancies, finds the people to write to, builds every application, keeps the tracker and the follow-ups, prepares you for each stage, runs mocks and debriefs. Claude prepares; you send.
+  actions:
+    - text: Install
+      link: /job-search-kit/install/
+      icon: right-arrow
+    - text: The path
+      link: /job-search-kit/path/
+      variant: minimal
+    - text: GitHub
+      link: https://github.com/butyavk/job-search-kit
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+  <Card title="Search and rank" icon="magnifier">
+    LinkedIn, company boards through ATS APIs, job sites and country boards. Every vacancy is checked two ways and passes a five-point gate as a screener sees it.
+  </Card>
+  <Card title="Apply through people" icon="comment">
+    The hiring manager, the recruiter, people you know there. A CV tailored by selection, the letter, the form filled — never submitted for you.
+  </Card>
+  <Card title="Track and follow up" icon="list-format">
+    The open-source tracker-mcp: every write previewed and reversible, follow-up dates, funnel, calendar export. A daily check every morning.
+  </Card>
+  <Card title="Prepare and practise" icon="star">
+    Answers built from your own checked sentences, likely questions per stage, system design and live coding training, mocks and same-day debriefs.
+  </Card>
+</CardGrid>
+
+Built from a real two-month search for engineering-manager roles: about a hundred applications, interviews up to final rounds, and the numbers behind every rule. Your personal data stays in a separate pack that never goes into the repository.
