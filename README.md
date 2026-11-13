@@ -11,7 +11,7 @@ It grew out of a real two-month search for engineering-manager roles: about a hu
 | Step | Command | What Claude does | What stays with you |
 | --- | --- | --- | --- |
 | 1. Start | `/start` | Builds your pack from your CV and a few interview sessions. Proposes roles, levels, countries, remote or relocation, and money floors from the market. Sets up the tracker and the schedule. | choose from the options, confirm facts |
-| 2. Search | `/find` | Reads job boards and company ATS APIs, checks each vacancy two ways, runs a five-point gate as a screener sees it, ranks the rest. A short list goes into the tracker. | choose where to apply |
+| 2. Search | `/find` | Reads LinkedIn, company boards through ATS APIs, job sites (hiring.cafe, Himalayas, HN «Who is hiring», levels.fyi…) and country boards; checks each vacancy two ways, runs a five-point gate as a screener sees it, ranks the rest. A short list goes into the tracker. | choose where to apply |
 | 3. People | `/people <company>` | Finds the hiring manager, the recruiter, people you know there, a referral path; drafts the notes. | send them |
 | 4. Apply | `/apply <vacancy>` | The gate, a CV tailored with a keyword table, the letter, form answers; fills the form without submitting; plans the note and the follow-ups. | press «submit», say «applied» |
 | 5. Every day | `/today` (and on a schedule) | Mail and LinkedIn into the tracker, new vacancies from alerts, follow-ups due with drafts, interviews this week. | send the drafts |
@@ -51,6 +51,20 @@ Claude reads `kit/CLAUDE.md`. Say «start my job search».
 **claude.ai project without a shell:** upload the skills (`skills/*`, each folder zipped) in Settings → Skills; put `CLAUDE.md` into the project instructions; upload `bank/questions.md`, `pack-template/` and the templates you need as project files. Claude gives you each pack file to upload. Commands become plain words. Details: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
 
 **The tracker** is the open-source MCP server [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` sets it up (`uvx tracker-mcp new …`, then one `claude mcp add` line, or the `.mcpb` file for the desktop app). Requires `uv`.
+
+## What to connect
+The kit works with whatever your Claude has; each connection unlocks a part of the path.
+| Connection | What it gives |
+| --- | --- |
+| Mail (Gmail connector) | replies, rejections and invitations into the tracker; follow-up drafts in the right thread |
+| Calendar (Google Calendar connector) | interviews this week; free slots for a reply |
+| Claude in Chrome | logged-in LinkedIn (alerts, search, People, messages), sites behind a login, and every application form — filled in your browser, never submitted |
+| The built-in browser (Claude desktop app) | job sites that block plain fetch (hiring.cafe, levels.fyi), the LinkedIn guest API |
+| tracker-mcp | the tracker, follow-up dates, funnel, calendar export |
+| A call recorder with transcripts (optional) | same-day debriefs from the transcript, where the company allows recording |
+| Scheduled tasks | the daily check, the weekly pass, the monthly review |
+
+Where vacancies come from — LinkedIn, company ATS boards, job sites, country boards — and how each one reads: [skills/job-search/sources.md](skills/job-search/sources.md).
 
 ## Companion projects
 - [tracker-mcp](https://github.com/butyavk/tracker-mcp) — the tracker server: write with a preview, version checks, backups, undo; follow-ups, funnel, calendar export.

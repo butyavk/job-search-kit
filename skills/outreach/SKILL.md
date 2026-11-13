@@ -10,7 +10,7 @@ A cold application gets a reply from a person about 9% of the time. A short note
 ## 1. Who to look for
 In this order, for one role:
 1. **The hiring manager** — the person the role reports to. Clues: «reports to the Director of Platform» in the posting, the team name, the product area. Search LinkedIn for that title at the company; check that their area matches the team (a Director of Payments is not the manager of a Subscriptions EM). Open-source roles: the repository's `MAINTAINERS`, `CODEOWNERS`, recent release notes.
-2. **The recruiter for the role** — «Talent Partner», «Technical Recruiter» at the company, in the right region; the name sometimes appears in the posting or the ATS confirmation email.
+2. **The recruiter for the role** — «Talent Partner», «Technical Recruiter» at the company, in the right region; the name sometimes appears in the posting or the ATS confirmation email. LinkedIn: `linkedin.com/company/<slug>/people/?keywords=recruiter`, scroll and read the cards (promoted posts have no «hiring team» card — go through People).
 3. **People the candidate knows there** — first-degree contacts, former colleagues (search by past companies in the pack), second-degree contacts with many mutual connections: a possible referral.
 4. **Peers** — engineers or managers in the same team — only as a source of context, not a cold channel.
 

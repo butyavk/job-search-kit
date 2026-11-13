@@ -21,11 +21,12 @@ Level and company stage go into ranking, not filters. As filters they gave 2–3
 From the candidate's experience, offer concrete options and let them choose: 2–3 role titles and levels that their CV supports, channels (remote / home country / visa-free / sponsorship / relocation) with what each means for them, money floors per channel from public salary data (with sources), company types (stage, size, domain). Write what they chose, and what they chose not to filter.
 
 ## 2. Sources
-- **LinkedIn**: the logged-in search and saved alerts (titles × regions); the guest API for reading without login: `jobs-guest/jobs/api/seeMoreJobPostings/search` (country by exact `geoId`, `f_TPR=r86400` for the last 24 hours) and `jobs-guest/jobs/api/jobPosting/<id>` for the full text. Pause between requests.
-- **Company boards through public ATS APIs** — the best source for known companies: Ashby (`api.ashbyhq.com/posting-api/job-board/<slug>?includeCompensation=true`; secondary locations are in the API, not the page), Greenhouse (`boards-api.greenhouse.io/v1/boards/<slug>/jobs`, `?questions=true` for the form), Lever (`api.lever.co/v0/postings/<slug>`), Workable, Teamtailor, Pinpoint, Breezy. The board slug is often in the careers page HTML (`jobs.ashbyhq.com/<slug>/embed`).
-- **Local job boards** of the target country, and job sites that work for the candidate's roles. Aggregators mostly repeat the same ATS posts.
-- Keep a **source list with status** in the frame — «reads via API», «only from the browser», «does not work» — and the technique for each. It saves hours in every new session.
-- Do not count agency posts with a hidden client, or links from search indexes without a check (about two thirds were stale).
+The full catalogue — what each source gives, how it reads (API, built-in browser, the candidate's Chrome), traps and statuses — is in `sources.md` next to this file. In short:
+- **LinkedIn** — alerts daily; the guest API and logged-in search for passes; People for finding recruiters.
+- **Company boards through public ATS APIs** (Ashby, Greenhouse, Lever, Workable, Teamtailor, Pinpoint, BambooHR, Breezy) — the best source for known companies; weekly over every company in the tracker and the target list.
+- **Job sites and aggregators** — hiring.cafe, Himalayas, Jobicy, RemoteOK, We Work Remotely, Working Nomads, HN «Who is hiring», levels.fyi, Wellfound, YC, Welcome to the Jungle (never page through it for the candidate).
+- **Country boards** for every country in the frame (helloworld.rs and infostud for Serbia, jobs.ge for Georgia, getmatch and Telegram for the Russian-speaking market…).
+- Skip what does not pay off (`sources.md`, section 5); keep the candidate's own source list with statuses in the frame.
 
 A **pass** = date window × titles × locations (for example 5 days, six titles, five locations, 2–3 pages each). The result is a dated file: what was read, how many cards, who passed, who was dropped and why. After a few full passes, switch to weekly monitoring: fresh posts and boards of companies already known to be interesting.
 
@@ -35,7 +36,8 @@ Any conclusion about a vacancy — open, closed, «no other roles», date, range
 - A second path: the company's whole board, or the copy on LinkedIn. Absence from a board list proves nothing on its own (hidden Ashby postings open by direct link).
 - Until the two agree, say «not found in X», not «closed».
 - Check before every application: a role can close the day after the letter is ready.
-- **Date**: take the earlier of ATS and LinkedIn; a relaunch hides the age. Older than 10 days — only through a person.
+- **Date**: by the ATS (`first_published` in Greenhouse, `publishedAt` in Ashby); LinkedIn paid posts can refresh their date, and a relaunch hides the age (the LinkedIn job id dates it, see `sources.md`).
+- **Age is a risk and a place in the queue, not a filter.** Senior roles take 60–75 days to fill. Fresh posts (up to ~4 days) go first, within 24 hours. Older than ~14 days — check that the role is really alive: its ATS page is open, and there is a sign of life in the last 2–3 weeks (`updated_at` or «Reposted», «Actively reviewing applicants», fresh posts by the recruiter or hiring manager). Older than 90 days with no sign of life — the end of the queue (roughly a fifth of postings never end in a hire). Applying cold to an old role is fine; add a note to a person the same day.
 - **Applicants**: logged-in LinkedIn (the guest view lags).
 - **Range and format**: LinkedIn sometimes shows a range or «hybrid» that the ATS does not have.
 - **Signals of the hiring form**: 401(k), HSA = US employment; «B2B contract», «tax allowance» = contractor. The country dropdown in the form is often more honest than the text. If all the company's other roles are on-site, remote will not appear.
@@ -50,7 +52,7 @@ Five points, each 0 / 1 / 2, judged on the CV and form answers that will actuall
 4. **Geography** — the country in the CV and form against the country list and format.
 5. **Money** — the number that will go into the form against the likely range. A number above the range in a salary field is the strongest knockout.
 
-Any zero — no cold application: either a route through a person (referral, recruiter, hiring manager — `/people`) or a conscious «apply anyway», marked in the tracker. The gate goes into the tracker and the vacancy report as one line: `L2 S2 D1 G0 M2 — G: country not in the list`.
+Any zero — no cold application: either a route through a person (referral, recruiter, hiring manager — `/people`) or a conscious «apply anyway», marked in the tracker. The candidate may decide that some zeros never block (for example «managing managers», a different stack in a manager role, a remote country list without their country): write those exceptions into the frame with the date; such a zero is still shown, and the role goes into the queue by priority. The gate goes into the tracker and the vacancy report as one line: `L2 S2 D1 G0 M2 — G: country not in the list`.
 
 Why: in the author's first 40 applications, 9 of 10 CV rejections had at least one knockout. Without knockouts: 2 calls from 13 applications and no CV rejections; with one: 1 call from 19.
 
@@ -60,7 +62,7 @@ Score each vacancy that passed the hard filters, 0–2 per line, and show the to
 - channel priority from the frame (for example remote first);
 - level fit (the role matches the candidate's last real scope);
 - domain and product fit (where their stories are strongest);
-- freshness (posted ≤ 3 days = 2, ≤ 10 = 1, older = 0) and applicants (fewer is better);
+- freshness (posted ≤ 4 days = 2, ≤ 14 = 1, older = 0, and older than 90 with no sign of life goes last) and applicants (fewer is better);
 - a route through a person (a contact at the company, a reachable hiring manager);
 - money (range published and above the floor = 2, unknown = 1, below = 0).
 The weights are the candidate's: if the frame says «remote first», channel counts double. Ranking orders the list; it does not drop anything that passed the filters.
@@ -70,7 +72,12 @@ The weights are the candidate's: if the frame says «remote first», channel cou
 - Dropped: one line each with the reason. Already in the tracker: one line each.
 - The tracker: `add_applications` as a dry run; write after the candidate's yes. Never apply.
 
-## 7. The monthly rejection analysis
+## 7. Timing
+- Apply within 24 hours of the package being ready; there is no limit on the number of packages — about one application in ten reaches a person.
+- Monday to Thursday, Tuesday best; the company's morning (6–10 a.m. their time). Not Friday evening or the weekend: the application lands in Monday's pile. When the day and freshness disagree, freshness wins.
+- A referral reaches an interview far more often than a cold application (about 40% against 3% in Ashby's 2026 data): look for a person first when one exists.
+
+## 8. The monthly rejection analysis
 Template `templates/rejection-analysis.md`. What it found in the author's first 48 applications:
 - before any call, the main reasons were location and money (gate knockouts), then the CV's vocabulary;
 - applications that reached a person covered 62–80% of the must-haves in the vacancy's own words; rejections and silence, about 39%;
