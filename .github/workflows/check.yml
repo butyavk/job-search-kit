@@ -1,0 +1,35 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: The empty pack passes the pack check
+        run: |
+          cp -r pack-template "$RUNNER_TEMP/me"
+          python3 scripts/check_pack.py --me "$RUNNER_TEMP/me"
+      - name: The English check runs
+        run: echo "I build small teams. They ship often." | python3 scripts/english_check.py
+      - name: Manifests are valid JSON
+        run: |
+          python3 -m json.tool .claude-plugin/plugin.json > /dev/null
+          python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
+      - name: No candidate pack in the repository
+        run: test ! -e me
+      - name: Every skill and command has a description
+        run: |
+          for f in skills/*/SKILL.md commands/*.md; do
+            grep -q '^description:' "$f" || { echo "no description: $f"; exit 1; }
+          done
+      - name: The plugin validates
+        run: |
+          npm install -g @anthropic-ai/claude-code > /dev/null 2>&1
+          claude plugin validate .

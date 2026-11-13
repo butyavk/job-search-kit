@@ -81,5 +81,8 @@ docs/             как это устроено — на английском �
 ## Как это устроено
 [docs/how-it-works.ru.md](docs/how-it-works.ru.md) — поиск, гейт и его цифры, подачи, фоллоу-апы, подготовка к интервью, кубики ответов и что не сработало.
 
+## Участие
+Issues и pull requests приветствуются — см. [CONTRIBUTING.md](CONTRIBUTING.md). Изменения — в [CHANGELOG.md](CHANGELOG.md), приватность и сообщения об уязвимостях — в [SECURITY.md](SECURITY.md).
+
 ## Лицензия
 MIT.

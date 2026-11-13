@@ -79,5 +79,8 @@ docs/             how it works, in English and Russian
 ## How it works
 [docs/how-it-works.md](docs/how-it-works.md) — the search, the gate and its numbers, applications, follow-ups, interview prep, answer blocks, and what did not work.
 
+## Contributing
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Changes are listed in [CHANGELOG.md](CHANGELOG.md); privacy and reporting in [SECURITY.md](SECURITY.md).
+
 ## License
 MIT.
