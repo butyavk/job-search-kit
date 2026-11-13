@@ -77,5 +77,13 @@ Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles an
 - `python3 "${CLAUDE_PLUGIN_ROOT:-kit}/scripts/check_pack.py"` (no shell — the checklist in `answer-blocks`): blocks, questions with a recipe, ★ without an answer.
 - Next: another session on questions without a recipe; `/find`; `/prep` for a stage that is close.
 
+## If an interview is close
+No pack yet and a stage within a week: do not run the whole of step 3 first.
+1. Steps 0–2 from the CV in one session.
+2. The stage's likely questions (`/prep` steps 1–2, or the bank's core ★ and the role's ◆ if the format is unknown) → the archetypes they need → 5–7 stories. Only these go through step 3 now: whole-story `S`, details, confirmation.
+3. Logistics and money (step 4, only the questions this stage will ask) and `never-say.md` (step 6).
+4. Then `/prep`: the prep document and the learning sheet from these stories.
+Write in `me/recipes.md` which archetypes and questions are left, and finish onboarding after the interview — from `check_pack.py`, as usual.
+
 ## If the candidate has prepared before
 A story bank, prep documents, interview debriefs — do not start empty: move facts to `facts.md`, cut ready answers into blocks, build recipes from the bank. Remove `draft` only where the candidate confirmed the fact before (with the date and source).

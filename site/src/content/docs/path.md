@@ -10,8 +10,8 @@ description: From the search frame to the offer — what Claude does at each ste
 | 3. People | `/people <company>` | Finds the hiring manager, the recruiter, people you know there, a referral path; drafts the notes. | send them |
 | 4. Apply | `/apply <vacancy>` | The gate, a CV tailored with a keyword table, the letter, form answers; fills the form without submitting; plans the note and the follow-ups. | press «submit», say «applied» |
 | 5. Every day | `/today` (and on a schedule) | Mail and LinkedIn into the tracker, new vacancies from alerts, follow-ups due with drafts, interviews this week. | send the drafts |
-| 6. A stage | `/prep <company> <stage>` | Format and people, likely questions with answers from your blocks, a trainer for the format, a plan by days. | practise |
-| 7. Mock | `/mock <kind>` | Recruiter, manager, behavioral, system design or live coding — by voice or text, with an honest debrief. | do the mock |
+| 6. A stage | `/prep <company> <stage>` | Format and people, likely questions with answers from your blocks, a trainer for the format, a plan by days, and a one-page learning sheet. | learn it aloud |
+| 7. Mock | `/mock <kind>` | A daily drill of the learning sheet with marks, or a full mock: recruiter, manager, behavioral, system design, live coding — with an honest debrief. | do the drill and the mock |
 | 8. After a call | `/debrief` | What happened and the next step; new facts into your pack; reminders. | tell how it went |
 | 9. Monthly | `/review` | Funnel, rejection analysis, what to change in the frame, the CV or the sources; a pack and fact check. | agree to the changes |
 

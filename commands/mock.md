@@ -1,7 +1,9 @@
 ---
-description: A mock interview — recruiter, hiring manager, behavioral, system design or live coding — by voice or text, with an honest debrief
-argument-hint: "<recruiter | manager | behavioral | system-design | live-coding> [company]"
+description: A mock interview — recruiter, hiring manager, behavioral, system design or live coding — or a drill of the learning sheet, by voice or text, with an honest debrief
+argument-hint: "<drill | recruiter | manager | behavioral | system-design | live-coding> [company]"
 ---
 Mock: $ARGUMENTS
 
 Follow the `interview-prep` skill, section «Mocks» (and `system-design` or `live-coding` for those kinds). Play the interviewer of that stage and company; one question at a time; no hints unless asked. After the mock: what worked, what to change (with the block ID or the phrase to say instead), speech errors and filler words to `me/voice.md`. If the candidate wants a voice mock outside Claude, write the brief from `templates/recruiter-mock-brief.md`.
+
+`drill` — the questions of the company's learning sheet in random order, a mark per answer (✓ / ~ / ✗) against the anchor, the misses again at the end, the marks into the sheet (section «Mocks», drill; no sheet yet — build it by step «Learn» of `interview-prep`).

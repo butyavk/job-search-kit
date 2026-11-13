@@ -1,9 +1,13 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 — 2026-11-14
 
 Added
-- A site on GitHub Pages, in English and Russian: install, the path, answer blocks, sources, autonomy, how it works — https://butyavk.github.io/job-search-kit/
+- Learning what you prepared: step «Learn» in `interview-prep` and `templates/learning-sheet.md` — a one-page map (question → first sentence → story), story anchors in four steps, recall aloud on a timer in random order, a mark per answer, only the misses again, a drill plan by days.
+- `/mock drill`: the sheet's questions in random order, ✓ / ~ / ✗ against the anchor, the marks into the sheet.
+- `/prep` now ends with the learning sheet and how to start.
+- Onboarding: «If an interview is close» — the stories for that stage first, then `/prep`; the rest after the interview.
+- A site on GitHub Pages, in English and Russian, with a page on preparing for an interview — https://butyavk.github.io/job-search-kit/
 
 ## 1.0.1 — 2026-11-13
 

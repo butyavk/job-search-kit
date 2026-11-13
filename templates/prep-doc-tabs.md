@@ -13,5 +13,5 @@ One document, a tab per topic.
 | System design | the 6-step frame; cards for likely tasks (`sd-task-card.md`); typical blocks (`skills/system-design/patterns.md`); numbers for estimates | the company's product, reviews, interviewers' code; bridges from blocks |
 | One-page plan | the 6 steps on one sheet, 2–3 hints per step — rewrite by hand | the System design tab |
 | Metrics | what → how we count → target → source → what we do; own numbers and how to explain them | `me/facts.md` (definitions) |
-| One sentence | a one-sentence answer to every question on the map — repeat the day before | all answer tabs |
+| Learn | the map (question → first sentence → story), story anchors in four steps, the drill plan by days and the marks table (`learning-sheet.md`); rewritten by hand the day before | the cheat sheet, recipes and blocks |
 | Final and references | 3 main questions for the founder or CTO and spares; short answers; references, messages, memo (`references.md`) | leaders' blog and posts; the pack |

@@ -8,4 +8,6 @@ Follow the `onboarding` skill from the step that is not done yet. If a pack alre
 
 The order: pack (facts, the story set, blocks for the core questions) → search frame (`me/search-rules.md`: roles and levels, where and how they can work, money, what to skip — Claude proposes options from the candidate's experience and the market, the candidate picks) → tracker (skill `tracker`, setup section) → schedule (`schedules/README.md`: daily check, weekly search, monthly review, or calendar reminders where scheduled tasks are not available) → autonomy (explain the default «Claude prepares, you send» in two lines; write a rule only if the candidate asks).
 
+If the candidate has an interview within a week, follow the skill's section «If an interview is close» and go to `/prep` as soon as the stories for that stage are confirmed.
+
 End with what is ready, what is next (usually `/find`), and the few things only the candidate can do.

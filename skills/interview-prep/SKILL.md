@@ -28,7 +28,7 @@ Templates are in `templates/`.
 
 ## One stage, one cycle
 ```
-format and people → topic weights and plan → material and trainer → mocks and audits → interview → debrief the same day → next stage
+format and people → topic weights and plan → material and trainer → learn it → mocks and audits → interview → debrief the same day → next stage
 ```
 
 ### Step 0. Project and context file
@@ -54,18 +54,28 @@ One document, a tab per topic (`templates/prep-doc-tabs.md`): recruiter, company
 
 Stories across rounds: `templates/story-split.md` — one row per round with its people; each round has its own main stories. Interviewers compare notes: one story must not be told in every round.
 
-### Step 4. Trainers (by format)
+### Step 4. Learn: from the document to memory
+The prep document is the reserve. What the candidate takes into the room is the **learning sheet** (`templates/learning-sheet.md`), built from the document in the same session:
+- **Stories, not answers.** 5–7 stories cover almost every likely question. Each gets an anchor in four steps — the answer in one sentence → the situation → what I did → the number and the lesson — plus what not to say. The candidate learns the anchor, not the text: the words in the interview will differ, the facts will not.
+- **A map on one page:** the 12–16 most likely questions → the first sentence, learned word for word → which story. Two questions for the interviewer, word for word.
+- **Recall, not rereading.** Read an anchor once, close it, tell it aloud. Rereading feels like knowing and does not hold under pressure.
+- **Aloud, timed, shuffled.** 60–90 seconds an answer, a case up to 60; the questions in random order, as an interviewer asks them.
+- **Repeat only the misses.** A mark per question in every drill: ✓ — the first sentence and all four steps, no prompt, in time; ~ — a pause, too long, or no number; ✗ — not recalled or off the point. ✗ comes back the same evening and the next morning; ✓ two days running leaves the drill.
+- **A plan by days:** day 1 — read each anchor once and tell each story aloud twice; then a drill a day (`/mock drill`) with the marks in the sheet; a full mock at the hour of the interview two days before, and from then the material is frozen (step 2): only drills; the interview day — the map rewritten by hand from memory.
+- **In the interview language.** A Russian interview — Russian drills; an English one — the anchors in English, with the errors from `me/voice.md` checked in every drill.
+
+### Step 5. Trainers (by format)
 - System design: skill `system-design`.
 - Live coding in SQL or Python: skill `live-coding`.
 - A coding screen on the company's domain or stack (TypeScript, Go, an API platform …): skill `company-trainer`.
 
-### Step 5. Audits
+### Step 6. Audits
 Every couple of days an independent pass (a separate agent where possible): does it match the format, are numbers and examples right, do tabs contradict each other, is anything over-complicated or missing, is authorship of stories right. Every code example is run; the output is real.
 
-### Step 6. The day before
-Nothing new. Rewrite the one-page plan by hand from memory. One short drill «the summary in a minute». 1–2 questions per interviewer for the end.
+### Step 7. The day before
+Nothing new. Rewrite the one-page plan and the learning map by hand from memory. One short drill «the summary in a minute». 1–2 questions per interviewer for the end.
 
-### Step 7. Final round
+### Step 8. Final round
 A founder, CTO or senior leader: 3 main questions and spares; 30–45-second answers to «tell me about yourself», «why us», risks, the first 90 days, plans. With a CTO — more on engineering strategy, quality, AI in teams. References: a memo with dates and facts and a request message; the answers are not a script (`templates/references.md`). After the decision — a retro of the process (`templates/retro.md`).
 
 ## Behavioral and manager answers
@@ -82,6 +92,7 @@ A founder, CTO or senior leader: 3 main questions and spares; 30–45-second ans
 - Outside Claude (a voice-agent tool, a friend): write the brief from `templates/recruiter-mock-brief.md`; for pronunciation work, `templates/voice-coach-brief.md`.
 - The debrief is by the points of the protocol, with timing, without smoothing. Repeating errors go to «My errors»: as it was → as it should be → the English phrase; speech errors and fillers to `me/voice.md`.
 - At least 2–3 full system-design mocks with a real person, who picks the task.
+- **Drill** (`/mock drill`): practice of the learning sheet, not an interview. Claude asks the map's questions in random order, one at a time, waits for the whole answer, compares it with the anchor and gives a mark with one line on what was missing (the first sentence, a step, the number) or «too long». ✗ come back at the end of the same drill. The marks go into the sheet's table; ✓ two days running leaves the drill. 15–25 minutes, by voice where possible. No sheet yet — build it first (step 4).
 
 ## Debrief
 The same day, from the transcript or notes (`templates/debrief.md`): who the interviewer was, the flow by time, what worked, where the interviewer led and how the answer could be stronger, English, form. Then:
@@ -95,6 +106,6 @@ A person from the company invites to a call, asks for a slot, sends a take-home,
 
 ## Checklist
 Start: project and context file · guide, reviews, interviewers · weights and plan · references warned · recording rules.
-Prep: story split · minute answers with a timer · first line for every value · trainers by format · 2–3 full mocks · an audit every couple of days.
+Prep: story split · minute answers with a timer · first line for every value · the learning sheet and a drill a day with marks · trainers by format · 2–3 full mocks · an audit every couple of days.
 Day before: nothing new · the one-page plan by hand · questions for the end.
 After the call: debrief the same day · lessons into the next stage.

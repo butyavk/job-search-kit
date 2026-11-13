@@ -15,8 +15,8 @@ It grew out of a real two-month search for engineering-manager roles: about a hu
 | 3. People | `/people <company>` | Finds the hiring manager, the recruiter, people you know there, a referral path; drafts the notes. | send them |
 | 4. Apply | `/apply <vacancy>` | The gate, a CV tailored with a keyword table, the letter, form answers; fills the form without submitting; plans the note and the follow-ups. | press «submit», say «applied» |
 | 5. Every day | `/today` (and on a schedule) | Mail and LinkedIn into the tracker, new vacancies from alerts, follow-ups due with drafts, interviews this week. | send the drafts |
-| 6. A stage | `/prep <company> <stage>` | Format and people, likely questions with answers from your blocks, a trainer for the format, a plan by days. | practise |
-| 7. Mock | `/mock <kind>` | Recruiter, manager, behavioral, system design or live coding — by voice or text, with an honest debrief. | do the mock |
+| 6. A stage | `/prep <company> <stage>` | Format and people, likely questions with answers from your blocks, a trainer for the format, a plan by days, and a one-page learning sheet: first sentences and story anchors. | learn it aloud |
+| 7. Mock | `/mock <kind>` | A daily drill of the learning sheet with marks, or a full mock: recruiter, manager, behavioral, system design, live coding — by voice or text, with an honest debrief. | do the drill and the mock |
 | 8. After a call | `/debrief` | What happened and the next step; new facts into your pack; reminders. | tell how it went |
 | 9. Monthly | `/review` | Funnel, rejection analysis, what to change in the frame, the CV or the sources; a pack and fact check. | agree to the changes |
 
@@ -90,6 +90,9 @@ examples/         one made-up story cut into blocks
 docs/             how it works, in English and Russian
 site/             the GitHub Pages site (Astro Starlight), built from docs/ and the sources list
 ```
+
+## Preparing for an interview
+The cycle for every stage: `/prep` → learn the one-page sheet → a daily `/mock drill` → a full mock two days before → the interview → `/debrief` the same day. Step by step: [the site](https://butyavk.github.io/job-search-kit/prep/).
 
 ## How it works
 [docs/how-it-works.md](docs/how-it-works.md) — the search, the gate and its numbers, applications, follow-ups, interview prep, answer blocks, and what did not work.

@@ -22,6 +22,7 @@ export default defineConfig({
         { label: 'Start', translations: { ru: 'Начало' }, items: [
           { slug: 'install', label: 'Install and connect', translations: { ru: 'Установка и подключения' } },
           { slug: 'path', label: 'The path: 9 commands', translations: { ru: 'Путь: 9 команд' } },
+          { slug: 'prep', label: 'Preparing for an interview', translations: { ru: 'Подготовка к интервью' } },
         ] },
         { label: 'How it works', translations: { ru: 'Как устроено' }, items: [
           { slug: 'answer-blocks', label: 'Answer blocks', translations: { ru: 'Кубики ответов' } },

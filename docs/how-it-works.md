@@ -39,6 +39,7 @@ Follow-up 1 at application + 10 days, follow-up 2 at +14 more, «No answer» 30 
 ## Interview preparation
 - **Answer blocks** instead of written answers: the same facts in every round, any question answered by a chain. Each story has a whole-story block for a short answer and details for follow-ups.
 - **One story, one round:** interviewers compare notes.
+- **Learn, do not reread.** The prep document is the reserve; you learn a one-page map (question → first sentence → story) and 5–7 story anchors in four steps. Recall aloud on a timer, in random order, with a mark per answer; only the misses come back. A daily 15–25-minute drill (`/mock drill`), a full mock two days before, then nothing new.
 - **Live coding:** requirements go into a comment in the code at once, and are checked against the code before «done» (an interviewer's answer did not reach the code six times in mocks). Run after every step. Open the platform's sandbox on the first day — once the database version turned out two hours before the interview. A browser trainer built in 6 days gave «Excellent» on both tasks.
 - **System design:** questions before drawing, only those that change the design; count the heaviest part first; prepare 2–3 variants of each likely task with an assumption removed — the real task was exactly such a variant.
 - **The same-day debrief** from the transcript turns into new blocks and trainer tasks.
