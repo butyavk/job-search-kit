@@ -32,6 +32,7 @@ import hashlib
 import json
 import os
 import re
+import unicodedata
 import sys
 from pathlib import Path
 
@@ -218,7 +219,7 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     return out
 
 
-KEY = r"[A-Za-z0-9_<(][A-Za-z0-9_ <>().'/-]*?"
+KEY = r"""[^\s:#{}\[\],&*!|>'"%@`?\-][^:#{}\[\]]*?"""   # Zürich, São Paulo, Staff+ (EU), R&D lead, UTC+1
 PLAIN_BAD_START = set("{[]}!&*?|>%@`,")
 
 
@@ -245,6 +246,8 @@ def _scalar(rest: str):
         return m.group(1).replace("''", "'"), "quoted", None
     if re.fullmatch(r"[|>][-+]?(\s+#.*)?", s):
         return "", "block", None
+    if s == "-" or s.startswith("- "):
+        return None, None, "a list item after «key:»; put it on the next line"
     if re.fullmatch(r"\[\](\s+#.*)?|~|null", s):
         return "", "empty-list", None
     m = re.fullmatch(r"\[([^\[\]{}]*)\](\s+#.*)?", s)
@@ -280,7 +283,23 @@ def read_profile(text: str):
     seen: dict[str, set] = {}
     items: dict[str, int] = {}
     block = None                     # (indent of its key, path, kind, lines)
-    lines = text.split("\n")
+    lines = text.lstrip("\ufeff").replace("\r\n", "\n").split("\n")
+    # a quoted value wrapped onto the next lines is one value: join it, keep the line numbers
+    for i in range(len(lines)):
+        m = re.match(r"""^(\s*(?:-\s)?[^"'#]*?:\s+)(["'])(.*)$""", lines[i])
+        if not m:
+            continue
+        q, rest = m.group(2), m.group(3)
+        closed = (lambda t: re.match(r'(?:[^"\\]|\\.)*"', t)) if q == '"' else (lambda t: re.match(r"(?:[^']|'')*'", t))
+        j = i
+        while not closed(rest) and j + 1 < len(lines) and lines[j + 1].strip():
+            j += 1
+            rest += " " + lines[j].strip()
+            lines[j] = ""
+        if j > i:
+            lines[i] = m.group(1) + q + rest
+    paths_seen: set[str] = set()
+    last_plain = None                # (indent of the key, path) of the last plain value: its next lines continue it
     for n, raw in enumerate(lines, 1):
         if block is not None:
             ind0 = len(raw) - len(raw.lstrip(" "))
@@ -299,11 +318,19 @@ def read_profile(text: str):
             block = None
         if not raw.strip() or raw.lstrip(" ").startswith("#"):
             continue
-        if "\t" in raw[: len(raw) - len(raw.lstrip())] or raw.startswith("\ufeff"):
-            errors.append(f"profile.yaml:{n}: a tab in the indentation; use spaces")
+        if "\t" in raw:
+            errors.append(f"profile.yaml:{n}: a tab; use spaces")
+            continue
+        if any(unicodedata.category(c) == "Cc" or c in "\u2028\u2029\u0085" for c in raw):
+            errors.append(f"profile.yaml:{n}: a control character or a line separator inside the line")
             continue
         ind = len(raw) - len(raw.lstrip(" "))
         line = raw[ind:]
+        if last_plain is not None and ind > last_plain[0] and not line.startswith(("- ", "#")) \
+                and not re.match(rf"({KEY}): |({KEY}):$", line) and " #" not in line and ": " not in line:
+            values[last_plain[1]] += " " + line.strip()   # a plain value wrapped onto the next line
+            continue
+        last_plain = None
         if line[0] in "?!&*%@{[" or line.startswith(("<<", "---", "...")):
             errors.append(f"profile.yaml:{n}: «{line[0]}» at the start of a line (complex keys, tags, anchors, "
                           "flow style, documents) is not used in a profile")
@@ -313,6 +340,9 @@ def read_profile(text: str):
             continue
         is_item = line == "-" or line.startswith("- ")
         if is_item:
+            if re.match(r"-\s+-(\s|$)", line):
+                errors.append(f"profile.yaml:{n}: a list inside a list item; write it as keys")
+                continue
             if line.startswith("-  "):
                 errors.append(f"profile.yaml:{n}: more than one space after «-»")
                 continue
@@ -332,7 +362,7 @@ def read_profile(text: str):
             ind += 2
             if not line:
                 continue
-            m = re.match(rf"({KEY}):(?:\s+(.*)|$)", line)
+            m = re.match(rf"({KEY}):(?: +(.*)|$)", line)
             if not m or line[0] in "\"'":
                 val, kind, err = _scalar(line)
                 if err:
@@ -346,7 +376,7 @@ def read_profile(text: str):
             if re.match(r"""["']""", line):
                 errors.append(f"profile.yaml:{n}: a quoted key; write keys bare")
                 continue
-            m = re.match(rf"({KEY}):(?:\s+(.*)|$)", line)
+            m = re.match(rf"({KEY}):(?: +(.*)|$)", line)
             if not m:
                 errors.append(f"profile.yaml:{n}: not «key: value» (a space before the colon, or another form)")
                 continue
@@ -362,10 +392,11 @@ def read_profile(text: str):
         if frames and frames[-1][2] == "key":
             frames[-1][3] = "map"
         parent = ".".join(f[1] for f in frames)
-        if key in seen.setdefault(parent, set()):
-            dups.append(f"{parent}.{key}" if parent else key)
-        seen[parent].add(key)
         path = f"{parent}.{key}" if parent else key
+        if path in paths_seen:   # set twice, or `a.b:` next to `a:` / `  b:` — a reader keeps only one
+            dups.append(path)
+        paths_seen.add(path)
+        seen.setdefault(parent, set()).add(key)
         val, kind, err = _scalar(m.group(2) or "")
         if err:
             errors.append(f"profile.yaml:{n}: {err}")
@@ -378,6 +409,8 @@ def read_profile(text: str):
         else:
             if kind in ("plain", "quoted"):
                 values[path] = val
+                if kind == "plain":
+                    last_plain = (ind, path)
             elif kind == "flow-list":
                 for i, item in enumerate(val, 1):
                     values[f"{path}.[{i}]"] = item
@@ -653,80 +686,36 @@ NO_RULE = re.compile(
 
 
 def autonomy_errors(ptxt: str) -> list[str]:
-    """Rules in profile.yaml → autonomy.rules: each one a block entry with action, since (a date) and
-    said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5). The file is read
-    the way a YAML reader would take it, so a duplicate key, a second `autonomy:` or a comment line
-    cannot hide a rule."""
+    """Rules in profile.yaml → autonomy.rules: each one a mapping with action, since (a date) and
+    said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5). The rules are
+    taken from read_profile — the one reader, which reads the file as a YAML reader does (escapes
+    decoded, duplicates found, a deeper `rules:` is not this one) — so nothing can be hidden from it."""
     import unicodedata
-    lines = ptxt.splitlines()
-    tops = [i for i, l in enumerate(lines) if re.match(r"autonomy:", l)]
-    if len(tops) > 1:
-        return ["profile.yaml: `autonomy:` is written twice; keep one (a reader takes the last)"]
-    if not tops:
-        return []
-    if re.match(r"autonomy:[ \t]*\{", lines[tops[0]]):
-        return ["profile.yaml: autonomy must be written as a block with one key per line, not «{…}»"]
-    body = []
-    for l in lines[tops[0] + 1:]:
-        if l.strip() == "" or l.lstrip().startswith("#"):
-            continue   # blank and comment lines, at any indent, do not end the block
-        if not l[:1].isspace():
-            break
-        body.append(l)
-    ri = next((i for i, l in enumerate(body) if re.match(r"[ \t]+rules:", l)), None)
-    if ri is None:
-        return []
-    inline = body[ri].split(":", 1)[1].split("#")[0].strip()
-    if inline and inline not in ("[]", "~", "null"):
-        return ["profile.yaml: autonomy.rules must be a list with one key per line (not «" + inline[:40] + "»)"]
-    rind = len(body[ri]) - len(body[ri].lstrip())
-    items: list[list[str]] = []
-    dash = None   # the indent of the list's own «- »
-    for l in body[ri + 1:]:
-        ind = len(l) - len(l.lstrip())
-        if ind <= rind and not l.lstrip().startswith("-"):
-            break   # the next key under autonomy
-        m = re.match(r"([ \t]*)-(?:[ \t]+|$)(.*)", l)
-        if m and (dash is None or len(m.group(1)) == dash):
-            dash = len(m.group(1))
-            items.append([" " * (len(l) - len(m.group(2))) + m.group(2)] if m.group(2) else [])
-        elif items:
-            items[-1].append(l)
-        else:
-            return ["profile.yaml: autonomy.rules must be a list (each rule starts with «- »)"]
-    out = []
-    for e in items:
-        keys: dict[str, str] = {}
-        kind = None
-        cur = None
-        for l in e:
-            if not l.strip():
-                continue
-            ind = len(l) - len(l.lstrip())
-            if kind is None:
-                kind = ind
-            m = re.match(r"([A-Za-z_][\w ]*):(.*)$", l.strip())
-            if ind == kind and m:
-                cur = m.group(1).strip()
-                if cur in keys:
-                    out.append(f"profile.yaml: an autonomy rule sets «{cur}» twice — it does not count")
-                keys[cur] = m.group(2)
-            elif ind > kind and cur is not None:
-                keys[cur] += "\n" + l.strip()   # a continuation: deeper than its key
-            else:
-                out.append("profile.yaml: an autonomy rule has a line out of place: «" + l.strip()[:40] + "»")
+    values, dups, _ = read_profile(ptxt)
+    out = [f"profile.yaml: «{d}» is set twice; a reader takes the last one — keep one"
+           for d in dups if d == "autonomy" or d.startswith("autonomy.")]
+    rules: dict[str, dict[str, str]] = {}
+    for path, val in values.items():
+        if path == "autonomy.rules":
+            out.append("profile.yaml: autonomy.rules must be a list of rules, one key per line")
+            continue
+        m = re.match(r"autonomy\.rules\.(\[\d+\])(?:\.(.+))?$", path)
+        if not m:
+            continue
+        if m.group(2) is None:
+            out.append("profile.yaml: an autonomy rule must be keys (action, since, said), not a single value")
+            continue
+        rules.setdefault(m.group(1), {})[m.group(2)] = val
+    for keys in rules.values():
         action = keys.get("action")
         if action is None:
             out.append("profile.yaml: an autonomy rule without `action:` — it does not count")
             continue
         said_key = "said" if "said" in keys else "quote"
-        said_raw = keys.get(said_key, "")
-        said_text = re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw).split("#")[0] if not said_raw.lstrip().startswith(("|", ">")) \
-            else re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw)
-        said_text = said_text.strip().strip("\"'")
-        if not re.match(r"\s*\d{4}-\d{2}-\d{2}", keys.get("since", "")) or not said_text or said_text.startswith("<"):
+        said_text = keys.get(said_key, "").strip()
+        if not re.match(r"\d{4}-\d{2}-\d{2}$", keys.get("since", "").strip()) or not said_text or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
-        act = unicodedata.normalize("NFKC", action.split("#")[0].strip().strip("\"'"))
+        act = unicodedata.normalize("NFKC", action.strip())
         what = " ".join(f"{k}: {v}" for k, v in keys.items() if k != said_key)   # a second quote key is scanned
         # the words as they read: compatibility forms folded, invisible characters out, accents off (delété)
         plain = "".join(c for c in unicodedata.normalize("NFKD", fold(what)) if unicodedata.category(c) != "Mn")
@@ -736,7 +725,7 @@ def autonomy_errors(ptxt: str) -> list[str]:
         elif NO_RULE.search(plain):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
-        elif re.search(r"[^\x20-\x7e«»‘’“”—–…\u00a0]", plain.replace("\n", " ")):   # allow, do not block: ASCII and its marks
+        elif re.search(r"[^\x20-\x7e«»‘’“”—–…\u00a0]", plain.replace("\n", " ")):   # allow, do not block
             out.append(f"profile.yaml: autonomy rule «{act}»: write its conditions in plain English letters, with no "
                        "invisible or look-alike characters (only `said:` holds the candidate's own words, in any language)")
     return out
@@ -964,6 +953,9 @@ def main() -> int:
               "pass --me <path to me/> or run /start")
         return 1
     for name in ("recipes.md", "never-say.md", "facts.md", "profile.yaml"):
+        if (a.me / name).is_symlink() and not (a.me / name).exists():
+            print(f"cannot read {a.me / name}: a link that is broken or points to itself; replace it with the file")
+            return 1
         if not (a.me / name).exists():
             print(f"note: {name} is missing in the pack (copy it from kit/pack-template/)")
     global NEED_L2
@@ -1115,7 +1107,7 @@ def main() -> int:
         errors += profile_syntax_errors(ptxt)
         errors += autonomy_errors(ptxt)
         for k in prof_dups:
-            if not k.startswith("autonomy."):   # autonomy_errors names those itself
+            if not (k == "autonomy" or k.startswith("autonomy.")):   # autonomy_errors names those, all of them
                 errors.append(f"profile.yaml: «{k}» is set twice; a reader takes the last one — keep one")
     errors += schedule_problems(a.me, a.kit)
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
@@ -1215,7 +1207,7 @@ def _decodes(f: Path) -> bool:
         return False
 
 
-READ_ERRORS = (UnicodeDecodeError, IsADirectoryError, NotADirectoryError, PermissionError, FileNotFoundError, ValueError)
+READ_ERRORS = (UnicodeDecodeError, OSError, ValueError)   # OSError: a folder, a missing file, a link that loops
 
 
 def friendly_errors() -> None:

@@ -5,6 +5,13 @@
 Changed
 - Money has no single right way: onboarding asks whether the candidate names a number first or stays flexible and lets the recruiter name the range first (`money.approach`), and the template has a block for that (LOG-7, «I am flexible on the number. What range do you have for this role?»). The floor is private by default rather than «never said»: the check keeps it out of blocks, and a candidate who wants to name it moves it to `money.say_aloud`. Site, offer template and messages say the same.
 
+Fixed (a fourth independent check)
+- Autonomy rules are read through the one profile reader: a second `rules:`, a deeper `rules:` that is not this one, an escape (`\u006c`) or a `#` inside a quoted action can no longer hide a rule, and every key set twice under `autonomy:` is named.
+- The profile reader takes keys with any letters and signs (Zürich, Staff+ (EU), R&D lead, UTC+1) and values wrapped onto the next line; it refuses what YAML reads differently or not at all: tabs, control characters and line separators, a list after `key:` on the same line, a list inside a list item, and `a.b:` next to `a:` / `b:` (named as set twice).
+- `values.yaml`: values reach the prompt quoted, as data («Maria Lopez»), under a line that says so; the word lists that tried to spot orders are gone — they refused real titles («iOS developer», «Responsable technique», «Engineering Lead, Apply Team») and still missed orders. The checks keep each value a short phrase: length, characters, no sentences, one alphabet per word, a real time zone. What keeps a scheduled run from acting is its tool list.
+- A pack file that is a broken or self-pointing link gives one line, not a traceback.
+- Interview prep says the floor stays private unless the candidate chooses to name it; a test keeps «never said» out of the kit.
+
 ## 1.5.2 — 2026-11-14
 
 Changed (a sweep for the kinds of error the fifth review found; `CONTRIBUTING.md`, «Habits that keep old mistakes from coming back»)

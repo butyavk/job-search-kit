@@ -114,7 +114,7 @@ A person from the company invites to a call, asks for a slot, sends a take-home,
 ## Offer
 An offer is a live response: a separate session at once (above). Claude prepares; every reply, counter and acceptance is the candidate's. Template: `templates/offer.md`.
 1. **Read it whole** into the context file: base and currency, contract form and country, bonus and its conditions, equity (type, number, vesting, cliff, strike, last valuation if known), start date, probation, notice, non-compete, IP and confidentiality, remote or relocation terms, the date of the first review. What is unclear → a list of questions for the recruiter.
-2. **Compare** with `money.floor` and `money.say_aloud` in `me/profile.yaml`, with the other open processes in the tracker, and with what the frame says matters. The floor is never said to anyone.
+2. **Compare** with `money.floor` and `money.say_aloud` in `me/profile.yaml`, with the other open processes in the tracker, and with what the frame says matters. The floor stays private unless the candidate chooses to name it (`money.approach`).
 3. **Never decide in the moment:** «Thank you — I need a day to look at the whole package.» A deadline shorter than 2–3 working days is worth asking to move.
 4. **Counter with one number,** tied to the role and its scope, not to needs, without a range. If the base is capped: a review in N months against agreed metrics, with the number and the date in the offer; a signing bonus; equity. Non-cash parts come on top of the cash, not instead of it.
 5. **Other processes:** companies at a final stage hear that there is an offer and its deadline (drafts; the candidate sends). Earlier stages — only if the candidate wants to speed them up.

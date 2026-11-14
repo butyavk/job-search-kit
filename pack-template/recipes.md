@@ -224,7 +224,7 @@ The 13 archetypes from the bank («Minimum story set») → your stories. Onboar
 | --- | --- | --- | --- | --- |
 | X01 | `LOG-1` | `LOG-1` | `LOG-1` | |
 | X02 | `LOG-2` | `LOG-2` → `LOG-4` | `LOG-2` → `LOG-3` → `LOG-4` | work authorization, then the start date |
-| X03 | `LOG-6` | `LOG-6` | `LOG-6` | with `money.approach` flexible, LOG-7 first: the recruiter names the range |
+| X03 | `LOG-6` | `LOG-6` | `LOG-6` | with `money.approach` flexible, start with LOG-7 instead of LOG-6: the recruiter names the range first |
 | X04 | — | — | — | |
 | X05 | — | — | — | |
 | X06 | — | — | — | |
