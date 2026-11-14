@@ -44,8 +44,8 @@ money:                              # said aloud only through blocks LOG-*
   current_or_last: "<current or last salary; say it only if asked directly>"
   form_numeric_field: floor of the level in the form's currency
 languages:
-  native: <native language: the second line of every block>
-  english: <B2 / C1 / C2>          # sets the register targets in english-register
+  native: <native language: the second line of every block; English → no second line>
+  english: <B2 / C1 / C2 / native>  # sets the register targets in english-register
   <other language>: <level>
 paths:                              # large sources that are not copied into the pack
   pack: <path to this me/ folder on my computer>

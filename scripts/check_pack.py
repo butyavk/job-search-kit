@@ -19,7 +19,7 @@ reports:
            "That", "Потом", "Это"...), confirmed blocks with <placeholders>;
   coverage bank questions with no recipe yet (core ★ first, then role ◆ for the
            candidate's track from profile.yaml); a recipe that uses a block
-           marked `черновик` counts as a draft, not as covered;
+           marked `draft` counts as a draft, not as covered;
            stories (topics with an R block, or an O and an L block) that have no whole `S` block.
 
 Exit code 1 if there are errors (or warnings with --strict).
@@ -135,6 +135,9 @@ def parse_questions(bank: Path):
     return questions
 
 
+DUP_RECIPES: list[str] = []
+
+
 def parse_recipes(recipes: Path):
     rows: dict[str, list[str]] = {}
     empty: list[str] = []
@@ -147,6 +150,8 @@ def parse_recipes(recipes: Path):
         cells = m.group(2).split("|")
         # first phrase, short chain, long chain; the notes column is free text
         refs = REF_RE.findall("|".join(cells[:3]))
+        if m.group(1) in rows:
+            DUP_RECIPES.append(m.group(1))
         rows[m.group(1)] = refs
         if not refs:
             empty.append(m.group(1))
@@ -229,9 +234,31 @@ def fact_numbers(path: Path) -> set[str]:
     return out
 
 
+MONTHS = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
+NOT_AMOUNTS = re.compile(
+    r"`[^`]*`"                                             # code spans
+    r"|\b[A-Z]{1,6}-[A-Z]?\d+\b"                           # block and fact IDs: PAY-S1, F-99
+    r"|\+\d[\d\s().-]{6,}\d"                               # phone numbers
+    r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
+    r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
+    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgres(?:QL)?|MySQL|iOS|Android|"
+    r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv)\s?/?\d[\d.]*"  # versions and standards
+    r"|\b\d{1,3},\d{1,3},\d{1,3}\b")                       # colours like 0,102,204
+SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn)\b(?!-)")
+SCALE_OF = {"million": 1_000_000, "billion": 1_000_000_000, "thousand": 1_000, "M": 1_000_000, "K": 1_000,
+            "k": 1_000, "bn": 1_000_000_000}
+
+
+def _scaled(m: re.Match) -> str:
+    v = float(m.group(1).replace(",", ".")) * SCALE_OF[m.group(2)]
+    return str(int(v)) if v == int(v) else str(v)
+
+
 def block_numbers(en: str) -> list[str]:
-    """Numbers worth a source: percentages, decimals and whole numbers of 10 and more; years are skipped."""
+    """Numbers worth a source: percentages, decimals and whole numbers of 10 and more; years, IDs,
+    versions, dates and phone numbers are skipped; «12 million» is one number."""
     out = []
+    en = SCALED_RE.sub(_scaled, NOT_AMOUNTS.sub(" ", en))
     for m in NUM_RE.finditer(en):
         n = norm_number(m.group(1), m.group(2))
         bare = n.rstrip("%")
@@ -258,8 +285,13 @@ def word_numbers(en: str) -> list[str]:
     block_numbers: percentages, and whole numbers of 10 and more."""
     out = []
     for m in WORDNUM_RE.finditer(en):
-        total = cur = 0
+        if re.search(r"\d\s*$", en[:m.start()]):   # «12 million»: the digits carry it (block_numbers)
+            continue
+        nums, total, cur, last = [], 0, 0, ""
         for w in re.split(r"[\s-]+", m.group(1).strip().lower()):
+            if (w in UNITS and last in UNITS) or (w in TENS and (last in TENS or last in UNITS)):
+                nums.append(total + cur)            # «ten twenty-person teams»: two numbers
+                total = cur = 0
             if w in UNITS:
                 cur += UNITS[w]
             elif w in TENS:
@@ -269,11 +301,13 @@ def word_numbers(en: str) -> list[str]:
             elif w in SCALES:
                 total += max(cur, 1) * SCALES[w]
                 cur = 0
-        n = total + cur
-        if m.group(2):
-            out.append(f"{n}%")
-        elif n >= 10:
-            out.append(str(n))
+            last = w
+        nums.append(total + cur)
+        for i, n in enumerate(nums):
+            if m.group(2) and i == len(nums) - 1:
+                out.append(f"{n}%")
+            elif n >= 10:
+                out.append(str(n))
     return out
 
 
@@ -305,12 +339,22 @@ def read_cv(path: Path) -> str | None:
         if not shutil.which("pdftotext"):
             return None
         return subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True).stdout
+    if path.suffix.lower() == ".docx":
+        import zipfile
+        try:
+            xml = zipfile.ZipFile(path).read("word/document.xml").decode("utf-8", "replace")
+        except (zipfile.BadZipFile, KeyError):
+            return None
+        return re.sub(r"<[^>]+>", " ", xml.replace("</w:p>", "\n"))
+    if path.suffix.lower() not in (".tex", ".md", ".txt", ".html", ".htm"):
+        return None
     text = path.read_text(encoding="utf-8", errors="replace")
     if path.suffix.lower() == ".tex":   # the document body only, without comments, layout sizes and commands
         if "\\begin{document}" in text:
             text = text.split("\\begin{document}", 1)[1]
         text = re.sub(r"(?<!\\)%.*", "", text)
         text = re.sub(r"\d*\.?\d+\s*(in|pt|cm|mm|em|ex|bp)\b|\d*\.?\d+\s*\\(text|line|column)width", " ", text)
+        text = re.sub(r"\\[a-zA-Z]+\*?(?:\{[\d.,\s]*\}|\[[^\]]*\])+", " ", text)   # \fontsize{10}{12}, \definecolor[...]
         text = text.replace("\\%", "%")
         text = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?", " ", text)
     elif path.suffix.lower() in (".html", ".htm"):
@@ -417,8 +461,8 @@ def main() -> int:
     if not a.me.is_dir():
         print(f"no candidate pack at {a.me}: pass --me <path to me/> or run /start")
         return 1
-    if not any((a.me / n).exists() for n in ("profile.yaml", "facts.md", "recipes.md", "blocks")):
-        print(f"{a.me} has none of the pack's files (profile.yaml, facts.md, recipes.md, blocks/): "
+    if not any((a.me / n).exists() for n in ("profile.yaml", "facts.md")):
+        print(f"{a.me} has neither profile.yaml nor facts.md, so it is not a pack: "
               "pass --me <path to me/> or run /start")
         return 1
     for name in ("recipes.md", "never-say.md", "facts.md", "profile.yaml"):
@@ -428,7 +472,7 @@ def main() -> int:
     prof_path = a.me / "profile.yaml"
     if prof_path.exists():
         mn = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
-        if mn and re.match(r"^(english\b|en(?:[-_][a-z]{2})?$)", mn.group(1).strip().strip("\"'").lower()):
+        if mn and re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", mn.group(1).strip().strip("\"'").lower()):
             NEED_L2 = False   # English, English (UK), en, en-GB, en_US
     expect_code = ""
     if prof_path.exists():
@@ -450,6 +494,13 @@ def main() -> int:
 
     fact_ids = set(re.findall(r"^\| (F-[\w-]+) \|", (a.me / "facts.md").read_text(encoding="utf-8"), re.M)) \
         if (a.me / "facts.md").exists() else set()
+    for qid in dict.fromkeys(DUP_RECIPES):
+        errors.append(f"recipes.md: {qid} has more than one row (the last one wins); keep one")
+    for path in sorted((a.me / "blocks").glob("*.md")):   # F- facts named in block notes
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            for r in re.findall(r"\bF-\d+[\w-]*", line):
+                if fact_ids and r not in fact_ids:
+                    errors.append(f"{path.name}:{n}: fact {r} is not in facts.md")
     for qid, refs in recipes.items():
         for r in refs:
             if r.startswith("F-") and r not in fact_ids:
@@ -480,7 +531,7 @@ def main() -> int:
         where = f"{b['file']}:{b['line']} {b['id']}"
         if longest > 30:
             warnings.append(f"{where}: a sentence of {longest} words (target under 30)")
-        if contr:
+        if contr and NEED_L2:   # a native English speaker's contractions are their own voice
             warnings.append(f"{where}: contractions {contr}")
         # one-word slots such as <company> or <city> are filled per vacancy; longer ones are unfinished text
         if not b["draft"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>|\bTODO\b|\bTBD\b|\[[^\]]*\b(?:number|name|date|company|цифра|имя|дата)\b[^\]]*\]", b["en"] + b["ru"]):
@@ -509,9 +560,10 @@ def main() -> int:
 
     known = fact_numbers(a.me / "facts.md")
     if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
-        mm = re.search(r"^money:\n((?:[ \t]+.*\n?)*)", prof_path.read_text(encoding="utf-8"), re.M)
+        mm = re.search(r"^money:[^\n]*\n((?:[ \t]+.*\n?|[ \t]*\n|[ \t]*#.*\n)*)", prof_path.read_text(encoding="utf-8"), re.M)
         if mm:
-            known |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(mm.group(1))}
+            money = NOT_AMOUNTS.sub(" ", re.sub(r"#.*", "", mm.group(1)))   # values, not the comments
+            known |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, money))}
     if (a.me / "facts.md").exists():
         for b in blocks.values():
             if b["draft"]:
@@ -524,12 +576,14 @@ def main() -> int:
     if a.cv is not None:
         cv_text = read_cv(a.cv)
         if cv_text is None:
-            errors.append(f"--cv: cannot read {a.cv} (a .pdf needs pdftotext)")
-        else:
+            errors.append(f"--cv: cannot read {a.cv} (.tex, .md, .txt, .html, .docx, or .pdf with pdftotext)")
+        else:   # contact lines (phone, email, address, links) carry no claims
+            cv_text = "\n".join(l for l in cv_text.splitlines()
+                                if not re.search(r"@|https?://|www\.|linkedin|github|\+\d|\btel\b|\bphone\b", l, re.I))
             cv_loose = [n for n in block_numbers(cv_text) if not known_number(n, known)]
             cv_loose += [n for n in word_numbers(cv_text) if not known_number(n, known, rounded=True)]
             if cv_loose:
-                errors.append(f"CV {a.cv.name}: numbers not in facts.md: {', '.join(dict.fromkeys(cv_loose))} "
+                warnings.append(f"CV {a.cv.name}: numbers not in facts.md: {', '.join(dict.fromkeys(cv_loose))} "
                               "(a difference between the CV and facts.md is a question for the candidate)")
             else:
                 print(f"CV {a.cv.name}: every number is in facts.md")
@@ -556,7 +610,7 @@ def main() -> int:
             if left:
                 warnings.append(f"{name}: {left} placeholder(s) left to fill")
 
-    if total_words and long_words / total_words > 0.13:
+    if NEED_L2 and total_words and long_words / total_words > 0.13:
         warnings.append(f"EN register: {100 * long_words / total_words:.1f}% words of 8+ letters (target under 13%): "
                         "swap long words for short ones")
 

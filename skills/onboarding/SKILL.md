@@ -9,7 +9,7 @@ The goal is a pack `me/` that the whole kit can run on, plus a working search: f
 
 The main rule: **invent nothing.** A draft from a CV is a guess, not a fact. Whatever the candidate has not confirmed keeps the mark `· draft` and never goes into an answer.
 
-Talk to the candidate in their language. Blocks are written in English (the interview language) plus their native language on the second line.
+Talk to the candidate in their language. Blocks are written in English (the interview language) plus their native language on the second line; a native English speaker has only the English line.
 
 **Order.** Steps 0–2, then 4–5 and the first `/find` in the first session; step 3 (stories) over the next sessions, 2–3 stories each, while applications go out; then 6–7. An interview within a week → «If an interview is close».
 
@@ -52,7 +52,7 @@ Special core questions:
 For each question:
 1. Ask it the way an interviewer will. Ask them to tell it by voice or text, as it is.
 2. Follow up in one message, 3–6 questions: what exactly they did versus the team or someone else; the number and how it was measured (not measured — write that); how it ended; what they would do differently; what not to say (words that change the meaning, names not to mention); which other questions this story fits.
-3. Cut the story into blocks: the whole `S` first, then details (`O`, `C`, `A`, `R`, `D`, `L`, and `G`, `Q` if needed), English plus the native language, register by `english-register`. Each block names the project and never opens with a link word.
+3. Cut the story into blocks: the whole `S` first, then details (`O`, `C`, `A`, `R`, `D`, `L`, and `G`, `Q` if needed), English plus the native language (English only for a native speaker), register by `english-register`. Each block names the project and never opens with a link word.
 4. Show the blocks and the chain. After «yes» — remove `draft`, put the date in the «Confirmed» column of `facts.md`, add the recipe to `me/recipes.md`.
 
 A weak or missing story — do not stretch. Write «—» in the recipe and come back later; the nearest story goes to «Notes» without backticks (otherwise it looks like a recipe).

@@ -182,7 +182,7 @@ class PackCheckBreakage(unittest.TestCase):
         code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(good))
         self.assertEqual(code, 0, out)
         self.assertIn("every number is in facts.md", out)
-        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(bad))
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(bad), "--strict")
         self.assertNotEqual(code, 0, out)
         self.assertIn("0.3%", out)
         self.assertNotIn("99", out.split("CV bad.tex")[1].split("\n")[0])
@@ -209,6 +209,19 @@ class PackCheckBreakage(unittest.TestCase):
         _, out = self.broken(edit)
         self.assertIn("differ from the kit's prompt", out)
         self.assertIn("Submit the forms", out)
+
+    def test_cv_noise_is_not_a_claim(self):
+        d = Path(tempfile.mkdtemp())
+        cv = d / "cv.md"
+        cv.write_text("Maria · +49 151 2345678 · maria@example.com · linkedin.com/in/maria\n"
+                      "Fintrek, 11/2026. Python 3.11, ISO 27001, on 15 March. Failed payouts from 2.1% to 0.4% (F-04).\n",
+                      encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(cv))
+        self.assertIn("every number is in facts.md", out)
+        bin_cv = d / "cv.pages"
+        bin_cv.write_bytes(b"\x00\x01binary")
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(bin_cv))
+        self.assertIn("cannot read", out)
 
 
 class EnglishCheck(unittest.TestCase):
@@ -241,6 +254,16 @@ class EnglishCheck(unittest.TestCase):
         code, out = run("english_check.py", "--me", str(FIX / "maria"), stdin="Я руководила командой платежей.")
         self.assertNotIn("Traceback", out)
         self.assertIn("never-say", out)
+
+    def test_idiom_forms_and_other_languages(self):
+        code, out = run("english_check.py", stdin="We kept moving the needle with deep dives. That said we shipped.")
+        self.assertNotEqual(code, 0, out)
+        for x in ("move the needle", "deep dive", "that said"):
+            self.assertIn(x, out)
+        code, out = run("english_check.py", stdin="Fue crucial y robusto para el equipo de pagos.")
+        self.assertEqual(code, 0, out)
+        code, out = run("english_check.py", "--me", "/nonexistent", stdin="x")
+        self.assertNotEqual(code, 0, out)
 
 
 class KitCheck(unittest.TestCase):

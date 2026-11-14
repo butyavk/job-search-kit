@@ -1,6 +1,6 @@
 ---
 name: english-register
-description: "Write or rewrite English application text in a confident non-native register at the candidate's level (C1 by default) instead of native-writer register. Use for cover letters, application form answers, LinkedIn notes, follow-ups and any English the candidate submits as their own words."
+description: "Write or rewrite English application text in the candidate's own register: a confident non-native one at their level (C1 by default) instead of native-writer polish, or plain native English without AI words for a native speaker. Use for cover letters, application form answers, LinkedIn notes, follow-ups and any English the candidate submits as their own words."
 ---
 
 # English register for a non-native candidate

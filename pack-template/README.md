@@ -6,7 +6,7 @@ Copy this folder as `me/` next to the kit (`kit/`) and never publish it: it will
 | --- | --- |
 | `profile.yaml` | contacts, status, work authorization, form answers, money, languages, paths, autonomy rules |
 | `facts.md` | facts with definition, source and confirmation date: roles, teams, numbers, who did what |
-| `blocks/` | answer blocks (English plus your native language) — format in the `answer-blocks` skill |
+| `blocks/` | answer blocks (English plus your native language, English only if it is your native one) — format in the `answer-blocks` skill |
 | `recipes.md` | bank question → first line and chains of blocks; your story set |
 | `never-say.md` | what not to say and why; people not to contact; filler words |
 | `voice.md` | pronunciation and speech errors from mocks and calls |

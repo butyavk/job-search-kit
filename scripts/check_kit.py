@@ -80,7 +80,9 @@ def rules_body(lines: list[str], frontmatter: bool) -> list[str]:
         lines = lines[lines.index("---", 1) + 1:]
     else:             # skip the title
         lines = lines[1:]
-    return [l for l in lines if not l.startswith("The same rules are in")]
+    notes = {"The same rules are in `skills/job-search-kit/SKILL.md` (a plugin does not load this file). Change one, copy the change to the other.",
+             "The same rules are in `CLAUDE.md` at the kit root (for folder mode). Change one, copy the change to the other."}
+    return [l for l in lines if l not in notes]
 
 
 def check_rules_copies() -> list[str]:

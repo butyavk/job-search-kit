@@ -65,10 +65,10 @@ Recipe columns: «First line» — the ID of an `O` (or `S`) block; «Short» an
 
 ## Checklist without the script
 The same list as `check_pack.py`, by eye, over the changed files:
-1. Every block has `#### ID · title`, a type line in backticks, `- EN:` and the native-language line. No ID repeats.
+1. Every block has `#### ID · title`, a type line in backticks, `- EN:` and the native-language line (none for a native English speaker). No ID repeats.
 2. Every ID in `recipes.md` chains and in block text exists.
 3. No block opens with a link word (Then, So, That, It, Also …); the project or company is named.
-4. English: no contractions (I'm, don't), every sentence under 30 words, 12–15 words on average, under 13% of words with 8+ letters (targets per level in `english-register`).
+4. English: no contractions (I'm, don't), every sentence under 30 words, 12–15 words on average, under 13% of words with 8+ letters (targets per level in `english-register`). A native English speaker: only the sentence length and the AI-word and never-say rules apply; contractions are fine.
 5. No filler from `never-say.md` and no claim from its «Never claim» table, except in the blocks that row names.
 6. Confirmed blocks have no `<…>` placeholders longer than one word; one-word slots like `<company>` are fine.
 7. Every story (an `R`, or `O` and `L`) has an `S` block.
