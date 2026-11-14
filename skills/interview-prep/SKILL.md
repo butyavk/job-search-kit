@@ -36,7 +36,7 @@ format and people → topic weights and plan → material and trainer → learn 
 - Read the pack first: `me/never-say.md`, then `me/facts.md` (open questions), then `me/recipes.md` and the blocks.
 - No pack yet — `/start`. Stories in another form — cut them into blocks (`answer-blocks`). Remove bridges to a previous company from ready answers («At <old company> I would…»).
 - CV: the version sent for this vacancy, saved and unchanged.
-- Choose and warn references at the start, not at the end (`templates/references.md`).
+- References: choose them once the process passes the first screen, and warn them before the final round, not at the end (`templates/references.md`).
 
 ### Step 1. Format and people
 - Sources: the company's interview guide, recruiter emails, Glassdoor-type reviews, the values page, the engineering blog, vacancies of neighbouring teams.
@@ -96,7 +96,7 @@ A founder, CTO or senior leader: 3 main questions and spares; 30–45-second ans
 
 ## Debrief
 The same day, from the transcript or notes (`templates/debrief.md`): who the interviewer was, the flow by time, what worked, where the interviewer led and how the answer could be stronger, English, form. Then:
-- new facts → `me/facts.md` (ask about anything new or contradictory), phrasings that worked → blocks, failed answers → what to say instead, new questions → the bank or the prep document;
+- new facts → `me/facts.md` (ask about anything new or contradictory), phrasings that worked → blocks, failed answers → what to say instead, new questions → `me/questions-extra.md` or the prep document;
 - lessons go into the next stage's prep at once;
 - the tracker: status, next step, when to expect an answer (skill `tracker`); the follow-up date if there is silence;
 - a rating on the Strong yes / Yes / Lean yes / Lean no / No scale only on request (`templates/assessment.md`).

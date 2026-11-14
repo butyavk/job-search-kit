@@ -59,13 +59,13 @@ If the session's `curl` gets 403/429, run the same `fetch(url, {credentials: 'om
 | Landing.jobs, 4dayweek.io, Relocate.me, startup.jobs | fetch | small, mostly duplicates |
 
 ## 4. Country boards (the candidate's channels)
-Add the boards of every country in the frame. Examples that worked:
+Add the boards of every country in the frame. To find them for a new country: search «<country> job board <role>» and «<country> tech jobs», check that the posts carry dates and are not reposts from LinkedIn, keep the 2–3 with own postings, and write them into `me/search-rules.md`. Examples that worked (for the kit author's markets; other countries have their own):
 - **Serbia:** helloworld.rs, infostud — lists show the application **deadline**, not the publication date: take the date from the posting and compare with LinkedIn, keep the earlier one.
 - **Georgia:** jobs.ge.
 - **Russian-speaking market:** getmatch (browser; filters only by real clicks; `vacancies/remote/lead?pa=7d&se=lead&sp=remote`), careerspace, Telegram channels (browser only; fetch previews carry no dates).
 - **UK sponsorship:** the gov.uk register of licensed sponsors (a large CSV; may be unreachable from a session — then check sponsorship in the posting and on the careers page).
 
-## 5. Not worth the time (as of autumn 2026)
+## 5. Not worth the time (as of autumn 2026, for remote manager roles from Serbia and Georgia — check again for another market)
 Remotive, Jobgether, Adzuna, jooble, Indeed, Glassdoor and Google Jobs (noise), Built In search, TrueUp (login), EU Remote Jobs (dead), cord.co, Honeypot, Remote Europe, geekjob, joberty (no JS), LinkedIn company pages through fetch (robots). New sites mostly repeat ATS posts already read through the APIs.
 
 ## 6. A weekly rhythm that worked

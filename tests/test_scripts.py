@@ -128,6 +128,38 @@ class PackCheckBreakage(unittest.TestCase):
             (d / "blocks" / "10-payouts.md").read_text(encoding="utf-8").replace("с 2,1% до 0,4%", "с 2,1% до 0,3%"), encoding="utf-8"))
         self.assertIn("0.3%", out)
 
+    def test_autonomy_rule_indented_deeper(self):
+        code, out = self.broken(lambda d: (d / "profile.yaml").write_text(
+            (d / "profile.yaml").read_text(encoding="utf-8").replace("  rules: []", "  rules:\n    - action: send_followup\n      when: \"x\""), encoding="utf-8"))
+        self.assertIn("autonomy rule without", out)
+
+    def test_recipe_points_to_a_missing_fact(self):
+        def edit(d):
+            f = d / "recipes.md"
+            f.write_text("\n".join(l.replace("`WHO-S1`", "`WHO-S1` `F-99`", 1) if l.startswith("| I01 ") else l
+                                   for l in f.read_text(encoding="utf-8").splitlines()) + "\n", encoding="utf-8")
+        code, out = self.broken(edit)
+        self.assertIn("F-99", out)
+
+    def test_native_english_variants_need_no_second_line(self):
+        for variant in ("English (UK)", "en-GB"):
+            d = Path(tempfile.mkdtemp()) / "me"
+            shutil.copytree(FIX / "sam", d)
+            prof = d / "profile.yaml"
+            text = prof.read_text(encoding="utf-8")
+            import re
+            prof.write_text(re.sub(r"(native:\s*)[^#\n]+", lambda m: m.group(1) + variant, text, count=1), encoding="utf-8")
+            code, out = run("check_pack.py", "--me", str(d))
+            self.assertEqual(code, 0, variant + out)
+            self.assertNotIn("native-language line", out)
+
+    def test_empty_folder_is_not_a_pack(self):
+        code, out = run("check_pack.py", "--me", tempfile.mkdtemp())
+        self.assertNotEqual(code, 0, out)
+        code, out = run("check_pack.py", "--me", str(Path(tempfile.mkdtemp()) / "nope"), "--mark-synced")
+        self.assertNotEqual(code, 0, out)
+        self.assertNotIn("Traceback", out)
+
 
 class EnglishCheck(unittest.TestCase):
     def test_register_numbers(self):
@@ -148,11 +180,32 @@ class EnglishCheck(unittest.TestCase):
         self.assertIn("don't", out)
         self.assertIn("deep dive", out)
 
+    def test_curly_apostrophes_and_hyphens(self):
+        code, out = run("english_check.py", stdin="It\u2019s a deep-dive. I don\u2019t know why we do this.")
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("It's", out)
+        self.assertIn("don't", out)
+        self.assertIn("deep dive", out)
+
+    def test_non_english_text_does_not_crash(self):
+        code, out = run("english_check.py", "--me", str(FIX / "maria"), stdin="Я руководила командой платежей.")
+        self.assertNotIn("Traceback", out)
+        self.assertIn("never-say", out)
+
 
 class KitCheck(unittest.TestCase):
     def test_kit_is_consistent(self):
         code, out = run("check_kit.py")
         self.assertEqual(code, 0, out)
+
+    def test_rule_copies_must_match(self):
+        d = Path(tempfile.mkdtemp()) / "kit"
+        shutil.copytree(KIT, d, ignore=shutil.ignore_patterns("site", ".git", "node_modules"))
+        f = d / "skills" / "job-search-kit" / "SKILL.md"
+        f.write_text(f.read_text(encoding="utf-8") + "\n- An extra rule only here.\n", encoding="utf-8")
+        p = subprocess.run([sys.executable, str(d / "scripts" / "check_kit.py")], capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0, p.stdout)
+        self.assertIn("differ", p.stdout)
 
 
 if __name__ == "__main__":

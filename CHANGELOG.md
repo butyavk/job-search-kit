@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.0 — 2026-11-14
+
+Fixed (three independent reviews: requirements audit, a newcomer run in Spanish, tracker-mcp 0.7)
+- Folder mode: `echo '@kit/CLAUDE.md' > CLAUDE.md` in the search folder (README, site, `/start` writes it), because Claude Code does not load a CLAUDE.md in a subfolder; a skill named in the kit is `<kit>/skills/<name>/SKILL.md` when it is not loaded as a skill.
+- Plugin: a SessionStart hook in a search folder (a `me/` or `JOB_SEARCH_ME`) points the session to the kit's rules first.
+- Scheduled runs in Claude Code load only the read-only tracker from `me/schedules/tracker-ro.mcp.json` with `--strict-mcp-config`, and may write only into `me/runs/` (daily, monthly) or `me/search/` (weekly); lines for all three, with full paths, the log and the macOS note. A live `/today` uses the read-write tracker. Desktop-app tasks: what protects them and what does not, said plainly.
+- A yes in the current message for named items is the yes for exactly those; the forms skill, `/apply` and CLAUDE.md now say the same.
+- New interview questions go to the pack (`me/questions-extra.md`, IDs `Q01`…), not the kit's bank; `check_pack.py` reads both.
+- `check_pack.py`: real placeholders only (not the template's examples in backticks or «»; headings count); money numbers from the profile; thousands with a dot (65.000); «3 100-person» is two numbers; autonomy rules at any indentation; recipes pointing to a missing `F-` fact; English variants (English (UK), en-GB) need no second line; Spanish and other language names; Spanish openers; an empty folder or a missing one with `--mark-synced` is an error; `--ready` needs profile and facts.
+- `english_check.py`: curly apostrophes, it's/that's/let's; hyphenated idioms; no false hits on «network bandwidth» or «the alert that said»; AI words separate from idioms; speech fillers are a warning; a warning when sentence length or long words are off target; native English candidates are not held to the non-native register; no crash on non-English text or a bare `--me`.
+- `check_kit.py`: the two copies of the rules must be the same text in the same order; relative Markdown links are checked.
+- The pack template's native line is `XX:` (any language), not `RU:`.
+- Onboarding asks for processes already under way; a plain-text CV gets an editable master; a reply from a company clears or moves its follow-up; `/today` runs the filled copy from `me/schedules/`.
+- Follow-up wording matches the tracker's config (`close_stale` for silent rows); Source and Gate columns proposed at setup and measured in `/review`, with a small-sample caveat.
+- Country boards: how to find them for any country; the «not worth the time» list is marked as market-specific. References are chosen after the first screen.
+- Offer: payments a year; tasks turned off by the candidate; the accepted offer in the tracker. Mocks write to the sheet's «Marks».
+- claude.ai: kit files uploaded with their path in the name (`commands__debrief.md`); the site's autonomy pages carry the consent and tracker rules.
+
 ## 1.2.3 — 2026-11-14
 
 Changed (tracker-mcp 0.7)

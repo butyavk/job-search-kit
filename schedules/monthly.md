@@ -6,4 +6,4 @@ READ AND PREPARE ONLY: propose changes, do not make them. Tracker writes only as
 2. Rejections and silence since the last review (`templates/rejection-analysis.md`): fit as the screener saw it, gate knockouts, keyword coverage of the CV against each vacancy, the channel. What repeats?
 3. Proposals, each with its evidence: the frame (`me/search-rules.md`), the master CV, the sources, the gate.
 4. The pack: the kit's `scripts/check_pack.py` where the run has a shell and the pack folder; otherwise the checklist in the `answer-blocks` skill — errors, warnings, questions without a confirmed answer.
-5. One message: the funnel in three lines, the top 3 proposals, the pack status.
+5. One message: the funnel in three lines, the top 3 proposals, the pack status; the same text in `me/runs/<date>-monthly.md` (a scheduled run writes nowhere else).

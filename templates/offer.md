@@ -5,7 +5,7 @@ Received: <date>, from <who>, by <channel>. Answer due: <date>.
 ## What is in it
 | Part | Offer | My floor / target | Note |
 | --- | --- | --- | --- |
-| Base (currency, gross, per month or year) | | floor from `me/profile.yaml`, never said aloud | |
+| Base (currency, gross, per month or year; payments a year where it varies, e.g. 12 or 14) | | floor from `me/profile.yaml`, never said aloud | |
 | Contract form and country (employee, contractor, EOR) | | | taxes and costs for this form |
 | Bonus and its conditions | | | |
 | Equity: type, number, vesting, cliff, strike, valuation | | | |
@@ -38,5 +38,5 @@ Unclear → questions for the recruiter:
 - [ ] Other processes: withdrawals sent (by me)
 - [ ] References thanked
 - [ ] Tracker closed out
-- [ ] Scheduled tasks paused
+- [ ] Scheduled tasks turned off (the candidate disables or deletes them; `schedules/README.md`, «Pause or end»)
 - [ ] Retro (`retro.md`)

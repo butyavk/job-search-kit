@@ -4,6 +4,8 @@ argument-hint: "[CV, LinkedIn link, or anything you already have]"
 ---
 Material from the candidate: $ARGUMENTS
 
+Folder mode: if the search folder (the one holding `kit/`) has no `CLAUDE.md` with the line `@kit/CLAUDE.md`, write it first, so every later session loads the kit's rules.
+
 Follow the `onboarding` skill from the step that is not done yet. If a pack already exists, run `python3 <kit>/scripts/check_pack.py`, say in three lines what is there, and continue from the first gap — never start over.
 
 The order puts the search first, so the first session already yields vacancies:

@@ -16,7 +16,7 @@ Two integrity rules:
 - `me/recipes.md` — bank question → first line and chains (short and long), and the story set.
 - `me/facts.md` — facts with definition, source and confirmation date; a block claims nothing that is not there.
 - `me/never-say.md` — bans and filler words.
-- `bank/questions.md` in the kit — the universal question bank with IDs.
+- `bank/questions.md` in the kit — the universal question bank with IDs; `me/questions-extra.md` — the candidate's own extra questions (`Q01`…).
 
 ## Block format
 ```
@@ -85,7 +85,7 @@ The format check does not prove the facts. Once a month (`/review`) and after bi
 Notes from 1:1s and feedback about other people are sources for the candidate's own facts only: they are never quoted, paraphrased or named in anything an employer reads.
 
 ## From an interview into blocks
-After `/debrief`: each new phrasing that worked → a block or a block edit; each speech error → a line in `me/voice.md` or `me/never-say.md`; each new question → a row in the bank (next ID in its section) and a recipe.
+After `/debrief`: each new phrasing that worked → a block or a block edit; each speech error → a line in `me/voice.md` or `me/never-say.md`; each new question → a row in `me/questions-extra.md` (next `Q` ID; the kit's bank is not edited from a pack) and a recipe.
 
 ## A cheat sheet
 On request: for the questions of a stage, a table «question → first line → anchor of IDs → one or two numbers». First lines word for word; everything else as anchors.

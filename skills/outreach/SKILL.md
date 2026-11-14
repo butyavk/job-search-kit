@@ -39,7 +39,7 @@ For each person: name, title, since when, region, degree of connection, why they
 - Every text goes through `english-register` (the script, with its numbers in the reply).
 
 ## 5. Follow-ups
-The rule lives in the tracker's config (`[followups]`; default: follow-up 1 at application + 10 days, weekends → Monday; follow-up 2 at +14 more; «No answer» after 30 more days). `followups_due` lists what is due. A follow-up names the role and the date of applying, adds one new relevant fact if there is one, and asks for nothing.
+The rule lives in the tracker's config (`[followups]`; default: follow-up 1 at application + 10 days, weekends → Monday; follow-up 2 at +14 more); silent applications are closed with `close_stale` (default 30 days) in `/review`. `followups_due` lists what is due. A follow-up names the role and the date of applying, adds one new relevant fact if there is one, and asks for nothing.
 
 ## 6. After sending
 The candidate says it is sent (or Claude sent it under an `autonomy` rule in a live session): write it to the tracker with `log_followup` — who, channel, date — and the next touch date. Notes not yet sent stay as drafts with the date they are for.

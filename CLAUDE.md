@@ -13,7 +13,7 @@ Look in this order and stop at the first hit:
 
 Say which pack is connected, in one line, in the first reply of a session.
 
-**Kit paths.** Paths in the kit's files (`schedules/daily.md`, `templates/debrief.md`, `scripts/check_pack.py`) are relative to the kit root, written `<kit>/…` in commands: `kit/` in folder mode; the plugin's folder when installed as a plugin (`~/.claude/plugins/cache/job-search-kit/job-search-kit/<version>/` — find it once with `ls` and use the absolute path; `${CLAUDE_PLUGIN_ROOT}` is set for hooks, not inside a session); the project files in claude.ai. If a path does not resolve, find the file by name before saying it is missing.
+**Kit paths.** Paths in the kit's files (`schedules/daily.md`, `templates/debrief.md`, `scripts/check_pack.py`) are relative to the kit root, written `<kit>/…` in commands: `kit/` in folder mode; the plugin's folder when installed as a plugin (`~/.claude/plugins/cache/job-search-kit/job-search-kit/<version>/` — find it once with `ls` and use the absolute path; `${CLAUDE_PLUGIN_ROOT}` is set for hooks, not inside a session); the project files in claude.ai, where a path is written into the name with `__` (`commands__debrief.md` = `commands/debrief.md`, `templates__debrief.md` = `templates/debrief.md`). If a path does not resolve, find the file by name before saying it is missing.
 
 ## 2. Language
 - Talk to the candidate in the language they write in (the default is `languages.native` in `me/profile.yaml`). Keep messages short: about eight lines and one block of questions; the details go into the file you wrote.
@@ -40,16 +40,18 @@ Say which pack is connected, in one line, in the first reply of a session.
 
 Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y», «drill <company>», «a take-home from X», «X made an offer», «pause my search», «I found a job». Map the words to the skill (take-homes and offers: `interview-prep`; pausing or ending: `schedules/README.md`, «Pause or end»).
 
+A skill named in the kit (`tracker`, `answer-blocks`) is `<kit>/skills/<name>/SKILL.md`: when it is not loaded as a skill (folder mode, a project without uploaded skills), read that file before doing its step.
+
 Slash commands exist only when the kit is installed as a plugin. In folder mode and in claude.ai, «/start» typed as text, or its words («set up my search»), is the same request: read `commands/start.md` (and so on for the other eight) and follow it.
 
 ## 5. Autonomy: Claude prepares, the candidate sends
-By default Claude asks before every outward action and the candidate does it: submitting a form, sending an email, a LinkedIn note or InMail, accepting or booking a meeting, publishing anything.
+By default Claude asks before every outward action and the candidate does it: submitting a form, sending an email, a LinkedIn note or InMail, accepting or booking a meeting, publishing anything. When the candidate says in the current message to do named, ready items («submit these two forms»), that is the yes for exactly those items in this session, nothing more; no rule is needed for it.
 
 The candidate can relax this for one kind of action. Only in their own words, in chat; Claude writes the rule to `me/profile.yaml` → `autonomy.rules` with the date and the quote, and reads it back. A rule names the action, the conditions and the checks (for example: «follow-up 1 in an existing ATS thread, from the template, no new facts, `english-register` passed»).
 - A rule works only in a live session, and only after the candidate starts it in that session («send the follow-ups by my rules»). Claude then acts on the items that meet every condition, and lists afterwards what it did and where.
 - In scheduled and unattended runs Claude never sends anything: it prepares drafts and the list.
 - No rule covers: passwords, creating accounts, money and payments, accepting offers or terms, ticking consents (privacy, terms, assessment rules, own-words pledges), deleting data, anything that cannot be undone. These the candidate always does.
-- Tracker writes are not outward actions, but they are the candidate's record: a dry run first, the write after their yes in a live session, with `expected_version`. `undo_last_write` steps back one write at a time and stops at a hand edit. A scheduled run never passes `confirm`, and uses the read-only entry `tracker-ro` where it is set up (skill `tracker`, setup step 4): that server refuses every write.
+- Tracker writes are not outward actions, but they are the candidate's record: a dry run first, the write after their yes in a live session, with `expected_version`. `undo_last_write` steps back one write at a time and stops at a hand edit. A scheduled run never passes `confirm`; in Claude Code it loads only the read-only tracker (`schedules/README.md`), which refuses every write.
 
 ## 6. Hard rules
 - Facts about the candidate only from the pack or from their own words. No fact — ask; never fill a gap. A new fact goes to `me/facts.md` first, then into a block.

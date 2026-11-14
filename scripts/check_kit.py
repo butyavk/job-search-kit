@@ -5,8 +5,10 @@
    (templates/…, skills/…, schedules/…, scripts/…, bank/…, pack-template/…,
    examples/…, docs/…, commands/…, tools/…), and every `me/…` file the
    instructions name exists in pack-template/.
-2. The two copies of the rules agree: every line of CLAUDE.md (after its
-   title and the note about the copy) is also in skills/job-search-kit/SKILL.md.
+   Relative Markdown links ([text](path)) in those files point to files that exist.
+2. The two copies of the rules are the same text, line for line and in order:
+   CLAUDE.md after its title, skills/job-search-kit/SKILL.md after its frontmatter
+   (each one's note about the other copy aside).
 3. Every skill named as «skill `x`» or «`x` skill» exists.
 
 Exit code 1 on any problem.
@@ -55,11 +57,45 @@ def check_paths() -> list[str]:
     return problems
 
 
+LINK = re.compile(r"\]\(([^)\s]+)\)")
+
+
+def check_links() -> list[str]:
+    problems = []
+    for f in md_files():
+        rel = f.relative_to(KIT).as_posix()
+        if rel in SKIP_FILES:
+            continue
+        for target in LINK.findall(f.read_text(encoding="utf-8")):
+            if target.startswith(("http://", "https://", "mailto:", "#", "/", "computer:")):
+                continue
+            path = target.split("#")[0]
+            if path and not (f.parent / path).exists():
+                problems.append(f"{rel}: link ({target}) — no such file")
+    return problems
+
+
+def rules_body(lines: list[str], frontmatter: bool) -> list[str]:
+    if frontmatter:   # skip the --- … --- block
+        lines = lines[lines.index("---", 1) + 1:]
+    else:             # skip the title
+        lines = lines[1:]
+    return [l for l in lines if not l.startswith("The same rules are in")]
+
+
 def check_rules_copies() -> list[str]:
-    claude = (KIT / "CLAUDE.md").read_text(encoding="utf-8").splitlines()[3:]
-    router = set((KIT / "skills" / "job-search-kit" / "SKILL.md").read_text(encoding="utf-8").splitlines())
-    missing = [l for l in claude if l.strip() and l not in router and not l.startswith("The same rules are in")]
-    return [f"CLAUDE.md line not in skills/job-search-kit/SKILL.md: {l[:90]}" for l in missing]
+    import difflib
+    claude = rules_body((KIT / "CLAUDE.md").read_text(encoding="utf-8").splitlines(), False)
+    router = rules_body((KIT / "skills" / "job-search-kit" / "SKILL.md").read_text(encoding="utf-8").splitlines(), True)
+    while claude and not claude[0].strip():
+        claude = claude[1:]
+    while router and not router[0].strip():
+        router = router[1:]
+    if claude == router:
+        return []
+    diff = [d for d in difflib.unified_diff(claude, router, "CLAUDE.md", "skills/job-search-kit/SKILL.md",
+                                            lineterm="", n=0) if d[:1] in "+-" and d[:3] not in ("---", "+++")]
+    return [f"the two copies of the rules differ: {d[:100]}" for d in diff[:10]]
 
 
 def check_skill_names() -> list[str]:
@@ -75,7 +111,7 @@ def check_skill_names() -> list[str]:
 
 
 def main() -> int:
-    problems = check_paths() + check_rules_copies() + check_skill_names()
+    problems = check_paths() + check_links() + check_rules_copies() + check_skill_names()
     for p in problems:
         print("ERROR  " + p)
     print("OK" if not problems else f"{len(problems)} problem(s)")

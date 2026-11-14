@@ -14,11 +14,16 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 4. **Connect the server:**
    - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp`
-   - For scheduled runs, a second, read-only entry: `claude mcp add tracker-ro -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp --read-only` (tracker-mcp 0.7 or later). It previews and refuses every write. In the desktop app, a scheduled task uses the same server, so its prompt keeps the dry-run rule.
+   - For Claude Code scheduled runs, a read-only server list of their own, `me/schedules/tracker-ro.mcp.json` (not a second `claude mcp add`, so everyday sessions see only `tracker`):
+     ```json
+     {"mcpServers": {"tracker-ro": {"command": "uvx", "args": ["tracker-mcp", "--read-only"],
+       "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
+     ```
+     The read-only server previews and refuses every write. `schedules/README.md` runs it with `--strict-mcp-config`, so the read-write server is not loaded in that run.
    - Claude desktop app: the `.mcpb` file from the latest release of tracker-mcp — double-click, pick the tracker.
    - Other clients: the agent setup guide, https://raw.githubusercontent.com/butyavk/tracker-mcp/main/docs/agent-setup.md
    - macOS with the tracker in Documents, Desktop or Downloads: see the macOS section of the server's README.
-5. **Check:** `check_tracker`, then `describe_tracker` — Claude says in two lines what it sees.
+5. **Check:** `check_tracker`, then `describe_tracker` — Claude says in two lines what it sees. If the tracker has no **Source** and **Gate** columns (section 5), propose adding them now (`add_column`, previewed): `/review` measures the search by them.
 6. Write the path to `me/profile.yaml` → `paths.tracker`.
 
 No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand; Claude gives the exact row changes as a table.
@@ -26,6 +31,7 @@ No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet b
 ## 2. Writing
 - Every write: read the row (`get_application` → version) → the change with `expected_version` as a dry run → show the preview → write after the candidate's yes (the server asks for this on every write). Batches (`add_applications`, `set_statuses`) always as a dry run first; write after the candidate's yes.
 - Only clear facts: a rejection email, an application confirmation, a reply from a person. A guess is a question in the summary, not a write.
+- A reply from the company (a screen booked, a next stage): the planned follow-up is moot — `reschedule_followup(on=<the next step's date>)`, or `on=null` to clear it, as its own previewed write right after the status.
 - A wrong write: `recent_writes`, then `undo_last_write` — each call steps back one write, newest first; it stops if the file was edited by hand after that write.
 - One writer at a time. The candidate may open and edit the file by hand, but not while a session is writing.
 

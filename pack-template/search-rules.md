@@ -43,7 +43,7 @@ Contacts, start date, work authorization, employment form and the standing form 
 ## Timing and follow-ups
 These are defaults — ask the candidate whether to keep them; unconfirmed ones stay marked «default».
 - (default) Apply within 24 hours of the package being ready; Monday to Thursday, Tuesday best; the company's morning (6–10 a.m. their time). Fresh posts first; age is not a filter (skill `job-search`, sections 3 and 7).
-- Follow-ups: the dates come from the tracker's config (`[followups]` in `<tracker>.tracker-mcp.toml`; defaults: +10 days, then +14, «No answer» 30 days later). Change them there, not here.
+- Follow-ups: the dates come from the tracker's config (`[followups]` in `<tracker>.tracker-mcp.toml`; defaults: follow-up 1 at +10 days, the next at +14). Silent applications are closed with `close_stale` (default 30 days, the no-response status from the config), proposed in `/review`. Change the dates there, not here.
 - (default) One application per company in 3–4 weeks.
 
 ## Sources and technique

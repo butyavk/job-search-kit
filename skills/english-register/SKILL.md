@@ -30,6 +30,9 @@ print(len(w), len(s), round(len(w)/len(s),1), round(100*len(lw)/len(w),1))
 
 Sentence boundaries are `.`, `!`, `?` only. A colon does not end a sentence. The same check with an idiom list is in `scripts/english_check.py` (`python3 <kit>/scripts/english_check.py file.txt`, or text on stdin). It also finds the pack and lists any phrase from `me/never-say.md` in the text (`--me <pack>` if it does not find it); that list must be empty.
 
+## A native English speaker
+When `languages.native` is English, the non-native targets above do not apply: contractions and idioms are their own voice. Keep the rules that hold for everyone: no AI words, nothing from `me/never-say.md`, no claim the pack does not hold, short plain sentences. `english_check.py` reads the profile and fails only on those.
+
 ## A vacancy in another language
 When the vacancy and the texts are in another language (often the candidate's native one), the register rules are not about a level: keep short sentences (12–15 words), plain words, no idioms or AI words, no claims the pack does not hold, and nothing from `me/never-say.md`. The script counts only English: check these texts by the same list, sentence by sentence.
 

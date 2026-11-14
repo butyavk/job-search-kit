@@ -63,7 +63,8 @@ CONTRACTION_RE = re.compile(
 DANGLING_EN = re.compile(
     r"^(Then|So|That|This|These|Those|It|Also|Later|And|But|Plus|After that|Since then|There|He|She|They|Here|Instead|Because)\b")
 NEED_L2 = True  # set from profile.yaml in main()
-DANGLING_RU = re.compile(r"^(Потом|Это |Так |Плюс|Тоже|Также|И |Но |Там |Он |Она |Они |Поэтому|После этого|Здесь|Вместо|Ещё |Дальше)")
+DANGLING_RU = re.compile(r"^(Потом|Это |Так |Плюс|Тоже|Также|И |Но |Там |Он |Она |Они |Поэтому|После этого|Здесь|Вместо|Ещё |Дальше"
+                         r"|Luego|Entonces|Después|Eso |Esto |También|Pero |Además)")   # Russian and Spanish openers
 SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
 WORD_RE = re.compile(r"[A-Za-z][A-Za-z'\-]*")
 
@@ -195,14 +196,17 @@ LANG_CODES = {"russian": "RU", "ukrainian": "UK", "belarusian": "BE", "german": 
               "french": "FR", "italian": "IT", "portuguese": "PT", "polish": "PL", "dutch": "NL",
               "turkish": "TR", "georgian": "KA", "armenian": "HY", "kazakh": "KK", "serbian": "SR",
               "chinese": "ZH", "japanese": "JA", "korean": "KO", "hebrew": "HE", "arabic": "AR", "hindi": "HI",
-              "русский": "RU", "украинский": "UK"}
+              "русский": "RU", "украинский": "UK", "español": "ES", "espanol": "ES", "deutsch": "DE",
+              "français": "FR", "francais": "FR", "português": "PT", "portugues": "PT", "italiano": "IT",
+              "polski": "PL", "türkçe": "TR", "nederlands": "NL"}
 
-NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,]\d{3})+(?![\d,.])|\d+(?:[.,]\d+)?)(\s?%)?")
+# thousands: 450 000 · 450,000 · 65.000 (not «3 100-person»: a group glued to a word is its own number)
+NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,.]\d{3})+(?![\d,.\w-])|\d+(?:[.,]\d+)?)(\s?%)?")
 
 
 def norm_number(raw: str, pct: str | None) -> str:
-    if re.fullmatch(r"\d{1,3}(?:[ \u00a0,]\d{3})+", raw):  # 450 000 · 450,000 — thousands
-        n = re.sub(r"[ \u00a0,]", "", raw)
+    if re.fullmatch(r"\d{1,3}(?:[ \u00a0,.]\d{3})+", raw):  # 450 000 · 450,000 · 65.000 — thousands
+        n = re.sub(r"[ \u00a0,.]", "", raw)
     else:
         n = raw.replace(",", ".")  # 2,1 — a decimal comma
     return n + ("%" if pct else "")
@@ -239,7 +243,7 @@ def register(en: str):
     sents = [s for s in SENT_SPLIT.split(en) if len(s.split()) > 1]
     words = WORD_RE.findall(en)
     longest = max((len(s.split()) for s in sents), default=0)
-    contractions = CONTRACTION_RE.findall(en)
+    contractions = CONTRACTION_RE.findall(en.replace("\u2019", "'"))
     return len(words), len(sents), longest, contractions
 
 
@@ -272,6 +276,9 @@ def main() -> int:
         cands += [a.kit.parent / "me", Path.cwd() / "me"]
         a.me = next((c for c in cands if c.is_dir()), cands[0])
 
+    if a.mark_synced and not a.me.is_dir():
+        print(f"no candidate pack at {a.me}: pass --me <path to me/>")
+        return 1
     if a.mark_synced:
         manifest = pack_hashes(a.me)
         (a.me / SYNC_FILE).write_text(json.dumps(manifest, indent=1, sort_keys=True), encoding="utf-8")
@@ -281,15 +288,19 @@ def main() -> int:
     if not a.me.is_dir():
         print(f"no candidate pack at {a.me}: pass --me <path to me/> or run /start")
         return 1
-    for name in ("recipes.md", "never-say.md", "facts.md"):
+    if not any((a.me / n).exists() for n in ("profile.yaml", "facts.md", "recipes.md", "blocks")):
+        print(f"{a.me} has none of the pack's files (profile.yaml, facts.md, recipes.md, blocks/): "
+              "pass --me <path to me/> or run /start")
+        return 1
+    for name in ("recipes.md", "never-say.md", "facts.md", "profile.yaml"):
         if not (a.me / name).exists():
             print(f"note: {name} is missing in the pack (copy it from kit/pack-template/)")
     global NEED_L2
     prof_path = a.me / "profile.yaml"
     if prof_path.exists():
         mn = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
-        if mn and mn.group(1).strip().strip("\"'").lower() in ("english", "en"):
-            NEED_L2 = False
+        if mn and re.match(r"^(english\b|en(?:[-_][a-z]{2})?$)", mn.group(1).strip().strip("\"'").lower()):
+            NEED_L2 = False   # English, English (UK), en, en-GB, en_US
     expect_code = ""
     if prof_path.exists():
         mn2 = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
@@ -297,6 +308,8 @@ def main() -> int:
         expect_code = LANG_CODES.get(lang, lang.upper() if re.fullmatch(r"[a-z]{2}", lang) else "")
     blocks, errors = parse_blocks(a.me / "blocks")
     questions = parse_questions(a.kit / "bank" / "questions.md")
+    if (a.me / "questions-extra.md").exists():   # the candidate's own questions, section Q
+        questions.update(parse_questions(a.me / "questions-extra.md"))
     recipes, empty = parse_recipes(a.me / "recipes.md")
     warnings: list[str] = []
 
@@ -306,7 +319,12 @@ def main() -> int:
         mt = re.search(r"^\s*track:\s*([A-Za-z]+)", prof.read_text(encoding="utf-8"), re.M)
         track = mt.group(1).lower() if mt else ""
 
+    fact_ids = set(re.findall(r"^\| (F-[\w-]+) \|", (a.me / "facts.md").read_text(encoding="utf-8"), re.M)) \
+        if (a.me / "facts.md").exists() else set()
     for qid, refs in recipes.items():
+        for r in refs:
+            if r.startswith("F-") and r not in fact_ids:
+                errors.append(f"recipes.md: {qid} points to fact {r}, which is not in facts.md")
         if qid not in questions:
             errors.append(f"recipes.md: {qid} is not in the question bank")
         for r in refs:
@@ -361,6 +379,10 @@ def main() -> int:
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
     known = fact_numbers(a.me / "facts.md")
+    if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
+        mm = re.search(r"^money:\n((?:[ \t]+.*\n?)*)", prof_path.read_text(encoding="utf-8"), re.M)
+        if mm:
+            known |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(mm.group(1))}
     if (a.me / "facts.md").exists():
         for b in blocks.values():
             if b["draft"]:
@@ -371,13 +393,18 @@ def main() -> int:
 
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8")
-        for rule in re.findall(r"^  - action:.*?(?=^  - |^\S|\Z)", ptxt, re.M | re.S):
+        for rule in re.findall(r"^[ \t]*- action:.*?(?=^[ \t]*- |^\S|\Z)", ptxt, re.M | re.S):
             if not re.search(r"^\s+since:\s*\d{4}-\d{2}-\d{2}", rule, re.M) or not re.search(r"^\s+(?:quote|said):\s*\S", rule, re.M):
                 errors.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
         f = a.me / name
         if f.exists():
-            left = len(re.findall(r"<[^<>\n]{1,80}>|\bTODO\b", "\n".join(l for l in f.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith("#"))))
+            lines = f.read_text(encoding="utf-8").splitlines()
+            if name.endswith(".yaml"):   # YAML comments are instructions, not values
+                lines = [l for l in lines if not l.lstrip().startswith("#")]
+            # `<tracker>.toml` and «call recording <date>» are examples in the template's prose
+            body = re.sub(r"`[^`\n]*`|«[^»\n]*»", "", "\n".join(lines))
+            left = len(re.findall(r"<[^<>\n]{1,80}>|\bTODO\b", body))
             if left:
                 warnings.append(f"{name}: {left} placeholder(s) left to fill")
 
@@ -443,6 +470,7 @@ def main() -> int:
         print("WARN   " + w)
     if a.ready:
         not_ready = [w for w in warnings if w.startswith(("profile.yaml:", "facts.md:")) and "placeholder" in w]
+        not_ready += [f"{n} is missing" for n in ("profile.yaml", "facts.md") if not (a.me / n).exists()]
         if "I01" not in covered:
             not_ready.append("the pitch I01 has no confirmed recipe")
         for r in not_ready:

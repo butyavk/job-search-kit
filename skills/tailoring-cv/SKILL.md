@@ -61,7 +61,7 @@ Without the candidate's explicit confirmation never add or alter: employers, tit
 - Register and the check script — skill `english-register`.
 
 ## Building the PDF
-Compile with the real engine of the master (LaTeX, or whatever the master uses); do not rebuild the CV in another layout system. Letters can be HTML printed with headless Chromium; embed fonts as TrueType so ATS text extraction works (`pdffonts` shows `CID TrueType`).
+Compile with the real engine of the master (LaTeX, or whatever the master uses); do not rebuild the CV in another layout system. A master in Markdown or plain text: build HTML from it with one fixed stylesheet kept next to the master and print it with headless Chromium; the same stylesheet every time. Letters can be HTML printed with headless Chromium; embed fonts as TrueType so ATS text extraction works (`pdffonts` shows `CID TrueType`).
 
 ## File naming
 Build files per company (`Name_Surname__CV (Company).pdf`); the copy attached to a form gets a neutral name and neutral PDF metadata (skill `job-application-forms`). Identify a PDF the candidate sends by its positioning line, not its file name.
