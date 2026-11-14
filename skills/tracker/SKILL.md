@@ -9,7 +9,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 
 ## 1. Setup (in `/start`)
 0. **`uv` is needed** (`uvx`): `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, or `brew install uv` — the candidate runs it.
-1. Version: tracker-mcp 0.8 or later (`uvx tracker-mcp --version`; `uvx --refresh tracker-mcp` updates it).
+1. Version: tracker-mcp 0.8.3 or later (`uvx tracker-mcp --version`; `uvx --refresh tracker-mcp` updates it).
 2. **Existing tracker?** Ask where it is. `uvx tracker-mcp init <file or Google Sheets URL>` writes a config that maps its columns and statuses; show the mapping and fix it with the candidate.
 3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` (other languages: `en`, then rename the statuses in its config) creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 4. **Connect the server:**
@@ -17,7 +17,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
    - For Claude Code scheduled runs, a read-only server list of their own, `me/schedules/tracker-ro.mcp.json` (not a second `claude mcp add`, so everyday sessions see only `tracker`):
      ```json
      {"mcpServers": {"tracker-ro": {"command": "<absolute path to uvx: run `which uvx`>",
-       "args": ["--from", "tracker-mcp>=0.8,<0.9", "tracker-mcp", "--read-only"],
+       "args": ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"],
        "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
      ```
      The read-only server previews and refuses every write. `schedules/README.md` runs it with `--strict-mcp-config`, so the read-write server is not loaded in that run.
@@ -27,7 +27,13 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 5. **Check:** `check_tracker`, then `describe_tracker` — Claude says in two lines what it sees. If the tracker has no **Source** and **Gate** columns (section 5), propose adding them now (`add_column`, previewed): `/review` measures the search by them.
 6. Write the path to `me/profile.yaml` → `paths.tracker`.
 
-No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand, with the columns of `templates/tracker.csv` (the same as `tracker-mcp new` makes, plus Gate); Claude gives the exact row changes as a table. Later, the desktop app's `.mcpb` can point at that same file (a .csv, or saved from Excel as .xlsx) — no terminal needed.
+No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand, with the columns of `templates/tracker.csv` (the same as `tracker-mcp new` makes, plus Gate); Claude gives the exact row changes as a table. The rules the server would apply, done by hand:
+- Status, one of: Not applied, Applied, Screening, Interview, Offer, Rejected, Withdrawn, No response, Closed (Furthest stage: Screening, Interview or Offer).
+- Follow-up date: Applied on + 10 days; after a follow-up is sent, + 14 days from the sending; a reply from the company clears it.
+- No response: 30 days after the last touch with no follow-up due.
+Where claude.ai can run code, Claude can also `pip install tracker-mcp` in its sandbox and make the file there (`tracker-mcp new job-tracker.xlsx`) for the candidate to download. Later, the desktop app's `.mcpb` can point at that same file (a .csv, or saved from Excel as .xlsx) — no terminal needed.
+
+**Processes already under way** (onboarding step 1): one `add_applications` batch with a row per process (company, role, the date applied if known, status Screening or Interview, Next step with the next date), as a dry run; after the yes, `mark_applied(applied_on=<the real date>, followup_on=<the next contact date, or null when a stage is booked>)` for rows whose date is known, and `set_statuses` for the stages. A process with an interview booked gets no follow-up date: the interview is the next touch.
 
 ## 2. Writing
 - Every write: read the row (`get_application` → version) → the change with `expected_version` as a dry run → show the preview → write after the candidate's yes (the server asks for this on every write). Batches (`add_applications`, `set_statuses`) always as a dry run first; write after the candidate's yes.

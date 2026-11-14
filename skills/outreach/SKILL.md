@@ -36,7 +36,7 @@ For each person: name, title, since when, region, degree of connection, why they
 - **No questions** in notes and letters: not about money, currency, location, visa or remote. State the fact: «I am based in <city> (UTC+N) and open to relocation». Questions about location twice led to a fast rejection.
 - One or two numbers, only if they answer a requirement. A gap only once, only on a must-have.
 - Do not repeat the first sentence word for word to the same person in a follow-up.
-- Every text goes through `english-register` (the script, with its numbers in the reply).
+- Every text goes through `english-register` (the script, with its numbers in the reply). A text in another language (a German or Spanish note) follows that language's conventions: the formal address (Sie, usted) to a stranger, the salutation and closing the country expects («Sehr geehrte Frau …», «Mit freundlichen Grüßen»), gender-fair job titles as the posting writes them (Entwickler:in); the script then checks only never-say and the sentence length.
 
 ## 5. Follow-ups
 The rule lives in the tracker's config (`[followups]`; default: follow-up 1 at application + 10 days, weekends → Monday; follow-up 2 at +14 more); silent applications are closed with `close_stale` (default 30 days) in `/review`. `followups_due` lists what is due. A follow-up names the role and the date of applying, adds one new relevant fact if there is one, and asks for nothing.

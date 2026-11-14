@@ -43,7 +43,7 @@ def check_paths() -> list[str]:
         rel = f.relative_to(KIT).as_posix()
         if rel in SKIP_FILES:
             continue
-        for raw in TICK.findall(f.read_text(encoding="utf-8")):
+        for raw in TICK.findall(f.read_text(encoding="utf-8-sig")):
             p = re.sub(r"^(\$\{CLAUDE_PLUGIN_ROOT(:-kit)?\}|<kit>)/", "", raw)
             p = re.sub(r"^kit/", "", p).split("#")[0].rstrip(".,;:")
             if any(c in p for c in "<*…{") or p.endswith("/"):
@@ -66,7 +66,7 @@ def check_links() -> list[str]:
         rel = f.relative_to(KIT).as_posix()
         if rel in SKIP_FILES:
             continue
-        for target in LINK.findall(f.read_text(encoding="utf-8")):
+        for target in LINK.findall(f.read_text(encoding="utf-8-sig")):
             if target.startswith(("http://", "https://", "mailto:", "#", "/", "computer:")):
                 continue
             path = target.split("#")[0]
@@ -77,6 +77,8 @@ def check_links() -> list[str]:
 
 def rules_body(lines: list[str], frontmatter: bool) -> list[str]:
     if frontmatter:   # skip the --- … --- block
+        if not lines or lines[0] != "---" or "---" not in lines[1:]:
+            return ["(the front matter is not closed with ---)"]
         lines = lines[lines.index("---", 1) + 1:]
     else:             # skip the title
         lines = lines[1:]
@@ -87,8 +89,8 @@ def rules_body(lines: list[str], frontmatter: bool) -> list[str]:
 
 def check_rules_copies() -> list[str]:
     import difflib
-    claude = rules_body((KIT / "CLAUDE.md").read_text(encoding="utf-8").splitlines(), False)
-    router = rules_body((KIT / "skills" / "job-search-kit" / "SKILL.md").read_text(encoding="utf-8").splitlines(), True)
+    claude = rules_body((KIT / "CLAUDE.md").read_text(encoding="utf-8-sig").splitlines(), False)
+    router = rules_body((KIT / "skills" / "job-search-kit" / "SKILL.md").read_text(encoding="utf-8-sig").splitlines(), True)
     while claude and not claude[0].strip():
         claude = claude[1:]
     while router and not router[0].strip():
@@ -105,7 +107,10 @@ def check_skill_names() -> list[str]:
     problems = []
     pat = re.compile(r"skills? `([a-z0-9-]+)`|`([a-z0-9-]+)` skill")
     for f in md_files():
-        for m in pat.finditer(f.read_text(encoding="utf-8")):
+        text = f.read_text(encoding="utf-8-sig")
+        if f.name == "SKILL.md" and (not text.startswith("---\n") or "\n---\n" not in text[4:]):
+            problems.append(f"{f.relative_to(KIT).as_posix()}: the front matter is not closed with ---")
+        for m in pat.finditer(text):
             name = m.group(1) or m.group(2)
             if name not in skills:
                 problems.append(f"{f.relative_to(KIT).as_posix()}: skill `{name}` does not exist")

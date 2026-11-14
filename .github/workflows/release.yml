@@ -39,7 +39,8 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/flat"
           for f in CLAUDE.md commands/*.md templates/*.md templates/*.csv schedules/*.md bank/questions.md \
-                   examples/*.md docs/how-it-works.md scripts/*.py $(find pack-template -type f); do
+                   examples/*.md docs/how-it-works.md scripts/*.py $(find pack-template -type f) \
+                   $(find skills -type f -name "*.md"); do
             cp "$f" "$RUNNER_TEMP/flat/$(echo "$f" | sed 's|/|__|g')"
           done
           (cd "$RUNNER_TEMP/flat" && zip -q "$RUNNER_TEMP/out/job-search-kit-project-files-${{ steps.v.outputs.version }}.zip" *)

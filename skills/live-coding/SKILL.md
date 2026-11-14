@@ -55,4 +55,4 @@ In Python the same as a docstring or comments at the top. Edge cases («no data 
 - The candidate picks or Claude assigns a task on Live Coding Map (by the stage's language and domain), and starts the site's timer.
 - Claude is a silent interviewer: answers only the questions asked, with plausible answers for the task; gives a hint only when asked; says the time at minutes 10, 18 and 22.
 - At the end the candidate pastes the code and the site's check result.
-- The debrief by the protocol, with timing: when coding started, which question was missing, which comment line is not in the code, which edge case failed, what was said about production. Repeating errors go to the prep document's «My errors»: as it was → as it should be → the English phrase.
+- The debrief by the protocol, with timing: when coding started, which question was missing, which comment line is not in the code, which edge case failed, what was said about production. Repeating errors go to the prep document's «My errors»: as it was → as it should be → the phrase in the interview language.

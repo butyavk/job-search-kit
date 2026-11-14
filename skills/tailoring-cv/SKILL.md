@@ -30,7 +30,7 @@ Everything else — facts, titles, dates, contacts, numbers — stays canonical.
 - No words lifted from the vacancy; no specific technology or vendor; never claim what the letter disclaims; do not restate the vacancy title.
 
 ### Length
-Two pages for a senior candidate; the second page at least half full. Recount lines after any structural change.
+Two pages for a senior candidate; the second page at least half full — filled from the master's real reserve, never padded (no new claims, no repeated bullets, no wider spacing). Short of material, one full page is better. Recount lines after any structural change.
 
 ### Level
 A Head / Director CV does not carry squad-level lines (one integration, a feature counter). Exception: postings that ask for hands-on work (`hands-on`, `player-coach`, `write / review code`) — then include hands-on lines from the reserve.
@@ -69,7 +69,7 @@ Build files per company (`Name_Surname__CV (Company).pdf`); the copy attached to
 ## Verification before «ready»
 - diff the tailored source against the master and account for every factual change;
 - `python3 <kit>/scripts/check_pack.py --cv <the tailored source or PDF>`: every number in it is in `me/facts.md`;
-- compile; `pdfinfo` (page count), `pdffonts`, `pdftotext` (every rendered bullet exists verbatim in the master; no leftover markup);
+- compile; `pdfinfo` (page count), `pdffonts` (no Type 3 fonts: some ATS cannot read their text; in LaTeX use `\usepackage[T1]{fontenc}` with lmodern or a TrueType font), `pdftotext` (every rendered bullet exists verbatim in the master; no leftover markup);
 - the positioning line renders on one line and contains no banned words or vacancy phrases;
 - coverage table at ≥80% of true must-have terms;
 - render pages to images and look: clipping, overlap, broken glyphs, orphan headings, empty space;

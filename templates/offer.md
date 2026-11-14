@@ -6,6 +6,8 @@ Received: <date>, from <who>, by <channel>. Answer due: <date>.
 | Part | Offer | My floor / target | Note |
 | --- | --- | --- | --- |
 | Base (currency, gross, per month or year; payments a year where it varies, e.g. 12 or 14) | | floor from `me/profile.yaml`, never said aloud | |
+| Net per month after tax and social contributions (the employer's or a calculator's figure, with the source) | | | gross and net are not compared with each other |
+| Tax regime that applies (a special expat or contractor regime, its conditions and how long it lasts) | | | |
 | Contract form and country (employee, contractor, EOR) | | | taxes and costs for this form |
 | Bonus and its conditions | | | |
 | Equity: type (options, RSUs, growth shares, EMI in the UK), number, vesting, cliff, strike, valuation | | | |
@@ -13,6 +15,7 @@ Received: <date>, from <who>, by <channel>. Answer due: <date>.
 | Start date, probation, notice both ways (and garden leave) | | | |
 | Conditions: references, background or right-to-work checks; is the offer conditional until they clear | | | withdraw from other processes only after they clear |
 | Remote, office, relocation support | | | |
+| Work permit or visa: who applies, who pays, how long it takes, whether the start waits for it | | | |
 | Review date and what it depends on | | | |
 | Non-compete and other restrictive covenants, IP, confidentiality, governing law | | | flag anything that limits future work |
 | For a contractor: the tax status of the role (IR35 in the UK and similar rules elsewhere), who carries it | | | |

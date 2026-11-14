@@ -7,6 +7,16 @@ Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are o
 - EN: I am based in <city>, UTC <offset>. <remote / relocation sentence>
 - XX: <…>
 
+#### LOG-2 · Work authorization
+`O` · work authorization · ~5 s · draft
+- EN: I have the right to work in <country>. <For other countries: I would need sponsorship / I work as a contractor from <country>.>
+- XX: <…>
+
+#### LOG-3 · Contract form
+`O` · contract form · ~5 s · draft
+- EN: <I am open to employment or a contractor agreement / I work as a contractor through my own company>.
+- XX: <…>
+
 #### LOG-4 · When I can start
 `O` · start date · ~2 s · draft
 - EN: I can start <immediately / in N weeks>.

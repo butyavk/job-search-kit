@@ -35,6 +35,7 @@ Block IDs for each story: `…-S1` (whole story), details `…-C1`, `…-A1`, `�
 Views, plans and frames the stage asks for — a 90-day plan, metrics, «how I see the role». Learned by their numbers: «three steps», «four hypotheses», one word each.
 
 ## Drill plan
+- [ ] Three days or less: day 1 — the sheet, then two tellings aloud; day 2 — a drill and one full mock at the interview hour; the interview day — only the map from memory. Otherwise:
 - [ ] Day 1 — read each anchor once; tell each story aloud twice with the sheet closed; the pitch three times on a timer.
 - [ ] Each next day — `/mock drill`, 15–25 minutes; in the evening only the ✗.
 - [ ] Two days before — a full mock at the hour of the interview; then freeze.

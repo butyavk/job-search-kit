@@ -13,6 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_pack import never_claims, never_say_phrases  # noqa: E402
 
 args = sys.argv[1:]
+if args and args[0] in ("-h", "--help"):
+    print(__doc__.strip())
+    sys.exit(0)
 me = None
 if "--me" in args:
     i = args.index("--me")
@@ -31,7 +34,7 @@ IDIOMS = ["earn their keep", "connective tissue", "move the needle", "low-hangin
           "at the end of the day", "double down", "north star", "have the bandwidth", "no bandwidth",
           "in the weeds", "boil the ocean", "tip of the iceberg", "hit the ground running", "wear many hats",
           "boil down to"]   # «That said» is matched only where it opens a sentence (OPENERS)
-OPENERS = [r"(?:^|[.!?]\s+)That said\b"]   # «That said» opening a sentence, with or without a comma
+OPENERS = [r"(?:^|[.!?]\s+)That said\b(?!\s+(?:nothing|something|it|that|so|no|yes|a|the)\b)"]   # «That said» opening a sentence, with or without a comma
 AI_WORDS = ["delve", "robust", "seamless", "holistic", "synergy",
             "testament to", "underscores", "pivotal", "landscape", "realm", "crucial", "furthermore",
             "moreover", "cornerstone", "spearhead", "leverage", "passionate", "proven track record", "genuinely"]
@@ -63,22 +66,25 @@ def idiom_re(i):  # every word matches its forms: «moving the needle», «deep 
 EN_COMMON = {"the", "and", "of", "to", "a", "in", "is", "i", "we", "it", "that", "for", "with", "on", "was", "my"}
 OTHER_COMMON = {"los", "las", "que", "por", "para", "con", "una", "del", "der", "das", "und", "ist", "nicht", "mit",
                 "les", "des", "est", "une", "pour", "dans", "não", "che", "het", "een", "och", "att", "się", "jest",
-                "el", "y", "il", "di", "et"}   # no English homographs (do, die, en, os, la, da)
+                "el", "y", "il", "di", "et", "für", "auf", "von", "bei", "zu", "im", "ich", "ein", "eine", "den",
+                "dem", "sich", "wir", "auch", "habe", "wurde", "über"}   # no English homographs (do, die, en, os, la, da)
 letters = re.findall(r"[^\W\d_]", t)
 non_latin = sum(1 for ch in letters if ord(ch) > 0x024F) / max(len(letters), 1)
 en_hits = sum(1 for x in w if x.lower() in EN_COMMON)
 other_hits = sum(1 for x in re.findall(r"[^\W\d_]+", t) if x.lower() in OTHER_COMMON)
 # CV bullets have few function words, so «English» means: Latin letters and no more of another
 # language's common words than of English ones
-is_english = bool(w) and non_latin < 0.2 and other_hits <= en_hits
+umlaut_words = len(re.findall(r"\b\w*[äöüßÄÖÜ]\w*\b", t))   # German, even in short CV bullets
+is_english = bool(w) and non_latin < 0.2 and other_hits <= en_hits and umlaut_words < max(2, len(w) // 40)
 found = [i.rstrip(",") for i in IDIOMS if re.search(idiom_re(i), t, re.I)] if is_english else []
 found += ["that said"] if is_english and any(re.search(o, t) for o in OPENERS) else []
 ai = [i for i in AI_WORDS if re.search(idiom_re(i), t, re.I)] if is_english else []
 native_en = False   # a native English speaker: contractions and idioms are their own register
 if me is not None and (me / "profile.yaml").exists():
-    mn = re.search(r"^\s*native:\s*([^#\n]+)", (me / "profile.yaml").read_text(encoding="utf-8"), re.M)
+    mn = re.search(r"^\s*native:[ \t]*([^#\n]*)", (me / "profile.yaml").read_text(encoding="utf-8-sig"), re.M)
     nv = mn.group(1).strip().strip("\"'").lower() if mn else ""
-    native_en = bool(nv and not nv.startswith("<") and re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", nv))
+    native_en = bool(nv and not nv.startswith("<") and re.match(
+        r"^(?:(?:british|american|australian|canadian|irish|us|uk)\s+)?english\b(?!\s*(?:,|and|\+|/))|^en(?:[-_][a-z]{2})?$", nv))
 if not t.strip():
     sys.exit("no text")
 off = []
@@ -95,12 +101,15 @@ if w and s and is_english:
     print(f"longest sentence: {max(len(x.split()) for x in s)} words (target under ~30)")
 else:
     print("register numbers: skipped (not English text); never-say still checked")
+    sents = [x for x in re.split(r"(?<=[.!?])\s+", t.strip()) if len(x.split()) > 1]
+    if sents:   # the length is still worth seeing in any language
+        print(f"longest sentence: {max(len(x.split()) for x in sents)} words (under ~30 is easier to say)")
 print(f"contractions: {contr or 'none'}" + (" (native English: fine)" if native_en and contr else ""))
 print(f"idioms: {found or 'none'}" + (" (native English: fine)" if native_en and found else ""))
 print(f"AI words: {ai or 'none'}")
 if me is not None:
     def loose(p):  # any run of spaces or line breaks between the words
-        return r"(?<!\w)" + r"\s+".join(re.escape(w) for w in p.split()) + r"(?!\w)"
+        return r"(?<!\w)" + r"\s+".join(re.escape(w).replace("'", "['’]") for w in p.split()) + r"(?!\w)"
     hits = [p for p, _ in never_claims(me / "never-say.md") if re.search(loose(p), t, re.I)]
     fillers = [p for p in never_say_phrases(me / "never-say.md") if re.search(loose(p), t, re.I)]
     print(f"never-claim ({me}): {hits or 'none'}")

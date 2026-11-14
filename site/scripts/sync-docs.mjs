@@ -23,7 +23,9 @@ for (const p of pages) {
     .replace(/^A Russian translation for people: [^\n]*\n+/m, '')
     .replace(/<a id="[^"]*"><\/a>\n/g, '')
     .replace(/\]\((?!https?:|#)([^)]+)\)/g, (_, link) => `](${gh}${link.replace(/^\.\.\//, '')})`);
-  const front = `---\ntitle: ${JSON.stringify(p.title)}\ndescription: ${JSON.stringify(p.description)}\n---\n\n`;
+  // a synced page is edited at its source, not in the site's copy
+  const edit = `https://github.com/butyavk/job-search-kit/edit/main/${p.from}`;
+  const front = `---\ntitle: ${JSON.stringify(p.title)}\ndescription: ${JSON.stringify(p.description)}\neditUrl: ${JSON.stringify(edit)}\n---\n\n`;
   mkdirSync(dirname(resolve(out, p.to)), { recursive: true });
   writeFileSync(resolve(out, p.to), front + text);
 }

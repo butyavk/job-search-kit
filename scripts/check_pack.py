@@ -64,7 +64,8 @@ DANGLING_EN = re.compile(
     r"^(Then|So|That|This|These|Those|It|Also|Later|And|But|Plus|After that|Since then|There|He|She|They|Here|Instead|Because)\b")
 NEED_L2 = True  # set from profile.yaml in main()
 DANGLING_RU = re.compile(r"^(Потом|Это |Так |Плюс|Тоже|Также|И |Но |Там |Он |Она |Они |Поэтому|После этого|Здесь|Вместо|Ещё |Дальше"
-                         r"|Luego|Entonces|Después|Eso |Esto |También|Pero |Además)")   # Russian and Spanish openers
+                         r"|Luego|Entonces|Después|Eso |Esto |También|Pero |Además"
+                         r"|Dann |Danach|Das |Dies |Aber |Und |Auch |Außerdem|Deshalb|Daher )")   # RU, ES, DE openers
 SENT_SPLIT = re.compile(r"(?<=[.!?])\s+")
 WORD_RE = re.compile(r"[A-Za-z][A-Za-z'\-]*")
 
@@ -74,7 +75,7 @@ def parse_blocks(blocks_dir: Path):
     errors: list[str] = []
     for path in sorted(blocks_dir.glob("*.md")):
         current = None
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for n, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
             m = BLOCK_RE.match(line)
             if m:
                 bid = m.group(1)
@@ -127,7 +128,7 @@ AUDIENCE: dict[str, str] = {}
 
 def parse_questions(bank: Path):
     questions: dict[str, str] = {}
-    for line in bank.read_text(encoding="utf-8").splitlines():
+    for line in bank.read_text(encoding="utf-8-sig").splitlines():
         m = QROW_RE.match(line)
         if m:
             questions[m.group(1)] = m.group(2) or ""
@@ -143,7 +144,7 @@ def parse_recipes(recipes: Path):
     empty: list[str] = []
     if not recipes.exists():
         return rows, empty
-    for line in recipes.read_text(encoding="utf-8").splitlines():
+    for line in recipes.read_text(encoding="utf-8-sig").splitlines():
         m = re.match(r"^\| ([A-Z]\d{2}) \|(.*)$", line)
         if not m:
             continue
@@ -162,7 +163,7 @@ def parse_recipes(recipes: Path):
 def never_say_phrases(path: Path) -> list[str]:
     if not path.exists():
         return []
-    text = path.read_text(encoding="utf-8")
+    text = path.read_text(encoding="utf-8-sig")
     m = re.search(r"## (?:Фразы-паразиты|Filler words)[^\n]*\n+(.+?)(\n## |\Z)", text, re.S)
     if not m:
         return []
@@ -180,7 +181,7 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     named in the row (those blocks are where the claim is handled, so skip them)."""
     if not path.exists():
         return []
-    m = re.search(r"## (?:Утверждения|Never claim)[^\n]*\n(.+?)(\n## |\Z)", path.read_text(encoding="utf-8"), re.S)
+    m = re.search(r"## (?:Утверждения|Never claim)[^\n]*\n(.+?)(\n## |\Z)", path.read_text(encoding="utf-8-sig"), re.S)
     if not m:
         return []
     out = []
@@ -189,9 +190,12 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
             continue
         cells = [c.strip() for c in line.strip("|").split("|")]
         allowed = set(REF_RE.findall(line))
-        for part in re.split(r"[;/]|, ", cells[0]):
+        quoted = re.findall(r"«([^»]+)»|\"([^\"]+)\"", cells[0])   # «a» or «b»: the quoted parts
+        parts = [x or y for x, y in quoted] or re.split(r"[;/]|, | or | или ", cells[0])
+        for part in parts:
             part = part.strip().strip("«»\"' ")
-            if len(part) < 4 or re.search(r"[А-Яа-яЁё<]", part):
+            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part)   # CTO, VP, PhD
+            if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
                 continue  # Russian descriptions and placeholders need a human
             out.append((part, allowed))
     return out
@@ -201,16 +205,20 @@ LANG_CODES = {"russian": "RU", "ukrainian": "UK", "belarusian": "BE", "german": 
               "french": "FR", "italian": "IT", "portuguese": "PT", "polish": "PL", "dutch": "NL",
               "turkish": "TR", "georgian": "KA", "armenian": "HY", "kazakh": "KK", "serbian": "SR",
               "chinese": "ZH", "japanese": "JA", "korean": "KO", "hebrew": "HE", "arabic": "AR", "hindi": "HI",
+              "bengali": "BN", "tamil": "TA", "telugu": "TE", "marathi": "MR", "gujarati": "GU", "kannada": "KN",
+              "malayalam": "ML", "punjabi": "PA", "urdu": "UR",
               "русский": "RU", "украинский": "UK", "español": "ES", "espanol": "ES", "deutsch": "DE",
               "français": "FR", "francais": "FR", "português": "PT", "portugues": "PT", "italiano": "IT",
               "polski": "PL", "türkçe": "TR", "nederlands": "NL"}
 
 # thousands: 450 000 · 450,000 · 65.000 (not «3 100-person»: a group glued to a word is its own number)
-NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,.]\d{3})+(?![\d\w-]|[,.]\d)|\d+(?:[.,]\d+)?)(\s?%)?")
+NUM_RE = re.compile(r"(?<![\w.,])(\d{1,2}(?:,\d{2})+,\d{3}(?![\d\w-]|[,.]\d)|\d{1,3}(?:[ \u00a0,.]\d{3})+(?![\d\w-]|[,.]\d)|\d+(?:[.,]\d+)?)(\s?%)?")
 
 
 def norm_number(raw: str, pct: str | None) -> str:
-    if re.fullmatch(r"\d{1,3}(?:[ \u00a0,.]\d{3})+", raw):  # 450 000 · 450,000 · 65.000 — thousands
+    if re.fullmatch(r"\d{1,2}(?:,\d{2})+,\d{3}", raw):   # 48,00,000 — Indian grouping
+        n = raw.replace(",", "")
+    elif re.fullmatch(r"\d{1,3}(?:[ \u00a0,.]\d{3})+", raw):  # 450 000 · 450,000 · 65.000 — thousands
         n = re.sub(r"[ \u00a0,.]", "", raw)
     else:
         n = raw.replace(",", ".")  # 2,1 — a decimal comma
@@ -222,12 +230,13 @@ def fact_numbers(path: Path) -> set[str]:
     if not path.exists():
         return set()
     out = set()
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         if not line.startswith("| F-"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         for cell in cells[1:-2] if len(cells) > 3 else cells[1:]:
             out |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(cell)}
+            out |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, cell))}
             for m in SUFFIX_RE.finditer(cell):   # €1M, 10K, 2 млн → the whole number too
                 v = float(m.group(1).replace(",", ".")) * SUFFIX[m.group(2)]
                 out.add(str(int(v)) if v == int(v) else str(v))
@@ -241,14 +250,18 @@ NOT_AMOUNTS = re.compile(
     r"|\+\d[\d\s().-]{6,}\d"                               # phone numbers
     r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
     r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
-    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform|Rust|TypeScript|Spark|Windows|Java|iOS|Android|"
+    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform|Rust|TypeScript|Spark|Windows|iOS|Android|"
     r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
     r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI)\s?/?\d[\d.]*"  # versions and standards
     r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
-    r"|\b\d+[A-Za-z][\w-]*")                                  # names glued to digits: 37signals, 2FA, 3rd
-SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn)\b(?!-)")
+    r"|\b\d+(?:st|nd|rd|th)\b|\b\d+(?:signals|FA|D)\b"         # ordinals and names: 3rd, 37signals, 2FA, 3D
+    r"|\bUTC[+-]\d{1,2}(?::\d{2})?|\b\d{1,2}:\d{2}\b")         # time zones and clock times: UTC+5:30, 10:30
+SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn|Mio|Mrd|Tsd|Millionen|Milliarden|"
+                       r"lakh|lakhs|crore|crores|LPA|млн|тыс|млрд)\b\.?(?!-)")
 SCALE_OF = {"million": 1_000_000, "billion": 1_000_000_000, "thousand": 1_000, "M": 1_000_000, "K": 1_000,
-            "k": 1_000, "bn": 1_000_000_000}
+            "k": 1_000, "bn": 1_000_000_000, "Mio": 1_000_000, "Millionen": 1_000_000, "Mrd": 1_000_000_000,
+            "Milliarden": 1_000_000_000, "Tsd": 1_000, "lakh": 100_000, "lakhs": 100_000, "LPA": 100_000,
+            "crore": 10_000_000, "crores": 10_000_000, "млн": 1_000_000, "тыс": 1_000, "млрд": 1_000_000_000}
 
 
 def _scaled(m: re.Match) -> str:
@@ -340,28 +353,43 @@ def read_cv(path: Path) -> str | None:
         import subprocess
         if not shutil.which("pdftotext"):
             return None
-        return subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True).stdout
+        out = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True,
+                             errors="replace").stdout
+        return out if out.strip() else None   # a scanned PDF has no text layer
     if path.suffix.lower() == ".docx":
+        import html
         import zipfile
         try:
-            xml = zipfile.ZipFile(path).read("word/document.xml").decode("utf-8", "replace")
-        except (zipfile.BadZipFile, KeyError):
+            z = zipfile.ZipFile(path)
+            parts = ["word/document.xml"] + sorted(n for n in z.namelist()
+                                                   if re.fullmatch(r"word/(header|footer)\d*\.xml", n))
+            xml = "\n".join(z.read(n).decode("utf-8", "replace") for n in parts)
+        except (zipfile.BadZipFile, KeyError, OSError):
             return None
-        return re.sub(r"<[^>]+>", "", xml.replace("</w:p>", "\n").replace("<w:tab/>", " "))
+        xml = re.sub(r"<w:(?:br|cr)\b[^>]*/>", "\n", xml.replace("</w:p>", "\n").replace("<w:tab/>", " "))
+        return html.unescape(re.sub(r"<[^>]+>", "", xml))
     if path.suffix.lower() not in (".tex", ".md", ".txt", ".html", ".htm"):
         return None
-    text = path.read_text(encoding="utf-8", errors="replace")
+    raw = path.read_bytes()
+    if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):   # saved as UTF-16 by some editors
+        text = raw.decode("utf-16", "replace")
+    else:
+        text = raw.decode("utf-8-sig", "replace")
     if path.suffix.lower() == ".tex":   # the document body only, without comments, layout sizes and commands
         if "\\begin{document}" in text:
             text = text.split("\\begin{document}", 1)[1]
         text = re.sub(r"(?<!\\)%.*", "", text)
         text = re.sub(r"\d*\.?\d+\s*(in|pt|cm|mm|em|ex|bp)\b|\d*\.?\d+\s*\\(text|line|column)width", " ", text)
-        text = re.sub(r"\\[a-zA-Z]+\*?(?:\{[\d.,\s]*\}|\[[^\]]*\])+", " ", text)   # \fontsize{10}{12}, \definecolor[...]
+        # \fontsize{10}{12}, \definecolor[...]; \textbf{45} and other text commands keep their number
+        text = re.sub(r"\\(?!(?:text(?:bf|it|sc|tt|sf|rm|up|sl)|emph|underline|mbox|hl|strong)\b)[a-zA-Z]+\*?"
+                      r"(?:\{[\d.,\s]*\}|\[[^\]]*\])+", " ", text)
         text = re.sub(r"\b\d{1,3},\d{1,3},\d{1,3}\b", " ", text)                 # colours like 0,102,204
         text = text.replace("\\%", "%")
         text = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?", " ", text)
     elif path.suffix.lower() in (".html", ".htm"):
-        text = re.sub(r"<[^>]+>", " ", text)
+        import html
+        text = re.sub(r"(?is)<(style|script)\b.*?</\1\s*>|<!--.*?-->", " ", text)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", text))
     return text
 
 
@@ -400,14 +428,84 @@ def autonomy_errors(ptxt: str) -> list[str]:
         if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or not said_text \
                 or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
-        act = action.group(1).split("#")[0].strip().strip("\"'")
-        what = act + " " + " ".join(re.findall(r"(?:^|\n)\s*(?:when|checks):\s*([^\n]+)", "\n" + e))
-        if not re.fullmatch(r"send_followup|send_note|other \(.+\)", act):
-            out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup, send_note or "
-                       "other (what, in words); nothing else can become a rule")
+        import unicodedata
+        def plain(t: str) -> str:   # look-alike letters and invisible characters do not hide a word
+            t = unicodedata.normalize("NFKC", t)
+            return re.sub(r"[­​-‏‪-‮⁠-⁤﻿]", "", t)
+        act = plain(action.group(1).split("#")[0].strip().strip("\"'"))
+        # everything in the entry except the candidate's quote: when, checks, conditions, notes
+        rest_of_entry = e if not said else ("\n" + e).replace(said.group(0), "\n")
+        what = plain(rest_of_entry)
+        if not re.fullmatch(r"send_followup|send_note", act):
+            out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup or send_note; "
+                       "nothing else can become a rule")
         elif NO_RULE.search(what):
             out.append(f"profile.yaml: autonomy rule «{action.group(1).strip()[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
+    return out
+
+
+TMP_DIRS = ("/tmp", "/private/tmp", "/var/tmp", "/dev/shm", "/private/var/tmp")
+
+
+def safe_place(p: str, search: Path | None) -> bool:
+    """A program or folder a scheduled run trusts: no `..`, not in a temporary folder anyone can write,
+    and not inside the search folder, where a downloaded file could replace it."""
+    if ".." in Path(p).parts:
+        return False
+    real = os.path.realpath(os.path.expanduser(p))
+    for t in TMP_DIRS:
+        if real == t or real.startswith(t + "/") or p.startswith(t + "/"):
+            return False
+    if search is not None:
+        s = os.path.realpath(search)
+        if real == s or real.startswith(s.rstrip("/") + "/"):
+            return False
+    return True
+
+
+def spec_ok(spec: str) -> bool:
+    """tracker-mcp 0.8.3 or later in 0.8: the first version whose read-only mode also refuses undo of foreign files."""
+    m = re.fullmatch(r"tracker-mcp(?:==(\d+)\.(\d+)\.(\d+)|>=(\d+)\.(\d+)\.(\d+),<(\d+)(?:\.(\d+))?)", spec)
+    if not m:
+        return False
+    v = tuple(int(x) for x in (m.group(1, 2, 3) if m.group(1) else m.group(4, 5, 6)))
+    return v >= (0, 8, 3)
+
+
+def settings_problems(folder: Path) -> list[str]:
+    """Settings a scheduled run in this folder loads (--setting-sources project): hooks and environment
+    there run before any check and outside the tool limits, so the run refuses them."""
+    out = []
+    for f in sorted((folder / ".claude").glob("settings*.json")) if (folder / ".claude").is_dir() else []:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8-sig"))
+        except (ValueError, OSError):
+            out.append(f"{f.relative_to(folder)}: not readable JSON — a scheduled run here must not start")
+            continue
+        bad = sorted(k for k in (data if isinstance(data, dict) else {})
+                     if k in ("hooks", "env", "apiKeyHelper", "mcpServers", "enableAllProjectMcpServers")
+                     or k.endswith("Helper") or k.endswith("Command"))
+        if bad:
+            out.append(f"{f.relative_to(folder)}: has {', '.join(bad)}, which run outside the scheduled run's limits; "
+                       "move them to your own user settings or remove them")
+    return out
+
+
+def instruction_warnings(folder: Path) -> list[str]:
+    """CLAUDE.md files a run in this folder reads besides the kit's: parent folders, and lines beyond
+    the `@kit/CLAUDE.md` import in the search folder's own."""
+    out = []
+    own = folder / "CLAUDE.md"
+    if own.is_file():
+        extra = [l for l in own.read_text(encoding="utf-8-sig", errors="replace").splitlines()
+                 if l.strip() and not l.lstrip().startswith(("#", "<!--")) and l.strip() != "@kit/CLAUDE.md"]
+        if extra:
+            out.append(f"CLAUDE.md in the search folder has {len(extra)} line(s) besides `@kit/CLAUDE.md`; "
+                       "a scheduled run reads them as instructions — keep only what you wrote")
+    for parent in list(folder.resolve().parents)[:-1]:
+        if (parent / "CLAUDE.md").is_file():
+            out.append(f"{parent / 'CLAUDE.md'}: a parent folder's CLAUDE.md is read by every run here; check it is yours")
     return out
 
 
@@ -416,7 +514,7 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
     tracker entry, and the dates of earlier run files."""
     out = []
     values = me / "schedules" / "values.yaml"
-    unfilled = values.exists() and re.search(r"<[^<>\n]+>", values.read_text(encoding="utf-8"))
+    unfilled = values.exists() and re.search(r"<[^<>\n]+>", values.read_text(encoding="utf-8-sig"))
     if (values.exists() and not (unfilled and not strict)) or strict:
         import subprocess
         r = subprocess.run([sys.executable, str(kit / "scripts" / "schedule_prompt.py"), "daily", "--me", str(me)],
@@ -431,11 +529,11 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
     if not ro.exists():
         if strict:
             out.append("schedules/tracker-ro.mcp.json is missing (skill `tracker`, setup step 4)")
-    elif re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8")) and not strict:
+    elif re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8-sig")) and not strict:
         pass   # the template, not filled yet: nothing runs from it
     else:
         try:
-            servers = json.loads(ro.read_text(encoding="utf-8")).get("mcpServers", {})
+            servers = json.loads(ro.read_text(encoding="utf-8-sig")).get("mcpServers", {})
         except (ValueError, AttributeError) as e:
             servers = None
             out.append(f"schedules/tracker-ro.mcp.json: not valid JSON ({e})")
@@ -444,14 +542,20 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
             ok = isinstance(entry, dict) and set(entry) <= {"command", "args", "env"}
             if ok:
                 cmd, args, env = str(entry.get("command", "")), entry.get("args", []), entry.get("env") or {}
-                ok = (re.fullmatch(r"(/|~/)[\w./ -]*/uvx(\.exe)?", cmd) is not None and not cmd.startswith(("/tmp/", "/var/tmp/"))
+                spec = str(args[1]) if isinstance(args, list) and len(args) > 1 else ""
+                ok = (re.fullmatch(r"(/|~/)[\w./ -]*/uvx(\.exe)?", cmd) is not None and safe_place(cmd, me.parent)
                       and isinstance(args, list) and len(args) == 4 and args[0] == "--from"
-                      and re.fullmatch(r"tracker-mcp(==\d+(\.\d+)*|>=\d+(\.\d+)*(,<\d+(\.\d+)*)?)", str(args[1])) is not None
-                      and args[2] == "tracker-mcp" and args[3] == "--read-only"
-                      and isinstance(env, dict) and set(env) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"})
+                      and spec_ok(spec) and args[2] == "tracker-mcp" and args[3] == "--read-only"
+                      and isinstance(env, dict) and set(env) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"}
+                      and all(isinstance(v, str) for v in env.values())
+                      and all(re.match(r"(/|~/)", env[k]) and safe_place(env[k], None)
+                              for k in ("TRACKER_CONFIG", "TRACKER_BACKUP_DIR") if k in env))
             if not ok:
                 out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by an absolute "
-                           "uvx path as `--from tracker-mcp<version> tracker-mcp --read-only` — a scheduled run must not use it")
+                           "uvx path outside temporary folders and the search folder, as `--from \"tracker-mcp>=0.8.3,<0.9\" "
+                           "tracker-mcp --read-only` (TRACKER_CONFIG and TRACKER_BACKUP_DIR absolute too) — a scheduled "
+                           "run must not use it")
+    out += settings_problems(me.parent)
     today = __import__("datetime").date.today().isoformat()
     for folder in ("runs", "search"):
         for f in sorted((me / folder).rglob("*")) if (me / folder).is_dir() else []:
@@ -493,7 +597,8 @@ def main() -> int:
                     help="check only what a scheduled run trusts (its values, the read-only tracker entry, run files): "
                          "exit 1 on any problem; run it before every scheduled run")
     ap.add_argument("--cv", type=Path, default=None,
-                    help="also check a CV (.tex, .md, .txt, .html, or .pdf with pdftotext): every number in it must be in facts.md")
+                    help="also check a CV (.tex, .md, .txt, .html, .docx, or .pdf with pdftotext): every number in it must be in facts.md, "
+                         "and the never-say phrases must not be in it")
     ap.add_argument("--mark-synced", action="store_true",
                     help="record that the pack was just copied to the claude.ai project")
     a = ap.parse_args()
@@ -519,6 +624,8 @@ def main() -> int:
         problems = schedule_problems(a.me, a.kit, strict=True)
         for pr in problems:
             print("ERROR  " + pr)
+        for w in instruction_warnings(a.me.parent):
+            print("WARN   " + w)
         print("schedules: OK" if not problems else "schedules: do not run until this is fixed")
         return 1 if problems else 0
     if not any((a.me / n).exists() for n in ("profile.yaml", "facts.md")):
@@ -531,14 +638,15 @@ def main() -> int:
     global NEED_L2
     prof_path = a.me / "profile.yaml"
     if prof_path.exists():
-        mn = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
+        mn = re.search(r"^\s*native:[ \t]*([^#\n]*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
         native_value = mn.group(1).strip().strip("\"'").lower() if mn else ""
         if native_value and not native_value.startswith("<") and \
-                re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", native_value):
+                re.match(r"^(?:(?:british|american|australian|canadian|irish|us|uk)\s+)?english\b(?!\s*(?:,|and|\+|/))"
+                         r"|^en(?:[-_][a-z]{2})?$", native_value):
             NEED_L2 = False   # English, English (UK), en, en-GB, en_US
     expect_code = ""
     if prof_path.exists():
-        mn2 = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
+        mn2 = re.search(r"^\s*native:[ \t]*([^#\n]*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
         lang = mn2.group(1).strip().strip("\"'").lower() if mn2 else ""
         expect_code = LANG_CODES.get(lang, lang.upper() if re.fullmatch(r"[a-z]{2}", lang) else "")
     blocks, errors = parse_blocks(a.me / "blocks")
@@ -551,15 +659,15 @@ def main() -> int:
     track = ""
     prof = a.me / "profile.yaml"
     if prof.exists():
-        mt = re.search(r"^\s*track:\s*([A-Za-z]+)", prof.read_text(encoding="utf-8"), re.M)
+        mt = re.search(r"^\s*track:\s*([A-Za-z]+)", prof.read_text(encoding="utf-8-sig"), re.M)
         track = mt.group(1).lower() if mt else ""
 
-    fact_ids = set(re.findall(r"^\| (F-[\w-]+) \|", (a.me / "facts.md").read_text(encoding="utf-8"), re.M)) \
+    fact_ids = set(re.findall(r"^\| (F-[\w-]+) \|", (a.me / "facts.md").read_text(encoding="utf-8-sig"), re.M)) \
         if (a.me / "facts.md").exists() else set()
     for qid in dict.fromkeys(DUP_RECIPES):
         errors.append(f"recipes.md: {qid} has more than one row (the last one wins); keep one")
     for path in sorted((a.me / "blocks").glob("*.md")):   # F- facts named in block notes
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for n, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
             for r in re.findall(r"\bF-\d+[\w-]*", line):
                 if fact_ids and r not in fact_ids:
                     errors.append(f"{path.name}:{n}: fact {r} is not in facts.md")
@@ -575,7 +683,7 @@ def main() -> int:
 
     # references inside block notes and chains
     for path in sorted((a.me / "blocks").glob("*.md")):
-        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        for n, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
             if line.startswith("#### "):
                 continue
             for r in REF_RE.findall(line):
@@ -603,26 +711,31 @@ def main() -> int:
         if DANGLING_EN.match(b["en"]) or DANGLING_RU.match(b["ru"]):
             warnings.append(f"{where}: does not stand alone (starts with a link word); name the project or the subject")
 
+    def loose_pat(phrase: str) -> re.Pattern:   # any spaces between the words, curly or straight apostrophes
+        words = [re.escape(w).replace("'", "['’]").replace("’", "['’]") for w in phrase.split()]
+        return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)", re.IGNORECASE)
+
     for phrase in never_say_phrases(a.me / "never-say.md"):
-        pat = re.compile(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", re.IGNORECASE)
+        pat = loose_pat(phrase)
         for b in blocks.values():
             for field in ("en", "ru"):
                 if pat.search(b[field]):
-                    warnings.append(f"{b['file']}:{b['line']} {b['id']}: never-say phrase «{phrase}» in {field.upper()}")
+                    label = "EN" if field == "en" else (b.get("l2code") or "the native line")
+                    warnings.append(f"{b['file']}:{b['line']} {b['id']}: never-say phrase «{phrase}» in {label}")
 
     for phrase, allowed in never_claims(a.me / "never-say.md"):
-        pat = re.compile(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", re.IGNORECASE)
+        pat = loose_pat(phrase)
         for b in blocks.values():
             # the row's own blocks (and their topic) are where the claim is handled honestly
             if b["id"] in allowed or b["id"].split("-")[0] in {x.split("-")[0] for x in allowed} \
                     or {"G", "Q"} & set(b["types"]):
                 continue
-            if pat.search(b["en"]):
+            if pat.search(b["en"]) or pat.search(b["ru"]):
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
     known = fact_numbers(a.me / "facts.md")
     if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
-        mm = re.search(r"^money:[^\n]*\n((?:[ \t]+.*\n?|[ \t]*\n|[ \t]*#.*\n)*)", prof_path.read_text(encoding="utf-8"), re.M)
+        mm = re.search(r"^money:[^\n]*\n((?:[ \t]+.*\n?|[ \t]*\n|[ \t]*#.*\n)*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
         floor_numbers: set[str] = set()
         if mm:   # only say_aloud is said; the floor and the current salary must never appear in a block
             money = re.sub(r"#.*", "", mm.group(1))
@@ -630,14 +743,13 @@ def main() -> int:
             ind = re.escape(first.group(1)) if first else r"[ \t]+"
             parts = re.split(r"^(" + ind + r"[a-z_]+:)", money, flags=re.M)
             for key, val in zip(parts[1::2], parts[2::2]):
-                nums = {norm_number(m.group(1), m.group(2))
-                        for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, NOT_AMOUNTS.sub(" ", val)))}
+                nums = set(block_numbers(val)) | set(word_numbers(val))
                 if key.strip().startswith("say_aloud"):
                     known |= nums
                 elif key.strip().startswith(("floor", "current_or_last")):
                     floor_numbers |= {n for n in nums if float(n.rstrip("%")) >= 100}
         for b in blocks.values():
-            said = set(block_numbers(b["en"]) + block_numbers(b["ru"]))
+            said = set(block_numbers(b["en"]) + block_numbers(b["ru"]) + word_numbers(b["en"]))
             if floor_numbers & said:
                 errors.append(f"{b['file']}:{b['line']} {b['id']}: says the money floor or the current salary "
                               f"({', '.join(sorted(floor_numbers & said))}) — those are never said aloud")
@@ -653,7 +765,8 @@ def main() -> int:
     if a.cv is not None:
         cv_text = read_cv(a.cv)
         if cv_text is None:
-            errors.append(f"--cv: cannot read {a.cv} (.tex, .md, .txt, .html, .docx, or .pdf with pdftotext)")
+            errors.append(f"--cv: cannot read {a.cv} (.tex, .md, .txt, .html, .docx, or a .pdf with a text layer "
+                          "and pdftotext installed; a scanned PDF has no text)")
         else:   # contact lines (phone, email, address, links) carry no claims
             cv_text = "\n".join(l for l in cv_text.splitlines()
                                 if not re.search(r"@|https?://|www\.|linkedin|github|\+\d|\btel\b|\bphone\b", l, re.I))
@@ -662,17 +775,25 @@ def main() -> int:
             if cv_loose:
                 warnings.append(f"CV {a.cv.name}: numbers not in facts.md: {', '.join(dict.fromkeys(cv_loose))} "
                               "(a difference between the CV and facts.md is a question for the candidate)")
+                for n in dict.fromkeys(cv_loose):   # where each one is, so it can be found in the CV
+                    line = next((l.strip() for l in cv_text.splitlines()
+                                 if n in block_numbers(l) + word_numbers(l)), "")
+                    if line:
+                        warnings.append(f"CV {a.cv.name}: {n} in «{line[:100]}»")
             else:
                 print(f"CV {a.cv.name}: every number is in facts.md")
+            for phrase, _ in never_claims(a.me / "never-say.md"):
+                if loose_pat(phrase).search(cv_text):
+                    warnings.append(f"CV {a.cv.name}: «{phrase}» is in the never-claim table")
 
     if prof_path.exists():
-        ptxt = prof_path.read_text(encoding="utf-8")
+        ptxt = prof_path.read_text(encoding="utf-8-sig")
         errors += autonomy_errors(ptxt)
     errors += schedule_problems(a.me, a.kit)
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
         f = a.me / name
         if f.exists():
-            lines = f.read_text(encoding="utf-8").splitlines()
+            lines = f.read_text(encoding="utf-8-sig").splitlines()
             if name.endswith(".yaml"):   # YAML comments are instructions, not values
                 lines = [l for l in lines if not l.lstrip().startswith("#")]
             # `<tracker>.toml` and «call recording <date>» are examples in the template's prose
@@ -729,7 +850,7 @@ def main() -> int:
         print("stories without a whole S block: " + ", ".join(no_whole))
     sync_file = a.me / SYNC_FILE
     if sync_file.exists():
-        old = json.loads(sync_file.read_text(encoding="utf-8"))
+        old = json.loads(sync_file.read_text(encoding="utf-8-sig"))
         now = pack_hashes(a.me)
         changed = sorted(f for f in now if old.get(f) != now[f]) + sorted(f for f in old if f not in now)
         if changed:
@@ -757,4 +878,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except (UnicodeDecodeError, IsADirectoryError, PermissionError, ValueError) as e:
+        # a file that is not UTF-8 text, a folder where a file should be, a damaged sync manifest
+        name = getattr(e, "filename", None) or ""
+        sys.exit(f"cannot read {name or 'a pack file'}: {type(e).__name__}: {e}. Save it as UTF-8 text and run again.")

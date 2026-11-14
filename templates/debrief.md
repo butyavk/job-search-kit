@@ -15,7 +15,7 @@ Length, format, source (transcript / notes). Recognition errors: «…» = «…
 | Time | Question | What I said | Stronger |
 | --- | --- | --- | --- |
 
-## English
+## Language (the interview language)
 - «as said» → «better»
 
 ## Form

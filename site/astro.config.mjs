@@ -17,7 +17,7 @@ export default defineConfig({
         ru: { label: 'Русский', lang: 'ru' },
       },
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/butyavk/job-search-kit' }],
-      editLink: { baseUrl: 'https://github.com/butyavk/job-search-kit/edit/main/' },
+      editLink: { baseUrl: 'https://github.com/butyavk/job-search-kit/edit/main/site/' },   // + src/content/docs/…
       sidebar: [
         { label: 'Start', translations: { ru: 'Начало' }, items: [
           { slug: 'install', label: 'Install and connect', translations: { ru: 'Установка и подключения' } },

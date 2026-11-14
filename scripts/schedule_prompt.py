@@ -16,10 +16,17 @@ from __future__ import annotations
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
-KEYS = {"name": 6, "roles": 14, "city": 6, "time zone": 4, "language": 4}   # key -> most words
+KEYS = {"name": 6, "roles": 8, "city": 6, "time zone": 4, "language": 4}   # key -> most words
+FORMAT = {   # what each value may look like, beyond the shared character set
+    "name": (re.compile(r"[^\W\d_]+(?:[ '.-][^\W\d_]+)*\.?"), "letters only (a name)"),
+    "time zone": (re.compile(r"[A-Z][A-Za-z]+(?:/[A-Z][A-Za-z_+-]+){1,2}|UTC|GMT|UTC[+-]\d{1,2}(?::\d{2})?"),
+                  "an IANA zone such as Europe/Berlin, or UTC+4"),
+    "language": (re.compile(r"[^\W\d_]+(?:[ ,/-]+[^\W\d_]+){0,3}"), "language names only"),
+}
 RUN_TIME = {"<date>", "<company>", "<stage>", "<the date it came>"}
 ALLOWED = re.compile(r"[\w ,.()'&/+\-]+")
 
@@ -38,17 +45,21 @@ def find_pack(argv: list[str]) -> Path:
 
 
 def read_values(path: Path) -> dict[str, str]:
+    if path.is_symlink() or path.parent.is_symlink():
+        sys.exit(f"{path} is a link: a scheduled run reads only a real file in the pack")
     if not path.exists():
         sys.exit(f"{path} is missing: write name, roles, city, time zone and language there (see the kit's "
                  "pack-template/schedules/values.yaml)")
     values: dict[str, str] = {}
-    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for n, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         m = re.match(r"^([a-z ]+):\s*(.*?)\s*(?:#.*)?$", line)
         if not m or m.group(1) not in KEYS:
             sys.exit(f"{path.name}:{n}: only {', '.join(KEYS)} go here, one per line")
-        values[m.group(1)] = m.group(2).strip().strip("\"'")
+        if m.group(1) in values:
+            sys.exit(f"{path.name}:{n}: «{m.group(1)}» is set twice; keep one line")
+        values[m.group(1)] = unicodedata.normalize("NFC", m.group(2).strip().strip("\"'"))
     for key, most in KEYS.items():
         v = values.get(key, "")
         if not v or v.startswith("<"):
@@ -58,6 +69,10 @@ def read_values(path: Path) -> dict[str, str]:
                      f"(at most 120 characters)")
         if len(v.split()) > most:
             sys.exit(f"{path.name}: «{key}» is a short phrase, at most {most} words")
+        if ("_" in v and key != "time zone") or re.search(r"\w{4,}[.!?]\s+\w", v):
+            sys.exit(f"{path.name}: «{key}» is a phrase, not sentences or code names")
+        if key in FORMAT and not FORMAT[key][0].fullmatch(v):
+            sys.exit(f"{path.name}: «{key}» must be {FORMAT[key][1]}")
     return values
 
 
@@ -66,7 +81,7 @@ def main(argv: list[str]) -> int:
         sys.exit(__doc__)
     me = find_pack(argv)
     values = read_values(me / "schedules" / "values.yaml")
-    text = (KIT / "schedules" / f"{argv[0]}.md").read_text(encoding="utf-8")
+    text = (KIT / "schedules" / f"{argv[0]}.md").read_text(encoding="utf-8-sig")
 
     def fill(m: re.Match) -> str:
         slot = m.group(0)

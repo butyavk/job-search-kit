@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.5.0 — 2026-11-14
+
+Safety (a fifth review: red team, claude.ai, a German and a Russian newcomer, docs and scripts)
+- Scheduled runs: the three cron lines are written out in full; each may write only today's output file (`$(date +\%F)`), reads stay in the search folder and the kit (`Read(…)` rules also cover Glob and Grep, so the bare `Glob,Grep` allows are gone), `--no-chrome`, `< /dev/null`, and in plugin mode always `--plugin-dir`.
+- `check_pack.py --schedules` also refuses the search folder's `.claude/settings*.json` with hooks, environment, helpers or MCP servers; the read-only tracker run from a temporary folder, from inside the search folder or through `..`, a tracker-mcp older than 0.8.3, and relative or temporary `TRACKER_CONFIG` / `TRACKER_BACKUP_DIR`. It warns about a parent folder's CLAUDE.md and about lines besides `@kit/CLAUDE.md` in the search folder's own.
+- `values.yaml`: each key has its form (a name has letters only; the time zone is an IANA zone or UTC±H; no sentences or code names); a key set twice, or the file as a link, stops the run; values are NFC-normalised.
+- Autonomy rules: the action is only `send_followup` or `send_note` (`other (…)` is gone); the whole entry except the candidate's quote is scanned for what no rule may cover, after look-alike letters and invisible characters are normalised.
+- CLAUDE.md §5: right before each send Claude shows the recipient's address (or the form's link) and the first line, even for named items.
+- Desktop-app tasks: the «ask» list covers every tool that does more than read, with the tracker's write tools by name; drafts stay in the daily summary, not in the mail; a pasted prompt is re-pasted after a kit update; a pack kept only in a claude.ai project gets no scheduled runs.
+- The plugin hook prints the pack's absolute folder and the plugin's folder (it changes with every version); paths are compared as written and resolved; `/proc`, `/dev` and `/sys` are never a pack's recorded path.
+- tracker-mcp 0.8.3 or later for the read-only entry (locked writes, per-tracker audit and backups, confined undo).
+
+Fixed
+- `check_pack.py`: files saved with a BOM are read; a file that is not UTF-8, a folder in a file's place or a damaged sync manifest gives «cannot read …» instead of a traceback; `native:` is read on its own line, and «English» means a value that starts with it (not «Russian, English»); the never-say and never-claim checks also run on the native-language line and the CV, allow any spacing and curly apostrophes, keep short parts (CTO, VP, PhD) and read «a» or «b» rows; numbers with units (10x, 150ms, 40h) are checked, clock times and UTC offsets are not; German (Mio., Mrd., Tsd.) and Indian (lakh, crore, LPA, 48,00,000) scales; the money floor is read with scales and words too; German link words in DANGLING; Indian languages in the language codes.
+- `--cv`: a scanned PDF says it has no text; .docx line breaks, headers and footers; UTF-16 files; `\textbf{45}` in TeX keeps its number; HTML without styles, scripts and entities; each unknown number is shown with its line.
+- `english_check.py`: `--help`; German text is told by its common words and umlauts; the longest sentence is shown for any language; «That said nothing» is not the opener.
+- `check_kit.py`: a skill file whose front matter is not closed.
+- Onboarding: `paths.pack` is written in step 0; company folders next to `me/`; one master CV per application language; statuses stay in English for other languages; with an interview within five days the processes under way are tracker rows in session 1 and a coding trainer starts on day 1. The tracker skill has a recipe for processes under way and, for a hand-kept table, the status list and the +10/+14/30 rule.
+- Templates: LOG-2 (work authorization) and LOG-3 (contract form) blocks and the X02 recipe; offer rows for net pay, the tax regime and the work permit; a three-day row in the learning sheet; a manager's round in the design card; «the interview language» instead of «English» in prep, live coding, the prep tabs and the debrief.
+- Docs: claude.ai steps copy the project files to a writable folder and run the scripts with `python3`; the project-files zip carries the skills' own files; moving to Claude Code covers « (1)» duplicates, `paths.pack` and the `@kit/CLAUDE.md` line; forms are «submitted only on your yes» on the site and «never under a rule» in the autonomy pages and README; the site's «Edit page» links point at the real files; German and Spanish conventions in outreach; never padding a two-page CV; Type 3 fonts; a stack the trainers do not cover goes to `company-trainer`; `/start` reads in order.
+
 ## 1.4.2 — 2026-11-14
 
 Changed (a fourth review)

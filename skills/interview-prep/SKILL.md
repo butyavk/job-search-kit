@@ -21,7 +21,7 @@ Templates are in `templates/`.
 - **Emails, bookings and applications are sent by the candidate** (router skill, «Autonomy»). Claude drafts.
 - **A CV once sent does not change.** An inaccuracy in it goes into the rules, and in the interview the candidate says how it really was.
 - **Recording calls and AI notes only if the company allows it.** Otherwise notes right after the call.
-- **English in the register the candidate holds when speaking** (skill `english-register`, checked by the script, not by eye).
+- **The interview language in the register the candidate holds when speaking** (in English: skill `english-register`, checked by the script, not by eye).
 - **Contradictions in the pack are the candidate's to resolve.** Write both versions and ask; do not use the fact until they answer.
 - **Chances only on request**, marked «my estimate from the transcript, not a forecast of the company's decision».
 - **Be brief.** What does not change a decision is not written.
@@ -50,7 +50,7 @@ format and people → topic weights and plan → material and trainer → learn 
 - Two days before the interview the material is frozen: only run-throughs aloud. With three days or less there is no freeze: onboarding, «Three days or less».
 
 ### Step 3. The prep document
-One document, a tab per topic (`templates/prep-doc-tabs.md`): recruiter, company and role, answer cheat sheet, English, behavioral and manager questions, values, system design, a one-page plan, metrics, «one sentence», final round and references. Answers come from the pack and are fitted to the company: another order, another emphasis, new bridges to this role. Facts do not change. Every answer keeps its block IDs.
+One document, a tab per topic (`templates/prep-doc-tabs.md`): recruiter, company and role, answer cheat sheet, the interview language, behavioral and manager questions, values, system design, a one-page plan, metrics, «one sentence», final round and references. Answers come from the pack and are fitted to the company: another order, another emphasis, new bridges to this role. Facts do not change. Every answer keeps its block IDs.
 
 Stories across rounds: `templates/story-split.md` — one row per round with its people; each round has its own main stories. Interviewers compare notes: one story must not be told in every round.
 
@@ -90,7 +90,7 @@ A founder, CTO or senior leader: 3 main questions and spares; 30–45-second ans
 - Claude plays the interviewer of that stage: answers only what is asked, keeps time, gives no hints unless asked, and at the end asks what an interviewer would ask.
 - By voice: the voice mode of the Claude desktop or mobile app (Claude Code has none — there, a text mock, or the brief for an outside voice tool below). For system design: talk by voice, draw in Excalidraw, and at three checkpoints (after the questions, after the skeleton, at the end) paste a screenshot.
 - Outside Claude (a voice-agent tool, a friend): write the brief from `templates/recruiter-mock-brief.md`; for pronunciation work, `templates/voice-coach-brief.md`.
-- The debrief is by the points of the protocol, with timing, without smoothing. Repeating errors go to «My errors»: as it was → as it should be → the English phrase; speech errors and fillers to `me/voice.md`.
+- The debrief is by the points of the protocol, with timing, without smoothing. Repeating errors go to «My errors»: as it was → as it should be → the phrase in the interview language; speech errors and fillers to `me/voice.md`.
 - At least 2–3 full system-design mocks with a real person, who picks the task.
 - **Drill** (`/mock drill`): practice of the learning sheet, not an interview. Claude asks the map's questions in random order, one at a time, waits for the whole answer, compares it with the anchor and gives a mark with one line on what was missing (the first sentence, a step, the number) or «too long». ✗ come back at the end of the same drill. The marks go into the sheet's table; ✓ two days running leaves the drill. 15–25 minutes, by voice where possible. No sheet yet — build it first (step 4).
 

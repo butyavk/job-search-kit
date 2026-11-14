@@ -223,7 +223,7 @@ The 13 archetypes from the bank («Minimum story set») → your stories. Onboar
 | ID | First line | Short | Long | Notes |
 | --- | --- | --- | --- | --- |
 | X01 | `LOG-1` | `LOG-1` | `LOG-1` | |
-| X02 | `LOG-4` | `LOG-4` | `LOG-4` | sponsorship: one sentence from `work_authorization` in the profile |
+| X02 | `LOG-2` | `LOG-2` → `LOG-4` | `LOG-2` → `LOG-3` → `LOG-4` | work authorization, then the start date |
 | X03 | `LOG-6` | `LOG-6` | `LOG-6` | |
 | X04 | — | — | — | |
 | X05 | — | — | — | |
