@@ -18,7 +18,7 @@ Fixed (the second sweep)
 - Numbers: a version is one or two digits or a dotted number, never one followed by %, a scale or more digits, so «Kubernetes 300 nodes», «Redis 99.9% hit rate» or «Android 500K installs» are checked; month names are whole words, so «Decreased 35%», «Declined 20» and «12 Junior engineers» are checked too.
 - Money is read through the profile reader (a quoted value with a comment after it, nested keys); `languages.native: "Russian"  # mine` is Russian.
 - A program or file in a folder anyone may write to (any world-writable parent, the system temp folder, /var/lock, /Users/Shared) is not trusted by a scheduled run.
-- Never-claim rows: only the table's header row is skipped (a row may start with «Never»); bold, code and links are read as their words; a described row's single words (QA, frontend, React) are not banned — quote a word to ban it alone.
+- Never-claim rows: only the table's header row is skipped (a row may start with «Never»); bold, code and links are read as their words; short fragments of a list (QA) are not banned, while single words that a row lists (Adyen; PSD2; Terraform) still are.
 - Filler lists written as bullets work; phrases and text are compared in one form (NFC, no invisible characters).
 - One pack lookup for every script: a wrong `JOB_SEARCH_ME` stops the script instead of quietly checking another pack.
 - The hook reads `paths.pack` only at the first level of `paths:`, and a `pack:` written twice counts as not recorded.

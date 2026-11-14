@@ -204,15 +204,15 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
         if quoted:
             parts = [x or y for x, y in quoted]
         else:
+            # «Adyen; PSD2; fraud, underwriting» lists single words that are claims: each is checked.
+            # A false ban here is only a warning; a word left out would be a claim never checked.
             parts = [p.strip() for p in re.split(r"[;/]|, | or ", claim)]
-            if len(parts) > 1:   # a described row: its single words (QA, frontend, React) are not claims
-                parts = [p for p in parts if len(p.split()) > 1]
         for part in parts:
             part = part.strip().strip("«»\"' ")
             # a short title (CTO, VP, PhD) only when it is quoted or the whole claim
             short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == claim.strip("«»\"' "))
             if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
-                continue  # placeholders and Russian descriptions need a human; quote a word to ban it alone
+                continue  # placeholders and Russian descriptions need a human; their English terms are still checked
             out.append((part, allowed))
     return out
 

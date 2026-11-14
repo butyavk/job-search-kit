@@ -791,7 +791,7 @@ class SweepTwo(unittest.TestCase):
                                env={**os.environ, "JOB_SEARCH_ME": ""})
             self.assertIn("does not record", p.stdout, prof)
 
-    def test_described_rows_ban_no_single_words(self):
+    def test_never_claim_rows_read_their_words(self):
         cp = self.cp()
         d = self.pack()
         ns = d / "never-say.md"
@@ -799,10 +799,9 @@ class SweepTwo(unittest.TestCase):
                       "| managed QA, frontend, design | x | — |\n| React/Vue lead | x | — |\n| **led 40 engineers** | x | — |\n"
                       "| Never missed a deadline | x | — |\n| «led managers» |", 1), encoding="utf-8")
         phrases = [p for p, _ in cp.never_claims(ns)]
-        for word in ("QA", "frontend", "design", "React"):
-            self.assertNotIn(word, phrases)
-        for claim in ("led 40 engineers", "Never missed a deadline", "managed QA", "Vue lead"):
-            self.assertIn(claim, phrases)
+        self.assertNotIn("QA", phrases)                    # a short fragment of a list is not a claim
+        for claim in ("led 40 engineers", "Never missed a deadline", "managed QA", "Vue lead", "frontend", "React"):
+            self.assertIn(claim, phrases)                  # single words in a list are claims (Adyen; PSD2)
 
     def test_autonomy_written_another_way_is_refused(self):
         cp = self.cp()
