@@ -968,6 +968,22 @@ class SweepTwo(unittest.TestCase):
         code, out = run("check_pack.py", "--me", str(d))
         self.assertIn("money has no «approach»", out)
 
+    def test_a_banned_number_in_a_russian_row_is_found(self):
+        # «−85% setup time у партнёров» is no English phrase to match, so a CV with «setup time fell 85%» passed
+        d = self.pack()
+        ns = d / "never-say.md"
+        ns.write_text(ns.read_text(encoding="utf-8").replace(
+            "| «led managers» | I led engineers | «led engineers» |",
+            "| «led managers» | I led engineers | «led engineers» |\n| −85% setup time у партнёров | мерили у себя | `PAY-R1` |"),
+            encoding="utf-8")
+        cv = Path(tempfile.mkdtemp()) / "cv.md"
+        cv.write_text("- With SDK blocks, partner setup time fell 85%.\n- Hired 85% of the team from referrals.\n",
+                      encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d), "--cv", str(cv))
+        self.assertIn("85% — the never-claim table bans «−85% setup time у партнёров»", out)
+        self.assertIn("partner setup time fell 85%", out)
+        self.assertNotIn("referrals", out)     # the same number beside other words is another fact
+
     def test_world_writable_folders_are_not_trusted(self):
         cp = self.cp()
         shared = Path(tempfile.mkdtemp(dir=Path.home()))

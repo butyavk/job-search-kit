@@ -3,6 +3,7 @@
 ## 1.5.7 — 2026-11-14
 
 Added
+- The never-claim table bans a number even when its row is written in another language («−85% setup time у партнёров»): a block or a CV line with that number beside one of the row's English words is shown to read. Before, only English phrases were matched, so a CV saying «partner setup time fell 85%» passed.
 - `templates/messages.md`: skeletons for the replies a candidate sends in a thread — follow-ups 1 and 2, times for a recruiter, a thank-you after an interview, a salary question in writing, a rejection, more time on an offer, withdrawing, declining and accepting an offer. The autonomy example now points to it.
 
 Changed
@@ -11,6 +12,7 @@ Changed
 - Tracker statuses: the skills name the English statuses and use the tracker's own names with the candidate (`--lang ru` or renamed); «No response» everywhere.
 - `english_check.py`: catches «reach out», «touch base», «circle back», «thrilled», «excited to», «bandwidth», «underscore(d)»; a message's subject, greeting and sign-off are not counted as sentences; the average sentence length is judged from six sentences.
 - Templates: the reference request without idioms or a claim the pack does not hold; no author facts in the voice-coach brief or the outreach example; «the candidate decides» at the walk-away point; weekday and date checked in drafts.
+- A short chain that is one whole `S` block is said alone (`answer-blocks`): its first sentence is the first line, so the `O` is not said twice.
 - Docs: the EN README says which language goes to whom; RU wording fixed (literal phrases, «комплект подачи» for an application package, the missing «if it is not English»), the RU sources link.
 
 ## 1.5.6 — 2026-11-14

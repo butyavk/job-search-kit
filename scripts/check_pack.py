@@ -232,6 +232,40 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     return out
 
 
+def never_claim_numbers(path: Path) -> list[tuple[str, str, set]]:
+    """Numbers named in the «Never claim» table («−85% setup time у партнёров»): (number, the claim, its
+    blocks). A row written in another language still bans its number, which no phrase match finds."""
+    if not path.exists():
+        return []
+    m = re.search(r"## (?:Утверждения|Never claim)[^\n]*\n(.+?)(\n## |\Z)", path.read_text(encoding="utf-8-sig"), re.S)
+    if not m:
+        return []
+    out = []
+    rows = m.group(1).splitlines()
+    for i, line in enumerate(rows):
+        if not line.startswith("|") or re.match(r"\|\s*:?-{3,}", line):
+            continue
+        if i + 1 < len(rows) and re.match(r"\|\s*:?-{3,}", rows[i + 1]):
+            continue
+        claim = re.sub(r"\*\*|__|`", "", line.strip("|").split("|")[0]).strip()
+        for n in dict.fromkeys(block_numbers(claim.replace("\u2212", "-"))):
+            out.append((n.lstrip("-"), claim, set(REF_RE.findall(line))))
+    return out
+
+
+def claim_words(claim: str) -> list[str]:
+    """The claim's own English words (setup, Mollie, A/B): a number counts only beside one of them,
+    so the same 40% of another fact is not taken for the banned one."""
+    stop = {"the", "and", "for", "with", "end"}
+    return [w for w in re.findall(r"[A-Za-z][A-Za-z/+#]{2,}|A/B", claim) if w.lower() not in stop]
+
+
+def bans_number(text: str, n: str, claim: str) -> bool:
+    words = claim_words(claim)
+    return n in block_numbers(text) and bool(words) and any(
+        re.search(r"(?<![A-Za-z])" + re.escape(w) + r"(?![A-Za-z])", text, re.I) for w in words)
+
+
 KEY = r"""[^\s:#{}\[\],&*!|>'"%@`?\-][^:#{}\[\]]*?"""   # Zürich, São Paulo, Staff+ (EU), R&D lead, UTC+1
 PLAIN_BAD_START = set("{[]}!&*?|>%@`,")
 
@@ -1108,6 +1142,14 @@ def main() -> int:
             if pat.search(fold(b["en"])) or pat.search(fold(b["ru"])):
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
+    for n, claim, allowed in never_claim_numbers(a.me / "never-say.md"):
+        for b in blocks.values():
+            if b["id"] in allowed or b["id"].split("-")[0] in {x.split("-")[0] for x in allowed} \
+                    or {"G", "Q"} & set(b["types"]):
+                continue
+            if bans_number(b["en"], n, claim) or bans_number(b["ru"], n, claim):
+                warnings.append(f"{b['file']}:{b['line']} {b['id']}: {n} — the never-claim table bans «{claim[:80]}»")
+
     known = fact_numbers(a.me / "facts.md")
     if prof_path.exists() and any(k.startswith("money.") for k in prof_values) \
             and not str(prof_values.get("money.approach", "")).strip():
@@ -1162,6 +1204,10 @@ def main() -> int:
             for phrase, _ in never_claims(a.me / "never-say.md"):
                 if " " in phrase.strip() and loose_pat(phrase).search(fold(cv_text)):   # phrases: a CV lists bare tool names
                     warnings.append(f"CV {a.cv.name}: «{phrase}» is in the never-claim table")
+            for n, claim, _ in never_claim_numbers(a.me / "never-say.md"):
+                for line in dict.fromkeys(l.strip() for l in cv_text.splitlines() if bans_number(l, n, claim)):
+                    warnings.append(f"CV {a.cv.name}: {n} — the never-claim table bans «{claim[:80]}»; "
+                                    f"read «{line[:120]}»")
 
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8-sig")

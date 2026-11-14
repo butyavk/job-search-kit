@@ -46,7 +46,7 @@ A block may have two types (`R` · `D`) when the result comes with its definitio
 ## Building an answer
 1. Find the question in the bank (ID) or the nearest one. Take the recipe from `me/recipes.md`.
 2. Choose the length: a recruiter and little time — short (for a story, its `S` block, 25–35 s); a hiring manager, a panel, a CTO — long (45–90 s): `S`, then details on follow-ups.
-3. The first line is the `O` block, word for word. An `A` or `R` block (an I-sentence) within the first two sentences.
+3. The first line is the `O` block, word for word. A short chain that is one whole `S` block is said alone: its first sentence is the first line, so the `O` is not said before it. An `A` or `R` block (an I-sentence) within the first two sentences.
 4. The other blocks in order; when speaking, own words are fine as long as the meaning is the block's.
 5. For a company — one bridge sentence at the end (their problem ↔ my block). Bridges live in the company's prep document, not in the pack.
 6. Check: nothing from `never-say.md`; one story is not told twice in one process (`templates/story-split.md`); English through `english-register`.
