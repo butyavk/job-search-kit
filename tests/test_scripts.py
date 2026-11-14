@@ -174,6 +174,14 @@ class PackCheckBreakage(unittest.TestCase):
         self.assertEqual(cp.word_numbers("hundreds of calls, tens of thousands of lines"), [])
         self.assertEqual(cp.word_numbers("twenty-five engineers, about two percent"), ["25", "2%"])
 
+    def test_names_and_ratios_are_not_amounts(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cp", KIT / "scripts" / "check_pack.py")
+        cp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cp)
+        self.assertEqual(cp.block_numbers("37signals and PostHog. The 80/20 rule, 24/7 on-call, 2FA."), [])
+        self.assertEqual(cp.block_numbers("12M users and 45% growth"), ["12000000", "45%"])
+
     def test_cv_numbers_against_facts(self):
         d = Path(tempfile.mkdtemp())
         good, bad = d / "good.txt", d / "bad.tex"

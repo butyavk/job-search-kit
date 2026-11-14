@@ -244,7 +244,9 @@ NOT_AMOUNTS = re.compile(
     r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgres(?:QL)?|MySQL|iOS|Android|"
     r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
     r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI)\s?/?\d[\d.]*"  # versions and standards
-    r"|\b\d{1,3},\d{1,3},\d{1,3}\b")                       # colours like 0,102,204
+    r"|\b\d{1,3},\d{1,3},\d{1,3}\b"                       # colours like 0,102,204
+    r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
+    r"|\b\d+[A-Za-z][\w-]*")                                  # names glued to digits: 37signals, 2FA, 3rd
 SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn)\b(?!-)")
 SCALE_OF = {"million": 1_000_000, "billion": 1_000_000_000, "thousand": 1_000, "M": 1_000_000, "K": 1_000,
             "k": 1_000, "bn": 1_000_000_000}
@@ -259,7 +261,7 @@ def block_numbers(en: str) -> list[str]:
     """Numbers worth a source: percentages, decimals and whole numbers of 10 and more; years, IDs,
     versions, dates and phone numbers are skipped; «12 million» is one number."""
     out = []
-    en = SCALED_RE.sub(_scaled, NOT_AMOUNTS.sub(" ", en))
+    en = NOT_AMOUNTS.sub(" ", SCALED_RE.sub(_scaled, en))   # «12M» becomes a number before names are dropped
     for m in NUM_RE.finditer(en):
         n = norm_number(m.group(1), m.group(2))
         bare = n.rstrip("%")

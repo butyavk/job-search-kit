@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2 — 2026-11-14
+
+Fixed
+- `check_pack.py`: names glued to digits (37signals, 2FA, 3rd) and ratios (80/20, 24/7) are not amounts to check against `facts.md`.
+
 ## 1.4.1 — 2026-11-14
 
 Safety (a third red-team review and a verification of 1.4.0)
