@@ -8,7 +8,7 @@ contacts:
 location:
   city: <city>
   country: <country>
-  timezone: <UTC+N>
+  timezone: <IANA zone, e.g. Europe/London: it follows summer time>
   line_cv: "<City, Country (UTC+N) · Remote, open to relocation>"
 target:
   track: <manager / engineer / product>   # check_pack counts the ◆ questions of this track

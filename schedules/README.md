@@ -24,7 +24,7 @@ cd <search folder> && ~/.local/bin/claude -p "$(cat me/schedules/daily.md)" --pe
 - macOS: cron cannot read Documents, Desktop or Downloads without Full Disk Access; a launchd agent (or a tracker outside those folders) avoids it. Plugin mode: add `--plugin-dir` only if the plugin is not installed for the user.
 - `mkdir -p me/runs me/search` once; cron output goes to the log in `me/runs/`.
 
-**No scheduler:** run `/today` in the morning. Follow-up dates still reach you: the tracker exports them to a calendar file (`tracker-mcp calendar`, or ask Claude «export follow-ups to my calendar»); interviews are in the calendar from the invitations.
+**No scheduler:** run `/today` in the morning. Follow-up dates still reach you: the tracker exports them to a calendar file (`uvx tracker-mcp calendar`, or ask Claude «export follow-ups to my calendar»); interviews are in the calendar from the invitations.
 
 ## Rules for every scheduled run
 - Read and prepare only. Nothing is sent, submitted, accepted, booked or published, whatever `autonomy` rules say: those work only in a live session.
@@ -34,8 +34,8 @@ cd <search folder> && ~/.local/bin/claude -p "$(cat me/schedules/daily.md)" --pe
 - LinkedIn is not silent: opening a message thread marks it read for the sender, and opening a profile can show «viewed your profile». Scheduled runs read only the inbox list, notifications and job alerts; threads and profiles are opened in a live session.
 - Forms are never touched by a scheduled run.
 - A run that finds nothing says so in one line.
-- Fill the `<…>` placeholders once, when the task is created: name, roles, city, time zone, language — and keep the filled copies in `me/schedules/`.
+- Fill the `<…>` placeholders once, when the task is created: name, roles, city, time zone, language, and `<kit>` as the absolute path of the kit (the plugin folder in plugin mode: a scheduled run has no shell to find it) — and keep the filled copies in `me/schedules/`.
 
 ## Pause or end
 - **«Pause my search»** (a holiday, a busy month): disable the three tasks (or comment out the cron lines); follow-ups due in the pause move with `reschedule_followup`; say when it resumes.
-- **«I found a job» or «I stop searching»:** withdrawals to the open processes (drafts; the candidate sends), thanks to references, the tracker closed out (`set_statuses`: the accepted offer gets the tracker's offer status with a note «accepted»; open applications «Withdrawn»; rows never applied to keep their status), the tasks turned off by the candidate (disabled or deleted — deleting is theirs), a retro (`templates/retro.md`). The pack stays: the next search starts from it.
+- **«I found a job» or «I stop searching»:** withdrawals to the open processes once the contract is signed and its conditions (references, checks) have cleared — before that, keep them open (drafts; the candidate sends), thanks to references, the tracker closed out (`set_statuses`: the accepted offer gets the tracker's offer status with a note «accepted»; open applications «Withdrawn»; rows never applied to keep their status), the tasks turned off by the candidate (disabled or deleted — deleting is theirs), a retro (`templates/retro.md`). The pack stays: the next search starts from it.

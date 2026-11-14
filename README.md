@@ -22,7 +22,7 @@ It grew out of a real two-month search for engineering-manager roles: about a hu
 
 Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y».
 
-**What runs by itself:** the daily check every morning (a push only when there is something to do), a weekly search pass, a monthly review — as scheduled tasks where your Claude app has them (`schedules/`). Follow-up dates also go to your calendar from the tracker.
+**What runs by itself:** the daily check every morning (in the desktop app, a push only when there is something to do), a weekly search pass, a monthly review — as scheduled tasks in the Claude desktop app, or from cron in Claude Code (`schedules/`, with what each one can and cannot reach). Follow-up dates also go to your calendar from the tracker.
 
 ## Your data stays yours
 Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit reads it and writes to it only what you confirm. Work per company (`companies/<company>/`: prep, debriefs) and per application (`applications/<date>/`: CVs, form answers) sits next to it in your search folder. None of it goes into this repository (`.gitignore` blocks `me/`, `companies/` and `applications/`).
@@ -45,11 +45,11 @@ Then, in an empty folder for your search: `/start`. To update later: `claude plu
 ```
 mkdir job-search && cd job-search
 git clone https://github.com/butyavk/job-search-kit kit
-echo '@kit/CLAUDE.md' > CLAUDE.md
+echo '@kit/CLAUDE.md' >> CLAUDE.md
 ```
 The one-line `CLAUDE.md` makes Claude Code load the kit's rules in every session started in `job-search/` (it does not read `kit/CLAUDE.md` on its own). In another client, start with «read kit/CLAUDE.md first». Then say «start my job search».
 
-**claude.ai project without a shell:** upload the skills in Settings → Skills — one zip per skill, ready in the latest [release](https://github.com/butyavk/job-search-kit/releases/latest); put `CLAUDE.md` into the project instructions; upload `commands/` (Claude reads them when you say a command), `bank/questions.md`, `pack-template/`, `schedules/` and `templates/` as project files, each named with its path and `__` (`commands__debrief.md`, `templates__debrief.md`: some names repeat across folders). Claude gives you each pack file to upload. Commands become plain words. Details: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
+**claude.ai project:** turn on code execution, upload the skill zips and add the project files from the latest [release](https://github.com/butyavk/job-search-kit/releases/latest), and put `CLAUDE.md` into the project instructions. Commands become plain words; Claude gives you each pack file to add. Step by step: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
 
 **The tracker** is the open-source MCP server [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` sets it up (`uvx tracker-mcp new …`, then one `claude mcp add` line, or the `.mcpb` file for the desktop app). Requires `uv` and tracker-mcp 0.8 or later.
 

@@ -1,6 +1,6 @@
 # References
 
-Usually 1–2 current or recent managers, or a colleague. Choose and warn them at the start of the process.
+Usually 1–2 current or recent managers, or a colleague. Choose them once the process passes the first screen, and warn them before the final round.
 
 | Order | Who | Role then | What they can confirm |
 | --- | --- | --- | --- |

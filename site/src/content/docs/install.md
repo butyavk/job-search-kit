@@ -15,15 +15,12 @@ Any Claude with file access: clone the kit as `kit/` next to your future `me/`.
 ```
 mkdir job-search && cd job-search
 git clone https://github.com/butyavk/job-search-kit kit
-echo '@kit/CLAUDE.md' > CLAUDE.md
+echo '@kit/CLAUDE.md' >> CLAUDE.md
 ```
 The one-line `CLAUDE.md` makes Claude Code load the kit's rules in every session started in `job-search/` (it does not read `kit/CLAUDE.md` on its own). In another client, start with «read kit/CLAUDE.md first». Then say «start my job search».
 
-## A claude.ai project without a shell
-- Skills: upload them in Settings → Skills, one zip per skill — ready in the latest [release](https://github.com/butyavk/job-search-kit/releases/latest).
-- Project instructions: the text of `CLAUDE.md`.
-- Project files: `commands/` (no slash commands there: Claude reads a command's file when you say it), `bank/questions.md`, `pack-template/`, `templates/`, `schedules/` — each named with its path and `__` (`commands__debrief.md`, `templates__debrief.md`: some names repeat across folders).
-- Claude gives you each pack file to upload; commands become plain words.
+## A claude.ai project
+Turn on code execution, upload one zip per skill, add the project files from the latest [release](https://github.com/butyavk/job-search-kit/releases/latest), and put `CLAUDE.md` into the project instructions. Step by step: [How it works → claude.ai](../how-it-works/#running-it-in-claudeai-a-project).
 
 ## What to connect
 Each connection unlocks a part of the path; the kit works with whatever your Claude has.

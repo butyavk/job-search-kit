@@ -23,7 +23,7 @@ Two integrity rules:
 #### CHK-A1 · Short title
 `A` · tags, comma separated · ~8 s
 - EN: One to three sentences, ready to say, in the candidate's register.
-- RU: The same in the native language, same meaning.
+- XX: The same in the native language, same meaning (XX = its two-letter code: RU, ES, DE…; none for a native English speaker).
 - ⚠ What not to say next to it, if anything.
 ```
 ID = topic + type + number: `CHK-A1`. Exception: one-line templates for logistics and questions to the interviewer — `LOG-1`, `ASK-1`, no type letter. The second line uses the two-letter code of the native language from `me/profile.yaml` → `languages.native` (`RU:`, `DE:`, `ES:` …); a native English speaker has only `EN:`. The English register follows `languages.english` (skill `english-register`). Examples below come from the made-up story in `examples/example-story.md` (Shoply). Types:

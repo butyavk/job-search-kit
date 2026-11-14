@@ -8,7 +8,7 @@ Read first: `me/search-rules.md` (frame, gate, money, sources and their techniqu
 
 Window: since the last pass; the first time, 21 days.
 
-Sources (skill `job-search`, section «Sources», and the catalogue `skills/job-search/sources.md`):
+Sources (skill `job-search`, section «Sources», and the catalogue `<kit>/skills/job-search/sources.md`):
 A. Company boards through public ATS APIs — every company in the tracker with a known ATS, companies from past passes, target companies in the frame.
 B. Job sites from the frame's source list that worked before. Skip the ones marked «does not work».
 

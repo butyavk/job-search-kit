@@ -32,7 +32,7 @@ format and people → topic weights and plan → material and trainer → learn 
 ```
 
 ### Step 0. Project and context file
-- One project per company, or one folder: `companies/<company>/` next to `me/` (never inside the kit) with `context.md`, the prep document, `learning-sheet.md`, debriefs. The first document is the context file: role, money and terms from the posting, stages with dates, people, where things are, working rules.
+- One folder per company: `companies/<company>/` next to `me/` (never inside the kit; in a claude.ai project, files named `companies__<company>__context.md` and so on in the same project, so the pack and the kit stay at hand) with `context.md`, the prep document, `learning-sheet.md`, debriefs. The first document is the context file: role, money and terms from the posting, stages with dates, people, where things are, working rules.
 - Read the pack first: `me/never-say.md`, then `me/facts.md` (open questions), then `me/recipes.md` and the blocks.
 - No pack yet — `/start`. Stories in another form — cut them into blocks (`answer-blocks`). Remove bridges to a previous company from ready answers («At <old company> I would…»).
 - CV: the version sent for this vacancy, saved and unchanged.
@@ -47,7 +47,7 @@ format and people → topic weights and plan → material and trainer → learn 
 ### Step 2. Weights and plan
 - Topics by likelihood (high / medium / low), each with the source of the estimate.
 - A day-by-day plan with hours per day; unlikely topics go to «later»; mocks at the hour of the real interview; logistics as its own item (link, time zone, equipment, a quiet room, the platform's sandbox opened on day one).
-- Two days before the interview the material is frozen: only run-throughs aloud.
+- Two days before the interview the material is frozen: only run-throughs aloud. With three days or less there is no freeze: onboarding, «Three days or less».
 
 ### Step 3. The prep document
 One document, a tab per topic (`templates/prep-doc-tabs.md`): recruiter, company and role, answer cheat sheet, English, behavioral and manager questions, values, system design, a one-page plan, metrics, «one sentence», final round and references. Answers come from the pack and are fitted to the company: another order, another emphasis, new bridges to this role. Facts do not change. Every answer keeps its block IDs.
@@ -62,7 +62,7 @@ The prep document is the reserve. What the candidate takes into the room is the 
 - **Aloud, timed, shuffled.** 60–90 seconds an answer, a case up to 60; the questions in random order, as an interviewer asks them.
 - **Repeat only the misses.** A mark per question in every drill: ✓ — the first sentence and all four steps, no prompt, in time; ~ — a pause, too long, or no number; ✗ — not recalled or off the point. ✗ comes back the same evening and the next morning; ✓ two days running leaves the drill.
 - **A plan by days:** day 1 — read each anchor once and tell each story aloud twice; then a drill a day (`/mock drill`) with the marks in the sheet; a full mock at the hour of the interview two days before, and from then the material is frozen (step 2): only drills; the interview day — the map rewritten by hand from memory.
-- **In the interview language.** A Russian interview — Russian drills; an English one — the anchors in English, with the errors from `me/voice.md` checked in every drill.
+- **In the interview language.** An interview in the native language — drills in it; an English one — the anchors in English, with the errors from `me/voice.md` checked in every drill.
 
 ### Step 5. Trainers (by format)
 - System design: skill `system-design`.

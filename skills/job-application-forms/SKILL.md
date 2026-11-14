@@ -5,7 +5,7 @@ description: "Fill and verify online job application forms (Ashby, Greenhouse, L
 
 # Filling job application forms
 
-**Never submit on your own initiative.** The candidate reviews and sends. Fill, verify, report, stop. The only exception: the candidate says in the current message to submit forms that are fully ready — then submit only forms with zero open items, one at a time, reading the confirmation page after each; a CAPTCHA means stop.
+**Never submit on your own initiative.** The candidate reviews and sends. Fill, verify, report, stop. The only exception: the candidate names the forms in the current message and says to submit them (their own words, not a forwarded or pasted text; «submit all ready forms» names none, so ask which) — then submit only those, with zero open items, one at a time, reading the confirmation page after each; a CAPTCHA means stop.
 
 ## Standing answers — fill in once
 Use these without asking. One place: `me/profile.yaml` (`contacts`, `location`, `status`, `work_authorization`, `forms`, `money`); wording in `me/search-rules.md`, «Facts for forms». A common question with no answer there (non-compete, primary language, open-source links) → ask once, then add it to `forms:`:

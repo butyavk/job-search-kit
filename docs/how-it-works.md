@@ -59,10 +59,13 @@ Follow-up 1 at application + 10 days, follow-up 2 at +14 more, «No answer» 30 
 | The mail connector rewrote links in drafts into redirects | no links in drafts; add them by hand |
 
 <a id="claudeai"></a>
-## Running it in claude.ai without a shell
-- Skills: zip each folder in `skills/` and upload it in Settings → Skills.
-- Project instructions: the text of `CLAUDE.md`.
-- Project files: `commands/` (there are no slash commands: Claude reads `commands/start.md` when you say «start» or «/start»), `bank/questions.md`, `pack-template/` (onboarding uses it), `templates/`, `schedules/` for scheduled tasks. If the project does not keep folders, name files with their path: `me__facts.md`, `me__blocks__10-work.md`.
-- Without a tool for project files, Claude cannot write them: after each change it gives the whole file and says which one to replace. With one (some setups have it), it writes them itself.
-- The pack check: Claude goes through the checklist in the `answer-blocks` skill. The independent fact check needs a session that can start a separate agent (Claude Code or the desktop app).
-- The tracker: the desktop app with the tracker-mcp `.mcpb`; in the browser only, keep the spreadsheet by hand from Claude's row changes.
+## Running it in claude.ai (a Project)
+1. Turn on code execution: Settings → Capabilities → «Code execution and file creation» («Create and edit files» in the new layout; on Team and Enterprise the owner turns it on, with Skills). Skills need it, and with it Claude can run the kit's scripts.
+2. Skills: Customize → Skills → «+» → «Upload a skill», one zip per skill from the latest [release](https://github.com/butyavk/job-search-kit/releases/latest).
+3. Project instructions: the text of `CLAUDE.md`.
+4. Project files: everything in `job-search-kit-project-files-<version>.zip` from the same release — commands, templates, schedules, the bank, the pack template, the example story, this guide and the scripts — each named with its path (`commands__debrief.md`, `templates__debrief.md`; some names repeat across folders). There are no slash commands: Claude reads `commands__start.md` when you say «start» or «/start».
+5. The pack: Claude gives each pack file as a download named with its path (`me__facts.md`, `me__blocks__10-work.md`); you add it to the project and replace the old one. With code execution it runs `check_pack.py` and `english_check.py` on copies; without it, it goes through the checklist in the `answer-blocks` skill.
+6. Work per company: files named `companies__<company>__learning-sheet.md` and so on, in the same project — not a project per company, which would lose the pack and the kit.
+7. The tracker: in the browser, a spreadsheet you keep by hand from Claude's row changes, with the columns of `templates__tracker.csv`; in the desktop app, the tracker-mcp `.mcpb` pointed at that file (save the CSV, or open it in Excel and save as .xlsx).
+8. The independent fact check needs a session that can start a separate agent (Claude Code or the desktop app).
+9. Moving to Claude Code later: download the pack files into the search folder and run `for f in me__*; do p="${f//__//}"; mkdir -p "$(dirname "$p")"; mv "$f" "$p"; done` there; the same for `companies__*`.

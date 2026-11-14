@@ -17,6 +17,15 @@ Theory and practice live on the open site **System Design Map** — a reworked a
 
 The candidate leads the first 15–20 minutes.
 
+## For engineering managers
+A manager's round uses the same six steps, but the interviewer listens for different things; the tables and keys of step 2 matter less than who owns what.
+- **Scope:** the business goal and its measure, the team that will build it, the deadline; what «done» means for the users.
+- **Contract:** the service boundaries and the teams behind them (Conway's law: a boundary between teams becomes an API); what is bought, what is built.
+- **Simple → Scale:** the first version a team of the given size ships in a quarter; then what changes at 10× and which signal (an SLO, a cost line) triggers it.
+- **Failures:** SLOs and error budgets, on-call and who is paged, the rollback; a migration from the old system without a stop (strangler, dual writes, the backfill and its check).
+- **Wrap-up:** the trade-offs and what would make the choice wrong; the team shape and the hires it needs.
+- Bridges to the candidate's own decisions come from blocks (`D`, `L`), with IDs: «at <company> we split the service along team lines when…».
+
 ## Rules that paid off
 - **Ask only what changes the design.** 4–5 questions at the start (START), the rest when you reach that part (LATER). The obvious is not asked but said as an assumption. Answers go on the board as text at once.
 - **Count the heaviest part first**, then draw the scale.

@@ -1,6 +1,7 @@
 # Publishes the version in .claude-plugin/plugin.json as a GitHub release, started by hand
-# (Actions → release → Run workflow): the tag v<version>, the notes from CHANGELOG.md, and one
-# zip per skill for claude.ai (Settings → Skills takes a skill as a zip) plus all of them in one.
+# by the maintainer (Actions → release → Run workflow): the tag v<version>, the notes from
+# CHANGELOG.md, one zip per skill for claude.ai (Customize → Skills takes one skill per zip), and
+# the kit's other files for a claude.ai project, each named with its path (`commands__debrief.md`).
 name: release
 
 on:
@@ -33,12 +34,20 @@ jobs:
             n="$(basename "$d")"
             (cd skills && zip -qr "$RUNNER_TEMP/out/skills/$n.zip" "$n")
           done
-          (cd "$RUNNER_TEMP/out/skills" && zip -qr "$RUNNER_TEMP/out/job-search-kit-skills-${{ steps.v.outputs.version }}.zip" .)
           ls "$RUNNER_TEMP/out/skills"
+      - name: The kit's other files for a claude.ai project, each named with its path
+        run: |
+          mkdir -p "$RUNNER_TEMP/flat"
+          for f in CLAUDE.md commands/*.md templates/*.md templates/*.csv schedules/*.md bank/questions.md \
+                   examples/*.md docs/how-it-works.md scripts/*.py $(find pack-template -type f); do
+            cp "$f" "$RUNNER_TEMP/flat/$(echo "$f" | sed 's|/|__|g')"
+          done
+          (cd "$RUNNER_TEMP/flat" && zip -q "$RUNNER_TEMP/out/job-search-kit-project-files-${{ steps.v.outputs.version }}.zip" *)
+          ls "$RUNNER_TEMP/flat"
       - name: Release
         run: |
           gh release create "v${{ steps.v.outputs.version }}" --target "$GITHUB_SHA" \
             --title "job-search-kit ${{ steps.v.outputs.version }}" --notes-file "$RUNNER_TEMP/notes.md" \
-            "$RUNNER_TEMP"/out/skills/*.zip "$RUNNER_TEMP/out/job-search-kit-skills-${{ steps.v.outputs.version }}.zip"
+            "$RUNNER_TEMP"/out/skills/*.zip "$RUNNER_TEMP/out/job-search-kit-project-files-${{ steps.v.outputs.version }}.zip"
         env:
           GH_TOKEN: ${{ github.token }}

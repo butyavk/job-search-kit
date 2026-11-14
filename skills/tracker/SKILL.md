@@ -11,7 +11,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 0. **`uv` is needed** (`uvx`): `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, or `brew install uv` — the candidate runs it.
 1. Version: tracker-mcp 0.8 or later (`uvx tracker-mcp --version`; `uvx --refresh tracker-mcp` updates it).
 2. **Existing tracker?** Ask where it is. `uvx tracker-mcp init <file or Google Sheets URL>` writes a config that maps its columns and statuses; show the mapping and fix it with the candidate.
-3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
+3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` (other languages: `en`, then rename the statuses in its config) creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 4. **Connect the server:**
    - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp`
    - For Claude Code scheduled runs, a read-only server list of their own, `me/schedules/tracker-ro.mcp.json` (not a second `claude mcp add`, so everyday sessions see only `tracker`):
@@ -27,7 +27,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 5. **Check:** `check_tracker`, then `describe_tracker` — Claude says in two lines what it sees. If the tracker has no **Source** and **Gate** columns (section 5), propose adding them now (`add_column`, previewed): `/review` measures the search by them.
 6. Write the path to `me/profile.yaml` → `paths.tracker`.
 
-No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand; Claude gives the exact row changes as a table.
+No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand, with the columns of `templates/tracker.csv` (the same as `tracker-mcp new` makes, plus Gate); Claude gives the exact row changes as a table. Later, the desktop app's `.mcpb` can point at that same file (a .csv, or saved from Excel as .xlsx) — no terminal needed.
 
 ## 2. Writing
 - Every write: read the row (`get_application` → version) → the change with `expected_version` as a dry run → show the preview → write after the candidate's yes (the server asks for this on every write). Batches (`add_applications`, `set_statuses`) always as a dry run first; write after the candidate's yes.
@@ -45,11 +45,11 @@ No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet b
 - Mail: `match_emails` links messages to rows.
 
 ## 4. Reminders without a scheduler
-`export_followups_calendar` (or `tracker-mcp calendar` in a shell) writes an .ics file with the open follow-ups (overdue ones on today); the candidate imports it into their calendar and re-imports after big changes. With a calendar connector, `calendar_events` gives the same events to add directly. Interviews are already in the calendar from the invitations.
+`export_followups_calendar` (or `uvx tracker-mcp calendar` in a shell) writes an .ics file with the open follow-ups (overdue ones on today); the candidate imports it into their calendar and re-imports after big changes. With a calendar connector, `calendar_events` gives the same events to add directly. Interviews are already in the calendar from the invitations.
 
 ## 5. Columns worth adding
 `add_column` adds a column and extends dropdowns. Useful ones:
-- **Source** — where the vacancy was found;
+- **Source** — where the vacancy was found (a tracker made by `tracker-mcp new` has it as «Found via»: check `describe_tracker` before adding any column);
 - **Geography — checked <date>** — what the posting really says about location and remote;
 - **Money (published)** — the range from the posting;
 - **Gate** — the five-point line, e.g. `L2 S2 D1 G0 M2`;

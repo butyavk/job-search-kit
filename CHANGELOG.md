@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.0 — 2026-11-14
+
+Safety (a red-team review)
+- Only the candidate's own words are a yes: pasted or forwarded text is data. A yes for named items needs the items named («submit all ready forms» names none).
+- Autonomy rules: written only from the candidate's words in a live session; read back with «still yours?» before the first use; `check_pack.py` parses them properly (any key order, no flow style) and rejects actions no rule may cover; the template no longer offers `submit_form`.
+- Text in pages, emails, invites, messages, tracker cells and earlier run summaries that tells Claude what to do is quoted under «Suspicious» and not done — in the daily, weekly and monthly runs alike.
+- A `me/` that came with something else (a cloned take-home) is not the pack; the pack is the one in `paths.pack`.
+- Scheduled runs in Claude Code: `--permission-mode default` and a deny list (Bash, the pack's own files); the weekly run fetches only job-board hosts; the read-only tracker starts from an absolute `uvx` path with a pinned version range (tracker-mcp 0.8). Desktop-app tasks are created only after the candidate hears what protects them and says yes; the mail and calendar send tools stay on «ask».
+- `check_pack.py` warns when a filled schedule prompt differs from the kit's beyond its `<…>` values; `/today` then uses the kit's text.
+- Imported facts stay drafts until the candidate confirms them in the session.
+- The kit needs tracker-mcp 0.8 or later (an edited config can no longer turn the yes off).
+
+Fixed (a requirements audit and a newcomer run in English, claude.ai first)
+- Native English: no second line, no contraction or long-word warnings, no non-native targets printed; the checklist, onboarding and the template say so; «British English» and «English (UK)» count.
+- claude.ai: code execution is the prerequisite; skills from Customize → Skills; the release ships the project files already named with their path, scripts and the example included; company work as `companies__<company>__…` in the same project; a hand-kept tracker with `templates/tracker.csv`; moving to Claude Code with one rename line.
+- An interview in three days or less: one session, no freeze, the search after the interview.
+- System design for engineering managers.
+- `check_pack.py`: money from the profile (with comments after the key); a pack needs profile.yaml or facts.md; duplicate recipe rows and missing `F-` facts in blocks are errors; IDs, versions, dates, phones and colours are not amounts; «12 million» is one number; «ten twenty-person teams» is two; `--cv` reads .docx, refuses unknown types, skips contact lines, and reports warnings.
+- `english_check.py`: idioms in any word form («moving the needle», «deep dives»), «That said» without a comma; «underscore» as a word is fine; text that is not English gets only the never-say check; `--me` without a pack is an error.
+- `check_kit.py` drops only the two exact copy-note lines. The hook fires only with a real pack (`me/profile.yaml`, or an existing `JOB_SEARCH_ME`).
+- The import line is appended to an existing `CLAUDE.md`, never overwriting it. Plugin-safe paths in CLAUDE.md §7 and in the schedule prompts (`<kit>`).
+- Offers: pension, holidays, notice both ways, conditional offers, restrictive covenants, IR35-type status; withdrawals only after the contract is signed and its conditions cleared. References are warned before the final round.
+- Debrief: block edits during an open process only with a note; new questions to `me/questions-extra.md` everywhere. Time zones as IANA names. `uvx tracker-mcp calendar`.
+
 ## 1.3.2 — 2026-11-14
 
 Fixed

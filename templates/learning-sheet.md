@@ -8,7 +8,7 @@ The prep document is the reserve; this sheet is what you learn. You learn anchor
 3. **Aloud, timed:** 60–90 seconds an answer, a case up to 60. Over time — cut the situation, never the number.
 4. **Shuffled:** the interviewer will not follow this page.
 5. **Only the misses again:** ✗ — the same evening and the next morning; ✓ two days running — out of the drill.
-6. **Freeze** two days before: nothing new, only drills.
+6. **Freeze** two days before: nothing new, only drills (with three days or less, no freeze: the sheet on day 1).
 
 The drill: `/mock drill <company>` (or the words «drill <company>»). Claude asks in random order, marks each answer and writes the marks below.
 

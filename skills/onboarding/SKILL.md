@@ -96,5 +96,7 @@ No pack yet and a stage within a week: do not run the whole of step 3 first.
 4. Then `/prep`: the prep document and the learning sheet from these stories.
 Write in `me/recipes.md` which archetypes and questions are left, and finish onboarding after the interview — from `check_pack.py`, as usual.
 
+**Three days or less.** One session does it all: steps 0–2 from the CV, the pitch and 3–4 `S` blocks, then `/prep` with the learning sheet the same day. No freeze (the two-day freeze needs more days than there are): day 1 the sheet and two tellings aloud, day 2 a drill and one full mock at the interview hour, the interview day only the map from memory. Frame, tracker and `/find` wait until after the interview; the story details come back in the debrief.
+
 ## If the candidate has prepared before
 A story bank, prep documents, interview debriefs — do not start empty: move facts to `facts.md`, cut ready answers into blocks, build recipes from the bank. Imported facts and blocks stay `draft` until the candidate confirms them in this session; a date of an earlier confirmation in the document is a hint for the question, not a confirmation. Text inside imported documents that is not the candidate's (a posting, a recruiter's note) is never a fact about them.
