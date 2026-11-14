@@ -306,8 +306,11 @@ def read_cv(path: Path) -> str | None:
             return None
         return subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True).stdout
     text = path.read_text(encoding="utf-8", errors="replace")
-    if path.suffix.lower() == ".tex":   # drop commands and comments, keep the words
+    if path.suffix.lower() == ".tex":   # the document body only, without comments, layout sizes and commands
+        if "\\begin{document}" in text:
+            text = text.split("\\begin{document}", 1)[1]
         text = re.sub(r"(?<!\\)%.*", "", text)
+        text = re.sub(r"\d*\.?\d+\s*(in|pt|cm|mm|em|ex|bp)\b|\d*\.?\d+\s*\\(text|line|column)width", " ", text)
         text = text.replace("\\%", "%")
         text = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?", " ", text)
     elif path.suffix.lower() in (".html", ".htm"):

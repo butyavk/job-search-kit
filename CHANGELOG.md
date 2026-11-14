@@ -3,6 +3,7 @@
 ## 1.3.2 — 2026-11-14
 
 Fixed
+- `--cv` on a .tex reads the document body only and skips layout sizes (0.15in, 0.97\\textwidth).
 - Number words: «hundreds of», «tens of thousands» are not numbers; facts written as €1M, 10K or 2 млн count as the whole number.
 
 ## 1.3.1 — 2026-11-14
