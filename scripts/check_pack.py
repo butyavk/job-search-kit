@@ -241,10 +241,9 @@ NOT_AMOUNTS = re.compile(
     r"|\+\d[\d\s().-]{6,}\d"                               # phone numbers
     r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
     r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
-    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgres(?:QL)?|MySQL|iOS|Android|"
+    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform|Rust|TypeScript|Spark|Windows|Java|iOS|Android|"
     r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
     r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI)\s?/?\d[\d.]*"  # versions and standards
-    r"|\b\d{1,3},\d{1,3},\d{1,3}\b"                       # colours like 0,102,204
     r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
     r"|\b\d+[A-Za-z][\w-]*")                                  # names glued to digits: 37signals, 2FA, 3rd
 SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn)\b(?!-)")
@@ -358,6 +357,7 @@ def read_cv(path: Path) -> str | None:
         text = re.sub(r"(?<!\\)%.*", "", text)
         text = re.sub(r"\d*\.?\d+\s*(in|pt|cm|mm|em|ex|bp)\b|\d*\.?\d+\s*\\(text|line|column)width", " ", text)
         text = re.sub(r"\\[a-zA-Z]+\*?(?:\{[\d.,\s]*\}|\[[^\]]*\])+", " ", text)   # \fontsize{10}{12}, \definecolor[...]
+        text = re.sub(r"\b\d{1,3},\d{1,3},\d{1,3}\b", " ", text)                 # colours like 0,102,204
         text = text.replace("\\%", "%")
         text = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?", " ", text)
     elif path.suffix.lower() in (".html", ".htm"):
@@ -400,76 +400,64 @@ def autonomy_errors(ptxt: str) -> list[str]:
         if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or not said_text \
                 or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
-        what = action.group(1) + " " + " ".join(re.findall(r"(?:^|\n)\s*when:\s*([^\n]+)", "\n" + e))
-        if NO_RULE.search(what):
+        act = action.group(1).split("#")[0].strip().strip("\"'")
+        what = act + " " + " ".join(re.findall(r"(?:^|\n)\s*(?:when|checks):\s*([^\n]+)", "\n" + e))
+        if not re.fullmatch(r"send_followup|send_note|other \(.+\)", act):
+            out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup, send_note or "
+                       "other (what, in words); nothing else can become a rule")
+        elif NO_RULE.search(what):
             out.append(f"profile.yaml: autonomy rule «{action.group(1).strip()[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
     return out
 
 
-SLOT_RE = re.compile(r"<[^<>\n]{1,80}>")
-
-
-def _slot(name: str) -> str:
-    # a value is a short phrase: no sentence end, no new clause, no code; the kit path is a path
-    if name == "<kit>":
-        return r"[^\s;`<>]{1,300}"
-    return r"[^.;:!?\n`<>]{1,80}"
-
-
-def prompt_drift(kit_prompt: Path, filled: Path) -> tuple[list[str], list[str]]:
-    """A filled schedule prompt against the kit's: lines that are not a kit line with its <…> filled
-    in (added or changed), and kit lines that have no filled line (deleted)."""
-    pats = []
-    for line in kit_prompt.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        text, pos, rx = line.strip(), 0, ""
-        for m in SLOT_RE.finditer(text):
-            rx += re.escape(text[pos:m.start()]) + _slot(m.group(0))
-            pos = m.end()
-        pats.append((text, re.compile(r"\s*" + rx + re.escape(text[pos:]) + r"\s*$")))
-    lines = [l for l in filled.read_text(encoding="utf-8").splitlines() if l.strip()]
-    extra = [l.strip()[:70] for l in lines if not any(pt.match(l) for _, pt in pats)]
-    missing = [t[:70] for t, pt in pats if not any(pt.match(l) for l in lines)]
-    return extra, missing
-
-
 def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
-    """What a scheduled run trusts in the pack: the filled prompts and the read-only tracker entry."""
+    """What a scheduled run trusts in the pack: the values its prompt is filled with, the read-only
+    tracker entry, and the dates of earlier run files."""
     out = []
+    values = me / "schedules" / "values.yaml"
+    unfilled = values.exists() and re.search(r"<[^<>\n]+>", values.read_text(encoding="utf-8"))
+    if (values.exists() and not (unfilled and not strict)) or strict:
+        import subprocess
+        r = subprocess.run([sys.executable, str(kit / "scripts" / "schedule_prompt.py"), "daily", "--me", str(me)],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            out.append("schedules/values.yaml: " + (r.stderr.strip().splitlines() or ["cannot fill the prompt"])[-1])
     for name in ("daily.md", "weekly.md", "monthly.md"):
-        filled, kit_prompt = me / "schedules" / name, kit / "schedules" / name
-        if filled.exists() and kit_prompt.exists():
-            extra, missing = prompt_drift(kit_prompt, filled)
-            if extra:
-                out.append(f"schedules/{name}: {len(extra)} line(s) are not the kit's prompt with its <…> filled in "
-                           f"(an old copy after a kit update, or an edit nobody asked for): «{extra[0]}»")
-            if missing:
-                out.append(f"schedules/{name}: {len(missing)} line(s) of the kit's prompt are missing: «{missing[0]}»")
+        if (me / "schedules" / name).exists():
+            out.append(f"schedules/{name}: a filled prompt in the pack is no longer used (the run builds it from "
+                       "the kit with `schedule_prompt.py`); delete it so nothing reads it")
     ro = me / "schedules" / "tracker-ro.mcp.json"
-    if ro.exists() and re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8")) and not strict:
+    if not ro.exists():
+        if strict:
+            out.append("schedules/tracker-ro.mcp.json is missing (skill `tracker`, setup step 4)")
+    elif re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8")) and not strict:
         pass   # the template, not filled yet: nothing runs from it
-    elif ro.exists():
+    else:
         try:
             servers = json.loads(ro.read_text(encoding="utf-8")).get("mcpServers", {})
-        except ValueError as e:
-            servers, _ = None, out.append(f"schedules/tracker-ro.mcp.json: not valid JSON ({e})")
+        except (ValueError, AttributeError) as e:
+            servers = None
+            out.append(f"schedules/tracker-ro.mcp.json: not valid JSON ({e})")
         if servers is not None:
-            entry = servers.get("tracker-ro") if list(servers) == ["tracker-ro"] else None
-            args = (entry or {}).get("args", [])
-            ok = (entry is not None and Path(str(entry.get("command", ""))).name in ("uvx", "uvx.exe")
-                  and len(args) == 4 and args[0] == "--from" and str(args[1]).startswith("tracker-mcp")
-                  and args[2] == "tracker-mcp" and args[3] == "--read-only"
-                  and set((entry.get("env") or {})) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"})
+            entry = servers.get("tracker-ro") if isinstance(servers, dict) and list(servers) == ["tracker-ro"] else None
+            ok = isinstance(entry, dict) and set(entry) <= {"command", "args", "env"}
+            if ok:
+                cmd, args, env = str(entry.get("command", "")), entry.get("args", []), entry.get("env") or {}
+                ok = (re.fullmatch(r"(/|~/)[\w./ -]*/uvx(\.exe)?", cmd) is not None and not cmd.startswith(("/tmp/", "/var/tmp/"))
+                      and isinstance(args, list) and len(args) == 4 and args[0] == "--from"
+                      and re.fullmatch(r"tracker-mcp(==\d+(\.\d+)*|>=\d+(\.\d+)*(,<\d+(\.\d+)*)?)", str(args[1])) is not None
+                      and args[2] == "tracker-mcp" and args[3] == "--read-only"
+                      and isinstance(env, dict) and set(env) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"})
             if not ok:
-                out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by uvx as "
-                           "`--from tracker-mcp… tracker-mcp --read-only` — a scheduled run must not use it")
+                out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by an absolute "
+                           "uvx path as `--from tracker-mcp<version> tracker-mcp --read-only` — a scheduled run must not use it")
     today = __import__("datetime").date.today().isoformat()
-    for f in sorted((me / "runs").glob("*.md")) + sorted((me / "search").glob("*.md")):
-        m = re.match(r"(\d{4}-\d{2}-\d{2})", f.name)
-        if m and m.group(1) > today:
-            out.append(f"{f.parent.name}/{f.name}: dated in the future — not a real run; remove it")
+    for folder in ("runs", "search"):
+        for f in sorted((me / folder).rglob("*")) if (me / folder).is_dir() else []:
+            m = re.match(r"(\d{4}-\d{2}-\d{2})", f.name)
+            if f.is_file() and m and m.group(1) > today:
+                out.append(f"{folder}/{f.relative_to(me / folder)}: dated in the future — not a real run; remove it")
     return out
 
 
@@ -502,8 +490,8 @@ def main() -> int:
     ap.add_argument("--ready", action="store_true",
                     help="fail until the pack can be used: no placeholders in profile and facts, the pitch I01 confirmed")
     ap.add_argument("--schedules", action="store_true",
-                    help="check only what a scheduled run trusts (the filled prompts, the read-only tracker entry, "
-                         "run files): exit 1 on any problem; run it before every scheduled run")
+                    help="check only what a scheduled run trusts (its values, the read-only tracker entry, run files): "
+                         "exit 1 on any problem; run it before every scheduled run")
     ap.add_argument("--cv", type=Path, default=None,
                     help="also check a CV (.tex, .md, .txt, .html, or .pdf with pdftotext): every number in it must be in facts.md")
     ap.add_argument("--mark-synced", action="store_true",
@@ -638,7 +626,9 @@ def main() -> int:
         floor_numbers: set[str] = set()
         if mm:   # only say_aloud is said; the floor and the current salary must never appear in a block
             money = re.sub(r"#.*", "", mm.group(1))
-            parts = re.split(r"^([ \t]{1,4}[a-z_]+:)", money, flags=re.M)
+            first = re.search(r"^([ \t]+)[a-z_]+:", money, re.M)   # the first level under money:, nested keys stay inside
+            ind = re.escape(first.group(1)) if first else r"[ \t]+"
+            parts = re.split(r"^(" + ind + r"[a-z_]+:)", money, flags=re.M)
             for key, val in zip(parts[1::2], parts[2::2]):
                 nums = {norm_number(m.group(1), m.group(2))
                         for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, NOT_AMOUNTS.sub(" ", val)))}

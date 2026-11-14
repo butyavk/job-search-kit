@@ -21,7 +21,7 @@ You need a pack first (`/start`): answers are built from your own answer blocks.
 Say «a take-home from <company>» with the task. Claude finds out the time box, what is evaluated and the rule on AI tools, plans the work inside the time box, keeps everything running and writes the README with you: assumptions, how to run, what was left out and why. You submit; then you prepare the review call the same way as any stage.
 
 ## An offer
-Say «<company> made an offer» and paste it. Claude reads it whole, compares it with your floor (never said to anyone) and your other processes, and drafts the answer: no decision in the moment, a counter with one number, a review date with metrics if the base is capped. Before signing — the contract against the offer, line by line. After the decision — withdrawals from other processes, thanks to references, the tracker closed and a retro. Every message is yours to send.
+Say «<company> made an offer» and paste it. Claude reads it whole, compares it with your floor (never said to anyone) and your other processes, and drafts the answer: no decision in the moment, a counter with one number, a review date with metrics if the base is capped. Before signing — the contract against the offer, line by line. Once the contract is signed and its conditions have cleared — withdrawals from other processes, thanks to references, the tracker closed and a retro. Every message is yours to send.
 
 ## How to learn
 - **Stories, not answers.** Almost any question is a first sentence plus one of 5–7 stories. A story is an anchor in four steps: the answer in one sentence → the situation → what I did → the number and the lesson.

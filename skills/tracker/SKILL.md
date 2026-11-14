@@ -21,7 +21,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
        "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
      ```
      The read-only server previews and refuses every write. `schedules/README.md` runs it with `--strict-mcp-config`, so the read-write server is not loaded in that run.
-   - Claude desktop app: the `.mcpb` file from the latest release of tracker-mcp — double-click, pick the tracker.
+   - Claude desktop app: the `.mcpb` file from the latest release of tracker-mcp — double-click, pick the tracker. Its setting «Confirm only in the app's dialog» (tracker-mcp 0.8.1) makes every write wait for the candidate's answer in the app; propose turning it on.
    - Other clients: the agent setup guide, https://raw.githubusercontent.com/butyavk/tracker-mcp/main/docs/agent-setup.md
    - macOS with the tracker in Documents, Desktop or Downloads: see the macOS section of the server's README.
 5. **Check:** `check_tracker`, then `describe_tracker` — Claude says in two lines what it sees. If the tracker has no **Source** and **Gate** columns (section 5), propose adding them now (`add_column`, previewed): `/review` measures the search by them.

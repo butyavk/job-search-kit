@@ -1,0 +1,7 @@
+# The values a scheduled run's prompt is filled with (scripts/schedule_prompt.py).
+# Short phrases only: letters, digits, spaces and , . ( ) ' & / + -
+name: <First Last>
+roles: <the roles you look for, e.g. Engineering Manager, Head of Engineering>
+city: <city>
+time zone: <IANA zone, e.g. Europe/London>
+language: <the language Claude talks to you in>

@@ -2,8 +2,16 @@
 
 ## 1.4.2 — 2026-11-14
 
+Changed (a fourth review)
+- A scheduled run's prompt is always the kit's: `scripts/schedule_prompt.py daily|weekly|monthly` builds it at the start from the kit's file and `me/schedules/values.yaml` (name, roles, city, time zone, language; short phrases only; `<kit>` filled by the script; run-time slots such as `<date>` left as they are). No prompt file in the pack is read, so a kit update reaches the runs by itself and an edited file cannot change what they do. `check_pack.py --schedules` checks the values, refuses an old filled copy in the pack, and checks the read-only entry strictly (an absolute uvx path, a `tracker-mcp` version range, no other keys).
+- The cron line no longer denies `Edit(./*)`, which blocked the run's own summary; it denies `Edit(./CLAUDE.md)` instead, and quotes its paths.
+- Autonomy rules: the action is `send_followup`, `send_note` or `other (…)`; anything else is an error, and `checks:` is scanned too.
+- The plugin hook warns unless the profile records this pack by its absolute path.
+
 Fixed
-- `check_pack.py`: names glued to digits (37signals, 2FA, 3rd) and ratios (80/20, 24/7) are not amounts to check against `facts.md`.
+- `check_pack.py`: names glued to digits (37signals, 2FA, 3rd) and ratios (80/20, 24/7) are not amounts to check against `facts.md`; nested keys under `money:` (the template's own layout); «1,234,567 users» is a number again (colours are skipped only in TeX); PostgreSQL, Terraform, Rust, TypeScript, Spark, Windows and Java versions.
+- `english_check.py`: «do», «die», «en», «os», «la» no longer make English look like another language; -ly forms (seamlessly, crucially, passionately) are caught; «That said» only where it opens a sentence.
+- Docs: forms are submitted only when the candidate names them (README, install pages, CLAUDE.md §5); withdrawals after the signed contract (site prep pages); the tracker extension's «Confirm only in the app's dialog» in the tracker skill; the references message says «late stages».
 
 ## 1.4.1 — 2026-11-14
 

@@ -30,7 +30,7 @@ if me is None:
 IDIOMS = ["earn their keep", "connective tissue", "move the needle", "low-hanging", "deep dive",
           "at the end of the day", "double down", "north star", "have the bandwidth", "no bandwidth",
           "in the weeds", "boil the ocean", "tip of the iceberg", "hit the ground running", "wear many hats",
-          "that said,", "boil down to"]
+          "boil down to"]   # «That said» is matched only where it opens a sentence (OPENERS)
 OPENERS = [r"(?:^|[.!?]\s+)That said\b"]   # «That said» opening a sentence, with or without a comma
 AI_WORDS = ["delve", "robust", "seamless", "holistic", "synergy",
             "testament to", "underscores", "pivotal", "landscape", "realm", "crucial", "furthermore",
@@ -51,7 +51,7 @@ def word_forms(word):  # move → moved, moving, moves; dive → dives; double �
     if word in ONLY_PLURAL:
         return re.escape(word) + r"s?\b"
     stem = re.sub(r"(e|y)$", "", word)
-    return re.escape(stem) + r"(?:e|es|ed|ing|s|d|y|ies|ied)?\b"
+    return re.escape(stem) + r"(?:e|es|ed|ing|s|d|y|ies|ied|ly|ely|ally)?\b"
 def idiom_re(i):  # every word matches its forms: «moving the needle», «deep dives», «doubled down»
     if " " in i or "-" in i:
         tail = "" if i.endswith(",") else r"\b"
@@ -61,9 +61,9 @@ def idiom_re(i):  # every word matches its forms: «moving the needle», «deep 
 # Is it English at all? A Spanish or German text has few of these words; its AI-word «hits»
 # («crucial», «robusto») are its own language, so only never-say is checked there.
 EN_COMMON = {"the", "and", "of", "to", "a", "in", "is", "i", "we", "it", "that", "for", "with", "on", "was", "my"}
-OTHER_COMMON = {"el", "la", "los", "las", "que", "y", "por", "para", "con", "una", "del", "der", "die", "das", "und",
-                "ist", "nicht", "mit", "le", "les", "des", "et", "est", "une", "pour", "dans", "os", "da", "do", "não",
-                "il", "che", "di", "het", "een", "en", "och", "att", "och", "na", "się", "jest"}
+OTHER_COMMON = {"los", "las", "que", "por", "para", "con", "una", "del", "der", "das", "und", "ist", "nicht", "mit",
+                "les", "des", "est", "une", "pour", "dans", "não", "che", "het", "een", "och", "att", "się", "jest",
+                "el", "y", "il", "di", "et"}   # no English homographs (do, die, en, os, la, da)
 letters = re.findall(r"[^\W\d_]", t)
 non_latin = sum(1 for ch in letters if ord(ch) > 0x024F) / max(len(letters), 1)
 en_hits = sum(1 for x in w if x.lower() in EN_COMMON)
@@ -72,7 +72,7 @@ other_hits = sum(1 for x in re.findall(r"[^\W\d_]+", t) if x.lower() in OTHER_CO
 # language's common words than of English ones
 is_english = bool(w) and non_latin < 0.2 and other_hits <= en_hits
 found = [i.rstrip(",") for i in IDIOMS if re.search(idiom_re(i), t, re.I)] if is_english else []
-found += ["that said"] if is_english and "that said" not in found and any(re.search(o, t) for o in OPENERS) else []
+found += ["that said"] if is_english and any(re.search(o, t) for o in OPENERS) else []
 ai = [i for i in AI_WORDS if re.search(idiom_re(i), t, re.I)] if is_english else []
 native_en = False   # a native English speaker: contractions and idioms are their own register
 if me is not None and (me / "profile.yaml").exists():
