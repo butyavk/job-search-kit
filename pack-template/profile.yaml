@@ -12,7 +12,6 @@ location:
   line_cv: "<City, Country (UTC+N) · Remote, open to relocation>"
 target:
   track: <manager / engineer / product>   # check_pack counts the ◆ questions of this track
-  roles: <roles and levels I look for>
 status:
   employed_now: <true/false>
   start_date: <Immediately / 2 weeks / ...>

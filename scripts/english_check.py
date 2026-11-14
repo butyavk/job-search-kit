@@ -35,7 +35,12 @@ s = [x for x in re.split(r'(?<=[.!?])\s+', t.replace('\n', ' ')) if len(x.split(
 w = re.findall(r"[A-Za-z][A-Za-z'\-]*", t)
 lw = [x for x in w if len(x) >= 8]
 contr = [x for x in w if re.search(r"[a-z]'(t|m|re|ve|ll|d|s)$", x, re.I) and not x.lower().endswith("'s")]
-found = [i for i in IDIOMS if re.search(r'\b' + re.escape(i) + r'\b', t, re.I)]
+def idiom_re(i):  # one word matches its forms too: leverage → leveraging, synergy → synergies
+    if " " in i or "-" in i:
+        return r"\b" + r"\s+".join(re.escape(w) for w in i.split()) + r"\b"
+    stem = re.sub(r"(e|y)$", "", i) if len(i) > 5 else i
+    return r"\b" + re.escape(stem) + r"\w*"
+found = [i for i in IDIOMS if re.search(idiom_re(i), t, re.I)]
 if not s:
     sys.exit("no sentences")
 print(f"words: {len(w)}, sentences: {len(s)}")
@@ -50,7 +55,9 @@ if me is not None:
         return r"(?<!\w)" + r"\s+".join(re.escape(w) for w in p.split()) + r"(?!\w)"
     hits = [p for p in banned if re.search(loose(p), t, re.I)]
     print(f"never-say ({me}): {hits or 'none'}")
-    if hits:
-        sys.exit(1)
 else:
+    hits = []
     print("never-say: no pack found (pass --me <pack>)")
+bad = bool(contr or found or hits)
+print("verdict: " + ("FIX — contractions, idioms or never-say phrases above" if bad else "OK (the sentence numbers above are targets, not a pass/fail)"))
+sys.exit(1 if bad else 0)

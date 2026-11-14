@@ -11,6 +11,8 @@ The main rule: **invent nothing.** A draft from a CV is a guess, not a fact. Wha
 
 Talk to the candidate in their language. Blocks are written in English (the interview language) plus their native language on the second line.
 
+**Order.** Steps 0–2, then 4–5 and the first `/find` in the first session; step 3 (stories) over the next sessions, 2–3 stories each, while applications go out; then 6–7. An interview within a week → «If an interview is close».
+
 ## Step 0. Create the pack
 - With a shell (Claude Code, Cowork): copy `pack-template/` from the kit to `me/` in the candidate's search folder — next to `kit/` in folder mode, the working folder with the plugin. Never inside the plugin's own folder: it is replaced on every update. Keep a project copy in claude.ai too? Then run `check_pack.py --mark-synced` after each copy, and the check will list what changed since.
 - claude.ai without a shell: Claude cannot create project files itself. It gives the pack files one by one and the candidate uploads them to the project, with flat names that carry the path: `me__facts.md`, `me__blocks__00-who.md` (the kit understands both). After each change Claude gives the whole changed file and says which one to replace.
@@ -62,7 +64,7 @@ Questions in one message; answers go to `me/profile.yaml` and `me/search-rules.m
 - native language and English level (`languages`): they set the second language of the blocks and the register targets;
 - employer-form answers they are willing to give (demographics only if they want).
 
-Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles and levels their CV supports; channels (remote, home country, visa-free, sponsorship, relocation) with what each means for them; a money floor per channel from public salary data, with sources (written only to `profile.yaml` → `money`); company types. They choose. Write the choices and what they chose not to filter. The template's timing rules (follow-up days, application days) are defaults: ask whether to keep them; unconfirmed ones keep the mark «default».
+Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles and levels their CV supports, each with 2–3 live postings as links (the market's wording, not only the CV's); channels (remote, home country, visa-free, sponsorship, relocation) with what each means for them; a money floor per channel from public salary data, with sources (written only to `profile.yaml` → `money`); company types. They choose. Write the choices and what they chose not to filter. The follow-up timing lives in the tracker's config (`[followups]` in `<tracker>.tracker-mcp.toml`) — ask whether to keep its defaults and change it there; application days and hours are in `search-rules.md`, marked «default» until confirmed.
 
 **The master CV** — every application is built from it (skill `tailoring-cv`):
 - an editable source exists (LaTeX, Word, Google Doc, Markdown): that is the master; write its path to `paths.master_cv` and keep its build engine;
@@ -74,7 +76,7 @@ Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles an
 ## Step 5. Tracker, schedule, autonomy
 - Tracker: skill `tracker`, section «Setup».
 - Mail: the daily check reads a job-search label. With a mail connector, propose one label and a filter for ATS senders and company domains (Greenhouse, Lever, Ashby, Workable, Teamtailor and others); a filter is a standing rule in their mail — the candidate creates it, or Claude does after their yes. Without a label the daily check searches by the companies in the tracker.
-- Schedule: `schedules/README.md` — create the daily, weekly and monthly tasks where the session can schedule; otherwise explain `/today` and the calendar export.
+- Schedule: `schedules/README.md` — fill the three prompts once (name, roles, city, time zone, language) and save them in the pack's `me/schedules/` folder (`daily.md`, `weekly.md`, `monthly.md`); create the tasks where the session can schedule, on the computer that holds the pack and the tracker; otherwise explain `/today` and the calendar export.
 - Autonomy: two lines — «I prepare everything; you send, submit and accept. If you want me to send some kind of message myself, tell me the rule and I will write it down.» Write a rule only when they ask (router skill, section «Autonomy»).
 
 ## Step 6. Bans and voice
@@ -82,13 +84,13 @@ Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles an
 - `me/voice.md` — if there are call recordings: frequent speech errors, filler words, hard names.
 
 ## Step 7. Check and next step
-- `python3 "${CLAUDE_PLUGIN_ROOT:-kit}/scripts/check_pack.py"` (no shell — the checklist in `answer-blocks`): blocks, questions with a recipe, ★ without an answer.
+- `python3 <kit>/scripts/check_pack.py --ready` (no shell — the checklist in `answer-blocks`): it fails while the profile or the facts still hold placeholders or the pitch is not confirmed; then blocks, questions with a recipe, ★ without an answer.
 - Next: another session on questions without a recipe; `/find`; `/prep` for a stage that is close.
 
 ## If an interview is close
 No pack yet and a stage within a week: do not run the whole of step 3 first.
-1. Steps 0–2 from the CV in one session.
-2. The stage's likely questions (`/prep` steps 1–2, or the bank's core ★ and the role's ◆ if the format is unknown) → the archetypes they need → 5–7 stories. Only these go through step 3 now: whole-story `S`, details, confirmation.
+1. Session 1: steps 0–2 from the CV; the stage's likely questions (`/prep` steps 1–2, or the bank's core ★ and the role's ◆ if the format is unknown) → the archetypes they need → 3–4 stories, only their whole-story `S` blocks and the pitch, confirmed.
+2. Session 2: the details of those stories and 1–3 more if the stage needs them.
 3. Logistics and money (step 4, only the questions this stage will ask) and `never-say.md` (step 6).
 4. Then `/prep`: the prep document and the learning sheet from these stories.
 Write in `me/recipes.md` which archetypes and questions are left, and finish onboarding after the interview — from `check_pack.py`, as usual.

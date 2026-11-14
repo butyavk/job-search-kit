@@ -48,7 +48,7 @@ git clone https://github.com/butyavk/job-search-kit kit
 ```
 Claude reads `kit/CLAUDE.md`. Say «start my job search».
 
-**claude.ai project without a shell:** upload the skills (`skills/*`, each folder zipped) in Settings → Skills; put `CLAUDE.md` into the project instructions; upload `bank/questions.md`, `pack-template/` and the templates you need as project files. Claude gives you each pack file to upload. Commands become plain words. Details: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
+**claude.ai project without a shell:** upload the skills (`skills/*`, each folder zipped) in Settings → Skills; put `CLAUDE.md` into the project instructions; upload `commands/` (Claude reads them when you say a command), `bank/questions.md`, `pack-template/`, `schedules/` and `templates/` as project files. Claude gives you each pack file to upload. Commands become plain words. Details: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
 
 **The tracker** is the open-source MCP server [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` sets it up (`uvx tracker-mcp new …`, then one `claude mcp add` line, or the `.mcpb` file for the desktop app). Requires `uv`.
 

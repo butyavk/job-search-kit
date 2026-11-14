@@ -48,7 +48,7 @@ git clone https://github.com/butyavk/job-search-kit kit
 ```
 Claude читает `kit/CLAUDE.md`. Скажите «начнём поиск работы».
 
-**Проект claude.ai без shell:** загрузите навыки (`skills/*`, каждую папку архивом) в Настройках → Skills; `CLAUDE.md` — в инструкцию проекта; `bank/questions.md`, `pack-template/` и нужные шаблоны — в файлы проекта. Файлы пакета Claude выдаёт по одному, вы их загружаете. Команды — словами. Подробно: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
+**Проект claude.ai без shell:** загрузите навыки (`skills/*`, каждую папку архивом) в Настройках → Skills; `CLAUDE.md` — в инструкцию проекта; `commands/` (Claude читает их, когда вы называете команду), `bank/questions.md`, `pack-template/`, `schedules/` и `templates/` — в файлы проекта. Файлы пакета Claude выдаёт по одному, вы их загружаете. Команды — словами. Подробно: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
 
 **Трекер** — открытый MCP-сервер [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` его подключает (`uvx tracker-mcp new …`, потом одна строка `claude mcp add` или файл `.mcpb` для приложения). Нужен `uv`.
 

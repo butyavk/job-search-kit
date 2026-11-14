@@ -8,7 +8,7 @@ description: "Fill and verify online job application forms (Ashby, Greenhouse, L
 **Never submit on your own initiative.** The candidate reviews and sends. Fill, verify, report, stop. The only exception: the candidate says in the current message to submit forms that are fully ready — then submit only forms with zero open items, one at a time, reading the confirmation page after each; a CAPTCHA means stop.
 
 ## Standing answers — fill in once
-Use these without asking. One place: `me/profile.yaml` (`contact`, `availability`, `work_authorization`, `forms`, `money`); wording in `me/search-rules.md`, «Facts for forms». A common question with no answer there (non-compete, primary language, open-source links) → ask once, then add it to `forms:`:
+Use these without asking. One place: `me/profile.yaml` (`contacts`, `location`, `status`, `work_authorization`, `forms`, `money`); wording in `me/search-rules.md`, «Facts for forms». A common question with no answer there (non-compete, primary language, open-source links) → ask once, then add it to `forms:`:
 - Contact: <name>; <email>; <phone with country code>; <city, country>; <LinkedIn>; <GitHub or portfolio for project URL fields>.
 - Start date / notice period: <…>.
 - Work authorisation by region and sponsorship: <…>.
@@ -102,4 +102,4 @@ Keep every final answer in one `FORM-ANSWERS.md` per batch (template `templates/
 10. Claims check: nothing from the candidate's «never claim» list; no questions in free text.
 
 ## After submission
-Confirm by the ATS email. Record in the tracker through the tracker MCP server: `mark_applied` dry run (date, channel, note on what was attached; follow-up 1 = submission + 10 days), show the preview, write only after the candidate's yes. Update `FORM-ANSWERS.md` the same turn.
+Confirm by the ATS email. Record in the tracker through the tracker MCP server: `mark_applied` dry run (date, channel, note on what was attached; the follow-up date comes from the tracker's rule), show the preview, write only after the candidate's yes. Update `FORM-ANSWERS.md` the same turn.

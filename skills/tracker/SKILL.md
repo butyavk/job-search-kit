@@ -8,8 +8,9 @@ description: Set up and keep the candidate's job-application tracker through the
 The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate owns. Claude changes it only through the open-source MCP server **tracker-mcp** (https://github.com/butyavk/tracker-mcp): every write shows the change first, checks the row version, keeps a backup and can be undone.
 
 ## 1. Setup (in `/start`)
+0. **`uv` is needed** (`uvx`): `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, or `brew install uv` — the candidate runs it.
 1. **Existing tracker?** Ask where it is. `uvx tracker-mcp init <file or Google Sheets URL>` writes a config that maps its columns and statuses; show the mapping and fix it with the candidate.
-2. **No tracker:** `uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
+2. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 3. **Connect the server:**
    - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp`
    - Claude desktop app: the `.mcpb` file from the latest release of tracker-mcp — double-click, pick the tracker.
@@ -21,7 +22,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand; Claude gives the exact row changes as a table.
 
 ## 2. Writing
-- Every write: read the row (`get_application` → version) → the change with `expected_version` → dry run when anything is unclear → write. Batches (`add_applications`, `set_statuses`) always as a dry run first; write after the candidate's yes.
+- Every write: read the row (`get_application` → version) → the change with `expected_version` as a dry run → show the preview → write after the candidate's yes (the server asks for this on every write). Batches (`add_applications`, `set_statuses`) always as a dry run first; write after the candidate's yes.
 - Only clear facts: a rejection email, an application confirmation, a reply from a person. A guess is a question in the summary, not a write.
 - A wrong write: `recent_writes`, then `undo_last_write`.
 - One writer at a time. The candidate may open and edit the file by hand, but not while a session is writing.

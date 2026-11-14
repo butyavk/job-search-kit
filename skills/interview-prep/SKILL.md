@@ -88,7 +88,7 @@ A founder, CTO or senior leader: 3 main questions and spares; 30–45-second ans
 
 ## Mocks
 - Claude plays the interviewer of that stage: answers only what is asked, keeps time, gives no hints unless asked, and at the end asks what an interviewer would ask.
-- By voice: the app's voice mode. For system design: talk by voice, draw in Excalidraw, and at three checkpoints (after the questions, after the skeleton, at the end) paste a screenshot.
+- By voice: the voice mode of the Claude desktop or mobile app (Claude Code has none — there, a text mock, or the brief for an outside voice tool below). For system design: talk by voice, draw in Excalidraw, and at three checkpoints (after the questions, after the skeleton, at the end) paste a screenshot.
 - Outside Claude (a voice-agent tool, a friend): write the brief from `templates/recruiter-mock-brief.md`; for pronunciation work, `templates/voice-coach-brief.md`.
 - The debrief is by the points of the protocol, with timing, without smoothing. Repeating errors go to «My errors»: as it was → as it should be → the English phrase; speech errors and fillers to `me/voice.md`.
 - At least 2–3 full system-design mocks with a real person, who picks the task.

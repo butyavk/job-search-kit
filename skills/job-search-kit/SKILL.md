@@ -16,10 +16,10 @@ Look in this order and stop at the first hit:
 
 Say which pack is connected, in one line, in the first reply of a session.
 
-**Kit paths.** Paths in the kit's files (`schedules/daily.md`, `templates/debrief.md`, `scripts/check_pack.py`) are relative to the kit root: the plugin's folder (`${CLAUDE_PLUGIN_ROOT}`) when installed as a plugin, `kit/` in folder mode, the project files in claude.ai. If a path does not resolve, find the file by name before saying it is missing.
+**Kit paths.** Paths in the kit's files (`schedules/daily.md`, `templates/debrief.md`, `scripts/check_pack.py`) are relative to the kit root, written `<kit>/…` in commands: `kit/` in folder mode; the plugin's folder when installed as a plugin (`~/.claude/plugins/cache/job-search-kit/job-search-kit/<version>/` — find it once with `ls` and use the absolute path; `${CLAUDE_PLUGIN_ROOT}` is set for hooks, not inside a session); the project files in claude.ai. If a path does not resolve, find the file by name before saying it is missing.
 
 ## 2. Language
-- Talk to the candidate in the language they write in (the default is `languages.native` in `me/profile.yaml`).
+- Talk to the candidate in the language they write in (the default is `languages.native` in `me/profile.yaml`). Keep messages short: about eight lines and one block of questions; the details go into the file you wrote.
 - Everything an employer will read or hear — CV, letters, form answers, notes, interview answers — is in the language of the vacancy, usually English, and goes through the `english-register` skill.
 
 ## 3. What to read from the pack, and when
@@ -41,7 +41,9 @@ Say which pack is connected, in one line, in the first reply of a session.
 | 8. after a call | `/debrief` | `interview-prep`, `answer-blocks` |
 | 9. the monthly review | `/review` | `job-search`, `answer-blocks` |
 
-Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y», «drill <company>», «a take-home from X», «X made an offer». Map the words to the skill (take-homes and offers: `interview-prep`).
+Everything else is plain words: «compose an answer to B03», «add a fact», «X rejected me», «I applied to Y», «drill <company>», «a take-home from X», «X made an offer», «pause my search», «I found a job». Map the words to the skill (take-homes and offers: `interview-prep`; pausing or ending: `schedules/README.md`, «Pause or end»).
+
+Slash commands exist only when the kit is installed as a plugin. In folder mode and in claude.ai, «/start» typed as text, or its words («set up my search»), is the same request: read `commands/start.md` (and so on for the other eight) and follow it.
 
 ## 5. Autonomy: Claude prepares, the candidate sends
 By default Claude asks before every outward action and the candidate does it: submitting a form, sending an email, a LinkedIn note or InMail, accepting or booking a meeting, publishing anything.

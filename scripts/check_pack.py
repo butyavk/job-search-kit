@@ -261,6 +261,8 @@ def main() -> int:
     ap.add_argument("--kit", type=Path, default=kit_default)
     ap.add_argument("--me", type=Path, default=None)
     ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--ready", action="store_true",
+                    help="fail until the pack can be used: no placeholders in profile and facts, the pitch I01 confirmed")
     ap.add_argument("--mark-synced", action="store_true",
                     help="record that the pack was just copied to the claude.ai project")
     a = ap.parse_args()
@@ -439,6 +441,14 @@ def main() -> int:
         print("ERROR  " + e)
     for w in warnings:
         print("WARN   " + w)
+    if a.ready:
+        not_ready = [w for w in warnings if w.startswith(("profile.yaml:", "facts.md:")) and "placeholder" in w]
+        if "I01" not in covered:
+            not_ready.append("the pitch I01 has no confirmed recipe")
+        for r in not_ready:
+            print("NOT READY  " + r)
+        if not_ready:
+            return 1
     if errors or (a.strict and warnings):
         return 1
     print("OK" if not warnings else f"OK with {len(warnings)} warning(s)")

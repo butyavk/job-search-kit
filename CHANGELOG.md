@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.2 — 2026-11-14
+
+Fixed (independent review of the candidate's path and simplicity)
+- No slash commands in folder mode and claude.ai: «/start» or its words make Claude read `commands/start.md`; `commands/` is in the claude.ai upload list.
+- `/start` puts the search first: CV, frame, tracker and the first `/find` in session one; stories over the next sessions. Proposed role titles come with live postings.
+- A close interview: 3–4 whole stories and the pitch in session one, details in session two.
+- Plugin paths: `<kit>/…`, with how to find the plugin folder (`${CLAUDE_PLUGIN_ROOT}` is not set inside a session).
+- Schedules: run on the computer that holds the pack and the tracker; filled copies in `me/schedules/`; a working cron line; «Pause or end» (also for «I found a job»).
+- When no new session can be started, the daily summary carries the filled live-response prompt.
+- Follow-up timing has one home, the tracker's config; `target.roles` dropped from the profile; the forms skill uses the profile's real keys.
+- `uv` and `mkdir -p` in the tracker setup; every tracker write is previewed (said so).
+- Voice mocks: the Claude desktop or mobile app (Claude Code has no voice).
+- `check_pack.py --ready` fails until the profile and facts are filled and the pitch is confirmed.
+- `english_check.py` catches word forms of AI words (leveraging, synergies) and ends with a verdict; it exits 1 on contractions, idioms or never-say phrases.
+- Messages to the candidate: about eight lines and one block of questions.
+- `system-design/patterns.md` links to the System Design Map pages.
+
 ## 1.2.1 — 2026-11-14
 
 Fixed (independent review of control, facts and privacy; a live unattended daily run)

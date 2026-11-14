@@ -21,7 +21,7 @@ Claude reads `kit/CLAUDE.md`. Say «start my job search».
 ## A claude.ai project without a shell
 - Skills: zip each folder in `skills/` and upload it in Settings → Skills.
 - Project instructions: the text of `CLAUDE.md`.
-- Project files: `bank/questions.md`, `pack-template/`, the templates you need, `schedules/`.
+- Project files: `commands/` (no slash commands there: Claude reads a command's file when you say it), `bank/questions.md`, `pack-template/`, `templates/`, `schedules/`.
 - Claude gives you each pack file to upload; commands become plain words.
 
 ## What to connect

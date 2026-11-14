@@ -32,6 +32,15 @@ class PackCheck(unittest.TestCase):
         self.assertNotIn("project copy", out)            # no project copy → no line about it
         self.assertNotIn("EN register", out)             # placeholders do not count
 
+    def test_template_is_not_ready(self):
+        code, out = run("check_pack.py", "--me", str(KIT / "pack-template"), "--ready")
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("NOT READY", out)
+
+    def test_maria_is_ready(self):
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--ready")
+        self.assertEqual(code, 0, out)
+
     def test_maria_manager_russian(self):
         code, out = run("check_pack.py", "--me", str(FIX / "maria"))
         self.assertEqual(code, 0, out)

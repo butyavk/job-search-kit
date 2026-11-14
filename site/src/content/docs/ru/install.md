@@ -21,7 +21,7 @@ Claude читает `kit/CLAUDE.md`. Скажите «начнём поиск р
 ## Проект claude.ai без shell
 - Навыки: каждую папку из `skills/` — архивом в Настройках → Skills.
 - Инструкция проекта: текст `CLAUDE.md`.
-- Файлы проекта: `bank/questions.md`, `pack-template/`, нужные шаблоны, `schedules/`.
+- Файлы проекта: `commands/` (слэш-команд там нет: Claude читает файл команды, когда вы её называете), `bank/questions.md`, `pack-template/`, `templates/`, `schedules/`.
 - Файлы пакета Claude выдаёт по одному, вы их загружаете; команды — словами.
 
 ## Что подключить

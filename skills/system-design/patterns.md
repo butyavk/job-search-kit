@@ -2,6 +2,8 @@
 
 The patterns that come up most often in system design for backend engineers and engineering managers.
 
+These are short answers to recall in an interview, not tasks: practice tasks and theory are on [System Design Map](https://butyavk.github.io/system-design/) — for example [rate limiting](https://butyavk.github.io/system-design/reliability/rate-limiting/), [caching](https://butyavk.github.io/system-design/caching/caching-layers/), [queues and back pressure](https://butyavk.github.io/system-design/async/queues-and-back-pressure/), and the [interview framework](https://butyavk.github.io/system-design/start/interview-framework/).
+
 ## 1. Delivering events to external systems (webhooks, integrations)
 The change and an outbox row in one transaction → a relay or CDC → a log (Kafka) keyed by user → a router writes the event to `events` (history, replay) and a `deliveries` row per recipient with UNIQUE (event_id, destination_id); the offset is committed after → workers take rows with a short lease (SKIP LOCKED), retries with backoff and jitter, after N attempts — dead and a manual retry. A slow recipient is isolated: a worker limit and a token bucket per recipient key. No promise of strict order: an event_id and a timestamp in every event; the recipient can re-read the state through the API.
 

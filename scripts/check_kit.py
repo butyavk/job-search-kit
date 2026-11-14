@@ -42,7 +42,7 @@ def check_paths() -> list[str]:
         if rel in SKIP_FILES:
             continue
         for raw in TICK.findall(f.read_text(encoding="utf-8")):
-            p = re.sub(r"^\$\{CLAUDE_PLUGIN_ROOT(:-kit)?\}/", "", raw)
+            p = re.sub(r"^(\$\{CLAUDE_PLUGIN_ROOT(:-kit)?\}|<kit>)/", "", raw)
             p = re.sub(r"^kit/", "", p).split("#")[0].rstrip(".,;:")
             if any(c in p for c in "<*…{") or p.endswith("/"):
                 continue
