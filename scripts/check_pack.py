@@ -223,6 +223,9 @@ def fact_numbers(path: Path) -> set[str]:
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         for cell in cells[1:-2] if len(cells) > 3 else cells[1:]:
             out |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(cell)}
+            for m in SUFFIX_RE.finditer(cell):   # €1M, 10K, 2 млн → the whole number too
+                v = float(m.group(1).replace(",", ".")) * SUFFIX[m.group(2)]
+                out.add(str(int(v)) if v == int(v) else str(v))
     return out
 
 
@@ -243,7 +246,11 @@ UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eigh
                                     "fourteen fifteen sixteen seventeen eighteen nineteen".split())}
 TENS = {w: 10 * i for i, w in enumerate("_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()) if w != "_"}
 SCALES = {"hundred": 100, "thousand": 1000, "million": 1_000_000}
-WORDNUM_RE = re.compile(r"\b((?:(?:" + "|".join(list(TENS) + list(UNITS) + list(SCALES)) + r")[\s-]*)+)(per ?cent)?", re.I)
+# whole words only: «hundreds of calls» and «tens of thousands» are not numbers
+WORDNUM_RE = re.compile(r"\b((?:(?:" + "|".join(list(TENS) + list(UNITS) + list(SCALES)) + r")\b[\s-]*)+)(per ?cent)?", re.I)
+SUFFIX_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s?(M|K|k|bn|млн|тыс\.?|млрд)(?![\w])")
+SUFFIX = {"k": 1_000, "K": 1_000, "тыс": 1_000, "тыс.": 1_000, "M": 1_000_000, "млн": 1_000_000,
+          "bn": 1_000_000_000, "млрд": 1_000_000_000}
 
 
 def word_numbers(en: str) -> list[str]:

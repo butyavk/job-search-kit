@@ -166,6 +166,14 @@ class PackCheckBreakage(unittest.TestCase):
                                                                                   "about five percent of our payouts failed and"), encoding="utf-8"))
         self.assertIn("5%", out)
 
+    def test_vague_plurals_are_not_numbers(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cp", KIT / "scripts" / "check_pack.py")
+        cp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cp)
+        self.assertEqual(cp.word_numbers("hundreds of calls, tens of thousands of lines"), [])
+        self.assertEqual(cp.word_numbers("twenty-five engineers, about two percent"), ["25", "2%"])
+
     def test_cv_numbers_against_facts(self):
         d = Path(tempfile.mkdtemp())
         good, bad = d / "good.txt", d / "bad.tex"
