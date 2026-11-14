@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.3 — 2026-11-14
+
+Changed (tracker-mcp 0.7)
+- The kit needs tracker-mcp 0.7 or later; the tracker setup checks the version.
+- Scheduled runs use a second, read-only tracker entry `tracker-ro` (`--read-only`): the server previews and refuses every write. The cron line allows only that entry.
+- `undo_last_write` steps back one write at a time, not only the last one; it stops at a hand edit.
+
 ## 1.2.2 — 2026-11-14
 
 Fixed (independent review of the candidate's path and simplicity)

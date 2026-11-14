@@ -5,7 +5,7 @@ READ AND PREPARE ONLY. Do not send email, LinkedIn messages or InMail, do not su
 Read first: `me/search-rules.md`, `me/profile.yaml`, `me/never-say.md`, the latest daily summary.
 
 Sources (skip any that is not connected, and say so):
-- Tracker — only through its MCP server: `list_applications`, `get_application`, `followups_due`, `match_emails`. Writes (`set_status`, `mark_applied`, `log_followup`) only as dry runs: the server writes after <name>'s yes, and a scheduled run has nobody to say it. List the planned changes in the summary; in the next live session they are redone as dry runs on the current version and written after the yes.
+- Tracker — only through its MCP server (the read-only `tracker-ro` where it is set up): `list_applications`, `get_application`, `followups_due`, `match_emails`. Writes (`set_status`, `mark_applied`, `log_followup`) only as dry runs: the server writes after <name>'s yes, and a scheduled run has nobody to say it. List the planned changes in the summary; in the next live session they are redone as dry runs on the current version and written after the yes.
 - Mail: the job-search label and messages from companies in the tracker, last 2 days.
 - LinkedIn in the browser: the messages list (previews only — opening a thread marks it read for the sender), notifications, job alerts; open no profiles. Work in a new tab and close it at the end.
 - Calendar: interviews in the next 7 days.

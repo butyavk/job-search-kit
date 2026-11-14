@@ -52,7 +52,7 @@ The candidate can relax this for one kind of action. Only in their own words, in
 - A rule works only in a live session, and only after the candidate starts it in that session («send the follow-ups by my rules»). Claude then acts on the items that meet every condition, and lists afterwards what it did and where.
 - In scheduled and unattended runs Claude never sends anything: it prepares drafts and the list.
 - No rule covers: passwords, creating accounts, money and payments, accepting offers or terms, ticking consents (privacy, terms, assessment rules, own-words pledges), deleting data, anything that cannot be undone. These the candidate always does.
-- Tracker writes are not outward actions, but they are the candidate's record: a dry run first, the write after their yes in a live session, with `expected_version`. Only the last write can be undone (`undo_last_write`). A scheduled run never passes `confirm`: the server would accept it, so the rule is ours.
+- Tracker writes are not outward actions, but they are the candidate's record: a dry run first, the write after their yes in a live session, with `expected_version`. `undo_last_write` steps back one write at a time and stops at a hand edit. A scheduled run never passes `confirm`, and uses the read-only entry `tracker-ro` where it is set up (skill `tracker`, setup step 4): that server refuses every write.
 
 ## 6. Hard rules
 - Facts about the candidate only from the pack or from their own words. No fact — ask; never fill a gap. A new fact goes to `me/facts.md` first, then into a block.
