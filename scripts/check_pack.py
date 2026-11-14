@@ -169,7 +169,10 @@ def never_say_phrases(path: Path) -> list[str]:
     if not m:
         return []
     phrases = []
-    for item in m.group(1).replace("\n", " ").split(" · "):
+    lines = m.group(1).splitlines()
+    bullets = [re.sub(r"^\s*[-*]\s+", "", l) for l in lines if re.match(r"\s*[-*]\s+", l)]
+    items = bullets if bullets else m.group(1).replace("\n", " ").split(" · ")
+    for item in items:
         item = item.strip()
         if not item or "(" in item:  # qualified items need a human: skip
             continue
@@ -186,20 +189,30 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     if not m:
         return []
     out = []
-    for line in m.group(1).splitlines():
-        if not line.startswith("|") or line.startswith("| ---") or line.startswith("| Нельзя") or line.startswith("| Never"):
+    rows = m.group(1).splitlines()
+    for i, line in enumerate(rows):
+        if not line.startswith("|") or re.match(r"\|\s*:?-{3,}", line):
             continue
+        if i + 1 < len(rows) and re.match(r"\|\s*:?-{3,}", rows[i + 1]):
+            continue   # the table's header row
         cells = [c.strip() for c in line.strip("|").split("|")]
         allowed = set(REF_RE.findall(line))
-        quoted = re.findall(r"«([^»]+)»|\"([^\"]+)\"", cells[0])   # «a» or «b»: the quoted parts
-        described = not quoted and re.search(r"[А-Яа-яЁё]", cells[0])   # «QA, фронтенд … подчинялись мне»
-        parts = [x or y for x, y in quoted] or re.split(r"[;/]|, | or ", cells[0])
+        # markdown is how the row looks, not what a block says: **bold**, `code`, [text](link)
+        claim = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", cells[0])
+        claim = re.sub(r"\*\*|__|`", "", claim).strip()
+        quoted = re.findall(r"«([^»]+)»|\"([^\"]+)\"", claim)   # «a» or «b»: the quoted parts
+        if quoted:
+            parts = [x or y for x, y in quoted]
+        else:
+            parts = [p.strip() for p in re.split(r"[;/]|, | or ", claim)]
+            if len(parts) > 1:   # a described row: its single words (QA, frontend, React) are not claims
+                parts = [p for p in parts if len(p.split()) > 1]
         for part in parts:
             part = part.strip().strip("«»\"' ")
-            # a short title (CTO, VP, PhD) only when it is the whole claim, not a fragment of a list
-            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == cells[0].strip().strip("«»\"' "))
-            if (len(part) < 4 and not short_ok) or "<" in part or (described and re.search(r"[А-Яа-яЁё]", part)):
-                continue  # placeholders and Russian descriptions need a human; their English terms are still checked
+            # a short title (CTO, VP, PhD) only when it is quoted or the whole claim
+            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == claim.strip("«»\"' "))
+            if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
+                continue  # placeholders and Russian descriptions need a human; quote a word to ban it alone
             out.append((part, allowed))
     return out
 
@@ -243,16 +256,40 @@ def yaml_scalars(text: str) -> tuple[dict[str, str], list[str]]:
             dups.append(f"{parent}.{key}" if parent else key)
         seen[parent].add(key)
         rest = m.group(4)
-        val = rest if rest[:1] in "\"'" else re.split(r"\s+#", rest, maxsplit=1)[0]
+        q = re.match(r"""\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^']|'')*)')""", rest)
+        if q:   # a quoted value ends at its closing quote; a comment may follow
+            val = q.group(1) if q.group(1) is not None else q.group(2).replace("''", "'")
+            val = "'" + val + "'"   # kept quoted here, unquoted below
+        else:
+            val = re.split(r"\s+#", rest, maxsplit=1)[0]
         val = val.strip()
         path = f"{parent}.{key}" if parent else key
         if val[:1] in ("|", ">"):
             block_from = ind
             values[path] = ""
         elif val:
-            values[path] = val.strip("\"'")
+            values[path] = val[1:-1] if q else val
         stack.append((ind, key))
     return values, dups
+
+
+def profile_syntax_errors(text: str) -> list[str]:
+    """YAML the kit's readers do not follow, refused so that what the checks read is what a YAML
+    reader reads: quoted keys, a space before the colon, anchors, aliases and merge keys, and flow
+    mappings ({…}) — the profile is written one key per line."""
+    out = []
+    for n, raw in enumerate(text.splitlines(), 1):
+        line = raw.split(" #")[0] if not raw.lstrip().startswith("#") else ""
+        body = re.sub(r"^\s*-\s+", "", line)
+        if re.match(r"""\s*["'][^"']*["']\s*:""", body):
+            out.append(f"profile.yaml:{n}: a quoted key; write keys bare (`autonomy:`, not `\"autonomy\":`)")
+        elif re.match(r"\s*[\w.-]+[ \t]+:(?:\s|$)", body):
+            out.append(f"profile.yaml:{n}: a space before the colon; write `key: value`")
+        if re.search(r"""(?:^|:\s|-\s)\s*[&*][\w-]+\s*$|^\s*<<\s*:""", body):
+            out.append(f"profile.yaml:{n}: anchors, aliases and merge keys (&x, *x, <<) are not used in a profile")
+        if re.search(r""":\s*\{""", body):
+            out.append(f"profile.yaml:{n}: a {{…}} mapping; write one key per line")
+    return out
 
 
 def native_is_english(value: str) -> bool:
@@ -263,10 +300,36 @@ def native_is_english(value: str) -> bool:
         r"|^en(?:[-_][a-z]{2})?$", v))
 
 
+def find_pack(explicit: str | Path | None, kit: Path, need: str | None = None) -> Path | None:
+    """The pack every script uses, in one order: --me; else JOB_SEARCH_ME (and only it: a wrong value
+    stops the script instead of quietly checking another pack); else me/ next to the kit, then
+    me/ in the working folder. `need` is the file the script reads (none: any folder)."""
+    def ok(c: Path) -> bool:
+        return (c / need).exists() if need else c.is_dir()
+    if explicit:
+        return Path(explicit).expanduser()
+    env = os.environ.get("JOB_SEARCH_ME")
+    if env:
+        c = Path(env).expanduser()
+        if ok(c):
+            return c
+        sys.exit(f"JOB_SEARCH_ME={env} is not a pack (no {need or 'folder'} there): fix it, unset it, or pass --me")
+    return next((c for c in (kit.parent / "me", Path.cwd() / "me") if ok(c)), None)
+
+
+def fold(text: str) -> str:
+    """The form both a phrase and the text it is looked for in are compared in: composed Unicode
+    (NFC), no invisible format characters (zero-width, bidi, soft hyphen)."""
+    import unicodedata
+    text = unicodedata.normalize("NFC", text)
+    return "".join(ch for ch in text if unicodedata.category(ch) != "Cf")
+
+
 def phrase_pattern(phrase: str) -> re.Pattern:
     """A never-say or never-claim phrase as the text may write it: any spaces between the words,
-    straight or curly apostrophes on either side, any case. check_pack and english_check share it."""
-    words = [re.escape(w.replace("\u2019", "'")).replace("'", "['\u2019]") for w in phrase.split()]
+    straight or curly apostrophes on either side, any case. Search `fold(text)` with it.
+    check_pack and english_check share it."""
+    words = [re.escape(w.replace("\u2019", "'")).replace("'", "['\u2019]") for w in fold(phrase).split()]
     return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)", re.IGNORECASE)
 
 
@@ -312,17 +375,21 @@ def fact_numbers(path: Path) -> set[str]:
     return out
 
 
-MONTHS = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?"
+MONTHS = (r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?"
+          r"|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\b\.?")
 NOT_AMOUNTS = re.compile(
     r"`[^`]*`"                                             # code spans
     r"|\b[A-Z]{1,6}-[A-Z]?\d+\b"                           # block and fact IDs: PAY-S1, F-99
     r"|\+\d[\d\s().-]{6,}\d"                               # phone numbers
     r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
     r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
-    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform|Rust|TypeScript|Spark|Windows|iOS|Android|"
-    r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
-    r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI|Kafka|Elasticsearch|Redis|OAuth|Spring ?Boot|C#|macOS|WCAG|log4j|"
-    r"Node|Go|PostgreSQL|Angular|Laravel|Symfony|Unity|Xcode|Gradle|Scala|Hadoop|Flink|Cassandra|MongoDB)\s?/?\d[\d.]*"  # versions and standards
+    r"|\b(?:ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|ES|RFC|WCAG|OAuth)\s?/?\d[\d.]*"   # standards: ISO 27001, HTTP/2
+    # a version: one or two digits, or a dotted number; never one followed by %, a scale or more digits
+    r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform"
+    r"|Rust|TypeScript|Spark|Windows|iOS|Android|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s"
+    r"|Kubernetes|Java ?SE|Swift ?UI|Kafka|Elasticsearch|Redis|Spring ?Boot|C#|macOS|log4j|Laravel|Symfony|Unity"
+    r"|Xcode|Gradle|Hadoop|Flink|Cassandra|MongoDB)\s?/?(?:\d+\.\d+(?:\.\d+)*|\d{1,2})(?!\d|[.,]\d|\s?(?:%|[kKM]\b|x\b"
+    r"|million|thousand|billion|percent))"
     r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
     r"|\b\d+(?:st|nd|rd|th)\b|\b\d+(?:signals|FA|D)\b"         # ordinals and names: 3rd, 37signals, 2FA, 3D
     r"|\bUTC[+-]\d{1,2}(?::\d{2})?|\b\d{1,2}:\d{2}\b")         # time zones and clock times: UTC+5:30, 10:30
@@ -472,7 +539,6 @@ NO_RULE = re.compile(
     r"\bsubmit\w*\s+(?:\w+\s+){0,3}?(?:forms?|applications?)\b|\b(?:fill\w*|complete\w*)\s+(?:\w+\s+){0,3}?forms?\b|"
     r"\bforms?\b|\bapply(?:ing)?\s+(?:to|for)\b|\bsign(?:ing)?\s+(?:up|in|on|the|a|an|contracts?|offers?)\b|"
     r"\bsignatures?\b|\bsubmit\b(?!\w)(?!ted)", re.I)
-NO_RULE_INVISIBLE = re.compile("[­​-‏‪-‮⁠-⁤﻿]")
 
 
 def autonomy_errors(ptxt: str) -> list[str]:
@@ -550,20 +616,21 @@ def autonomy_errors(ptxt: str) -> list[str]:
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
         act = unicodedata.normalize("NFKC", action.split("#")[0].strip().strip("\"'"))
         what = " ".join(f"{k}: {v}" for k, v in keys.items() if k not in ("said", "quote"))
-        plain = NO_RULE_INVISIBLE.sub("", unicodedata.normalize("NFKC", what))
+        plain = fold(unicodedata.normalize("NFKC", what))   # the words as they read, without invisible characters
         if not re.fullmatch(r"send_followup|send_note", act):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup or send_note; "
                        "nothing else can become a rule")
-        elif re.search(r"[^\x00-\x7f]", plain) and re.search(r"[^\W\d_]", re.sub(r"[\x00-\x7f]", "", plain)):
-            out.append(f"profile.yaml: autonomy rule «{act}»: write its conditions in plain English letters "
-                       "(only `said:` holds the candidate's own words, in any language)")
         elif NO_RULE.search(plain):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
+        elif re.search(r"[^\x20-\x7e«»’“”—–]", what.replace("\n", " ")):   # allow, do not block: printable ASCII
+            out.append(f"profile.yaml: autonomy rule «{act}»: write its conditions in plain English letters, with no "
+                       "invisible or look-alike characters (only `said:` holds the candidate's own words, in any language)")
     return out
 
 
-TMP_DIRS = ("/tmp", "/private/tmp", "/var/tmp", "/dev/shm", "/private/var/tmp")
+TMP_DIRS = ("/tmp", "/private/tmp", "/var/tmp", "/dev/shm", "/private/var/tmp", "/run/lock", "/var/lock",
+            "/users/shared", "/var/folders", "/private/var/folders")   # compared case-folded
 
 
 def safe_place(p: str, search: Path | None) -> bool:
@@ -577,6 +644,17 @@ def safe_place(p: str, search: Path | None) -> bool:
     for t in TMP_DIRS:
         if any(x == t or x.startswith(t + "/") for x in (real, given)):
             return False
+    import stat
+    import tempfile
+    tmp = os.path.realpath(tempfile.gettempdir()).casefold()
+    if real == tmp or real.startswith(tmp.rstrip("/") + "/"):
+        return False
+    for anc in Path(os.path.realpath(os.path.expanduser(p))).parents:   # anyone may write there: not trusted
+        try:
+            if os.stat(anc).st_mode & stat.S_IWOTH:
+                return False
+        except OSError:
+            continue
     if search is not None:
         s = os.path.realpath(search).casefold().rstrip("/")
         if any(x == s or x.startswith(s + "/") for x in (real, given)):
@@ -741,10 +819,7 @@ def main() -> int:
                     help="record that the pack was just copied to the claude.ai project")
     a = ap.parse_args()
     if a.me is None:
-        env = os.environ.get("JOB_SEARCH_ME")
-        cands = [Path(env).expanduser()] if env else []
-        cands += [a.kit.parent / "me", Path.cwd() / "me"]
-        a.me = next((c for c in cands if c.is_dir()), cands[0])
+        a.me = find_pack(None, a.kit) or a.kit.parent / "me"
 
     if a.mark_synced and not a.me.is_dir():
         print(f"no candidate pack at {a.me}: pass --me <path to me/>")
@@ -775,6 +850,8 @@ def main() -> int:
             print(f"note: {name} is missing in the pack (copy it from kit/pack-template/)")
     global NEED_L2
     prof_path = a.me / "profile.yaml"
+    prof_values: dict[str, str] = {}
+    prof_dups: list[str] = []
     if prof_path.exists():
         prof_values, prof_dups = yaml_scalars(prof_path.read_text(encoding="utf-8-sig"))
         if native_is_english(prof_values.get("languages.native", "")):
@@ -851,7 +928,7 @@ def main() -> int:
         pat = loose_pat(phrase)
         for b in blocks.values():
             for field in ("en", "ru"):
-                if pat.search(b[field]):
+                if pat.search(fold(b[field])):
                     label = "EN" if field == "en" else (b.get("l2code") or "the native line")
                     warnings.append(f"{b['file']}:{b['line']} {b['id']}: never-say phrase «{phrase}» in {label}")
 
@@ -862,24 +939,20 @@ def main() -> int:
             if b["id"] in allowed or b["id"].split("-")[0] in {x.split("-")[0] for x in allowed} \
                     or {"G", "Q"} & set(b["types"]):
                 continue
-            if pat.search(b["en"]) or pat.search(b["ru"]):
+            if pat.search(fold(b["en"])) or pat.search(fold(b["ru"])):
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
     known = fact_numbers(a.me / "facts.md")
     if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
-        mm = re.search(r"^money:[^\n]*\n((?:[ \t]+.*\n?|[ \t]*\n|[ \t]*#.*\n)*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
         floor_numbers: set[str] = set()
-        if mm:   # only say_aloud is said; the floor and the current salary must never appear in a block
-            money = re.sub(r"#.*", "", mm.group(1))
-            first = re.search(r"^([ \t]+)[a-z_]+:", money, re.M)   # the first level under money:, nested keys stay inside
-            ind = re.escape(first.group(1)) if first else r"[ \t]+"
-            parts = re.split(r"^(" + ind + r"[a-z_]+:)", money, flags=re.M)
-            for key, val in zip(parts[1::2], parts[2::2]):
-                nums = set(block_numbers(val)) | set(word_numbers(val))
-                if key.strip().startswith("say_aloud"):
-                    known |= nums
-                elif key.strip().startswith(("floor", "current_or_last")):
-                    floor_numbers |= {n for n in nums if float(n.rstrip("%")) >= 100}
+        # only say_aloud is said; the floor and the current salary must never appear in a block.
+        # Read by the YAML reader, so nesting, quotes and comments are taken as a YAML reader takes them
+        for key, val in prof_values.items():
+            nums = set(block_numbers(val)) | set(word_numbers(val))
+            if key == "money.say_aloud" or key.startswith("money.say_aloud."):
+                known |= nums
+            elif re.match(r"money\.(?:floor|current_or_last)(?:\.|$)", key):
+                floor_numbers |= {n for n in nums if float(n.rstrip("%")) >= 100}
         for b in blocks.values():
             said = set(block_numbers(b["en"]) + block_numbers(b["ru"]) + word_numbers(b["en"]))
             if floor_numbers & said:
@@ -915,11 +988,12 @@ def main() -> int:
             else:
                 print(f"CV {a.cv.name}: every number is in facts.md")
             for phrase, _ in never_claims(a.me / "never-say.md"):
-                if " " in phrase.strip() and loose_pat(phrase).search(cv_text):   # phrases: a CV lists bare tool names
+                if " " in phrase.strip() and loose_pat(phrase).search(fold(cv_text)):   # phrases: a CV lists bare tool names
                     warnings.append(f"CV {a.cv.name}: «{phrase}» is in the never-claim table")
 
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8-sig")
+        errors += profile_syntax_errors(ptxt)
         errors += autonomy_errors(ptxt)
         for k in prof_dups:
             if not k.startswith("autonomy."):   # autonomy_errors names those itself

@@ -16,7 +16,6 @@ A value that does not fit stops the run (exit 1) and says why.
 """
 from __future__ import annotations
 
-import os
 import re
 import sys
 import unicodedata
@@ -24,15 +23,34 @@ from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(KIT / "scripts"))
-from check_pack import friendly_errors  # noqa: E402
+from check_pack import find_pack as _find_pack, friendly_errors  # noqa: E402
 KEYS = {"name": 6, "roles": 8, "city": 6, "time zone": 4, "language": 4}   # key -> most words
 RUN_TIME = {"<date>", "<company>", "<stage>", "<the date it came>"}
 ABBREV = {"st", "mt", "ft", "ste", "sr", "jr", "dr", "mr", "mrs", "ms", "sta", "san"}   # «St. Petersburg»
 # a value names something; a verb that tells a run what to do has no place in it
-ORDERS = re.compile(r"\b(?:send\w*|submit\w*|apply|applying|reply\w*|respond\w*|accept\w*|pay|paying|delete\w*|"
-                    r"remove\w*|ignore\w*|forget\w*|always|never|must|should|run|execute|fetch\w*|click\w*|"
-                    r"email\w*|forward\w*|share|book|install\w*|do|don't|please|instead|override\w*|rules?|"
-                    r"instructions?|prompt|then)\b", re.I)
+ORDERS = re.compile(r"\b(?:send(?:s|ing)?|submit(?:s|ted|ting)?|apply|applying|repl(?:y|ies|ying)|respond(?:s|ing)?|"
+                    r"accept(?:s|ing)?|pay(?:s|ing)?|delete[sd]?|deleting|remove[sd]?|removing|ignor(?:e|es|ing)|"
+                    r"forget|always|never|must|should|execute|fetch(?:es|ing)?|click(?:s|ing)?|install(?:s|ing)?|"
+                    r"don't|please|instead|override|instructions?|then)\b", re.I)
+
+
+def script_ok(v: str) -> bool:
+    """No invisible characters, no combining mark on a Latin letter (NFC composes the real ones),
+    and one alphabet per word: «ѕubmit» with a Cyrillic ѕ is not a word that names anything."""
+    import unicodedata
+    prev = ""
+    for ch in v:
+        cat = unicodedata.category(ch)
+        if cat in ("Cf", "Co", "Cn", "Cs", "Cc"):
+            return False
+        if cat.startswith("M") and prev.isascii() and prev.isalpha():
+            return False
+        prev = ch
+    for word in re.findall(r"[^\W\d_]+", v):
+        scripts = {unicodedata.name(ch, "?").split()[0] for ch in word if ch.isalpha()}
+        if len(scripts) > 1:
+            return False
+    return True
 
 
 def letters_ok(v: str, extra: str) -> bool:
@@ -42,21 +60,19 @@ def letters_ok(v: str, extra: str) -> bool:
 
 
 def find_pack(argv: list[str]) -> Path:
+    explicit = None
     if "--me" in argv:
         i = argv.index("--me")
         if i + 1 >= len(argv):
             sys.exit("--me needs the pack folder")
-        return Path(argv[i + 1]).expanduser()
-    env = os.environ.get("JOB_SEARCH_ME")
-    for c in ([Path(env).expanduser()] if env else []) + [KIT.parent / "me", Path.cwd() / "me"]:
-        if (c / "profile.yaml").exists():
-            return c
-    sys.exit("no pack found: pass --me <path to me/>")
+        explicit = argv[i + 1]
+    return _find_pack(explicit, KIT, "profile.yaml") or sys.exit("no pack found: pass --me <path to me/>")
 
 
 def zone_ok(v: str) -> bool:
-    if re.fullmatch(r"(?:UTC|GMT)(?:[+-]\d{1,2}(?::\d{2})?)?", v):
-        return True
+    m = re.fullmatch(r"(?:UTC|GMT)(?:([+-])(\d{1,2})(?::(\d{2}))?)?", v)
+    if m:
+        return not m.group(2) or (int(m.group(2)) <= 14 and (m.group(3) or "00") in ("00", "15", "30", "45"))
     try:
         import zoneinfo
         zones = zoneinfo.available_timezones()
@@ -77,18 +93,22 @@ def read_values(path: Path) -> dict[str, str]:
     for n, line in enumerate(path.read_text(encoding="utf-8-sig").splitlines(), 1):
         if not line.strip() or line.lstrip().startswith("#"):
             continue
-        m = re.match(r"^([a-z ]+):\s*(.*?)\s*(?:#.*)?$", line)
+        m = re.match(r"^([a-z ]+):\s*(.*?)\s*(?:\s#.*)?$", line)   # «C# Developer» keeps its #
         if not m or m.group(1) not in KEYS:
             sys.exit(f"{path.name}:{n}: only {', '.join(KEYS)} go here, one per line")
         if m.group(1) in values:
             sys.exit(f"{path.name}:{n}: «{m.group(1)}» is set twice; keep one line")
-        values[m.group(1)] = unicodedata.normalize("NFC", m.group(2).strip().strip("\"'"))
+        raw = m.group(2).strip()
+        q = re.fullmatch(r"'((?:[^']|'')*)'|\"((?:[^\"\\]|\\.)*)\"", raw)   # YAML quotes: '' is one '
+        raw = (q.group(1).replace("''", "'") if q.group(1) is not None else q.group(2)) if q else raw
+        # NFKC: full-width and other compatibility forms read as the letters they look like
+        values[m.group(1)] = unicodedata.normalize("NFKC", raw)
     for key, most in KEYS.items():
         v = values.get(key, "")
         if not v or v.startswith("<"):
             sys.exit(f"{path.name}: «{key}» is not filled")
-        if not letters_ok(v, " ,.()'&/+-_" + (":" if key == "time zone" else "")) or len(v) > 120:
-            sys.exit(f"{path.name}: «{key}» may hold only letters, digits, spaces and , . ( ) ' & / + - "
+        if not letters_ok(v, " ,.()'&/+-_#" + (":" if key == "time zone" else "")) or len(v) > 120:
+            sys.exit(f"{path.name}: «{key}» may hold only letters, digits, spaces and , . ( ) ' & / + - # "
                      f"(at most 120 characters)")
         if len(v.split()) > most:
             sys.exit(f"{path.name}: «{key}» is a short phrase, at most {most} words")
@@ -96,6 +116,8 @@ def read_values(path: Path) -> dict[str, str]:
                        for m in re.finditer(r"(\w+)[.!?]\s+\w", v))
         if ("_" in v and key != "time zone") or sentence:
             sys.exit(f"{path.name}: «{key}» is a phrase, not sentences or code names")
+        if not script_ok(v):
+            sys.exit(f"{path.name}: «{key}» mixes alphabets in one word, or holds invisible or stray marks")
         if ORDERS.search(v):
             sys.exit(f"{path.name}: «{key}» names something; «{ORDERS.search(v).group(0)}» tells a run what to do")
         if key == "name" and not all(letters_ok(w, "'.-") and not any(c.isdigit() for c in w) for w in v.split()):

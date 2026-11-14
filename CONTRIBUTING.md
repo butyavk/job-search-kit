@@ -33,7 +33,8 @@ Past reviews found the same few kinds of error again and again; each change is c
 - **Normalise both sides.** Apostrophes, letter case, Unicode forms and invisible characters are folded the same way in the pattern and in the text.
 - **Match whole words.** A pattern that guards against a word also has a test with innocent text around it («after I submitted», «signal»).
 - **Every claim has a test.** A line in the CHANGELOG, a README or a docstring that says what a script does has a test that runs the script, not one that reads its source.
-- **No traceback for a user.** Broken input (not UTF-8, a folder or a broken link where a file should be) gives one line naming the file.
+- **No traceback for a user.** Broken input (not UTF-8, a folder or a broken link where a file should be) gives one line naming the file; every script calls `friendly_errors()`.
+- **A test must be able to fail.** A new test is first run against the code without the fix and seen failing; break the code on purpose once in a while and check that a test notices.
 - **Before a release:** run the new scripts on a real pack and compare their warnings with the last release's (`git worktree add /tmp/old v<last>` and `diff` the `WARN`/`ERROR` lines); a new warning is either a real finding or a false positive to fix first.
 
 ## License

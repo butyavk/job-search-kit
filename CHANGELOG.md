@@ -8,8 +8,21 @@ Changed (a sweep for the kinds of error the fifth review found; `CONTRIBUTING.md
 - The plugin hook reads `paths.pack` only inside the top-level `paths:` block.
 - `values.yaml`: «open» is not taken for an order any more (Open Source Program Manager).
 - Tests that compare copies: the three cron lines (same guards, the file each one may write, the same denies), and every English page with its Russian copy (structure, commands, file names, links). The Russian sources page had fallen behind the English one; it is level again.
-- Every line of the 1.5.x CHANGELOG that had no test now has one that runs the script; a test that read the script's source was replaced by one that runs it.
+- Tests that run the scripts for the 1.5.x CHANGELOG lines that had none; a test that read a script's source was replaced by one that runs it. A second, independent sweep then broke the code on purpose and found tests that still passed; those were rewritten until each was seen failing on the broken code.
 - README: tracker-mcp 0.8.3 or later.
+
+Fixed (the second sweep)
+- Profile syntax the kit's readers do not follow is refused: quoted keys, a space before the colon, anchors, aliases and merge keys, `{…}` mappings. A rule written as `"autonomy":` or reached through an alias no longer slips past the autonomy check.
+- Autonomy conditions may hold only printable ASCII (the candidate's own `said:` excepted); invisible characters, combining marks and look-alike letters are refused by what is allowed, not by a list of what is not.
+- `values.yaml`: full-width letters are read as the letters they look like (NFKC), a word may not mix alphabets, invisible characters and stray marks are refused; the order words are whole verbs, so Forward Deployed Engineer, Prompt Engineer, Email Marketing Manager, ClickHouse, Sendai or «Minh Do» pass; `C# Developer` and `'O''Brien'` read as a YAML reader reads them; a UTC offset is at most ±14 hours in quarter hours.
+- Numbers: a version is one or two digits or a dotted number, never one followed by %, a scale or more digits, so «Kubernetes 300 nodes», «Redis 99.9% hit rate» or «Android 500K installs» are checked; month names are whole words, so «Decreased 35%», «Declined 20» and «12 Junior engineers» are checked too.
+- Money is read through the profile reader (a quoted value with a comment after it, nested keys); `languages.native: "Russian"  # mine` is Russian.
+- A program or file in a folder anyone may write to (any world-writable parent, the system temp folder, /var/lock, /Users/Shared) is not trusted by a scheduled run.
+- Never-claim rows: only the table's header row is skipped (a row may start with «Never»); bold, code and links are read as their words; a described row's single words (QA, frontend, React) are not banned — quote a word to ban it alone.
+- Filler lists written as bullets work; phrases and text are compared in one form (NFC, no invisible characters).
+- One pack lookup for every script: a wrong `JOB_SEARCH_ME` stops the script instead of quietly checking another pack.
+- The hook reads `paths.pack` only at the first level of `paths:`, and a `pack:` written twice counts as not recorded.
+- `check_kit.py` answers broken files with one line too.
 
 ## 1.5.1 — 2026-11-14
 

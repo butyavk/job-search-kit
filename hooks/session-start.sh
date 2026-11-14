@@ -16,13 +16,19 @@ echo "job-search-kit: a candidate pack is here. Before anything else, load the j
 [ -n "$CLAUDE_PLUGIN_ROOT" ] && echo "job-search-kit: the kit (plugin) is at $CLAUDE_PLUGIN_ROOT; a cron line or a schedule that names another version's folder must be re-pointed here"
 # paths.pack in the profile names the candidate's own pack by its absolute path; a me/ that came
 # with a cloned project has another path, a relative one, a placeholder, or none
-# read as YAML would: `pack:` one level inside the top-level `paths:` block, nowhere else
+# read as YAML would: `pack:` at the first level inside the top-level `paths:` block, nowhere else;
+# written more than once (where a reader would take the last), it counts as not recorded
 recorded=$(awk -v q="'" '
-  /^[^[:space:]#]/ { inpaths = ($0 ~ /^paths:[[:space:]]*(#.*)?$/); next }
-  inpaths && /^[[:space:]]+pack:/ {
-    v = $0; sub(/^[[:space:]]+pack:[[:space:]]*/, "", v); sub(/[[:space:]]+#.*$/, "", v)
-    sub(/[[:space:]]+$/, "", v); gsub("^[\"" q "]|[\"" q "]$", "", v); print v; exit
-  }' "$pack/profile.yaml" 2>/dev/null)
+  /^[^[:space:]#]/ { inpaths = ($0 ~ /^paths:[[:space:]]*(#.*)?$/); child = -1; next }
+  inpaths && /^[[:space:]]+[^[:space:]#]/ {
+    match($0, /^[[:space:]]+/); ind = RLENGTH
+    if (child < 0) child = ind
+    if (ind == child && $0 ~ /^[[:space:]]+pack:/) {
+      v = $0; sub(/^[[:space:]]+pack:[[:space:]]*/, "", v); sub(/[[:space:]]+#.*$/, "", v)
+      sub(/[[:space:]]+$/, "", v); gsub("^[\"" q "]|[\"" q "]$", "", v); n++; last = v
+    }
+  }
+  END { if (n == 1) print last }' "$pack/profile.yaml" 2>/dev/null)
 case "$recorded" in "~"*) recorded="$HOME${recorded#\~}" ;; esac   # the value is data: never evaluated
 want=""
 case "$recorded" in

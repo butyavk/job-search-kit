@@ -126,4 +126,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    sys.path.insert(0, str(KIT / "scripts"))
+    from check_pack import friendly_errors
+    friendly_errors()
     sys.exit(main())
