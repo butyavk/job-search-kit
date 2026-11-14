@@ -19,11 +19,7 @@ The single source of truth for the search. Read it first in every session about 
 ## Hard filters — only these
 1. A must-have I cannot honestly meet (language, certificate, citizenship, experience I do not have). Quote it in full.
 2. Geography: (where I can work, where I would move, where a visa is needed and how real it is).
-3. Money: the floor per channel.
-
-| Channel or level | Floor | Into a numeric form field |
-| --- | --- | --- |
-| | | |
+3. Money: below the floor for that level or channel. The numbers live in one place, `profile.yaml` → `money` (`floor`, `say_aloud`, `form_numeric_field`); never copy them here.
 
 Free-text salary field: «…». I never ask about money or currency myself.
 

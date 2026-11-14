@@ -1,5 +1,7 @@
 # Where vacancies come from — sources and how to read them
 
+A Russian translation for people: `docs/sources.ru.md` — change both.
+
 Statuses are from a real two-month search (autumn 2026). Sites change: when a source stops reading, write it into the frame's source list (`me/search-rules.md`) with the date, so the next session does not lose an hour on it.
 
 **Three ways to read**, from cheapest to most expensive:

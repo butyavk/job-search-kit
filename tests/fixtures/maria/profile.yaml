@@ -1,0 +1,59 @@
+# Candidate profile — personal data. Never publish.
+name: Maria Sokolova
+contacts:
+  email: maria@example.com
+  phone: +995 500 000 000
+  linkedin: linkedin.com/in/maria-example
+  github: 
+location:
+  city: Tbilisi
+  country: Georgia
+  timezone: UTC+4
+  line_cv: "Tbilisi, Georgia (UTC+4) · Remote, open to relocation"
+target:
+  track: manager   # check_pack counts the ◆ questions of this track
+  roles: Engineering Manager, Senior EM
+status:
+  employed_now: false
+  start_date: Immediately
+  citizenship: Georgia
+  residence_country: Georgia
+  contract: "contractor through my own company in Georgia"
+work_authorization:                 # per country where I search; true = I have the right, no sponsor needed
+  home_country: Georgia
+  eu: false
+  uk: false
+  us: false
+  needs_sponsorship_where: EU, UK, US
+forms:                              # only what I am willing to give; leave the rest empty
+  gender: ""
+  ethnicity: ""
+  veteran: ""
+  criminal_convictions: ""
+  recording_consent: false
+money:                              # said aloud only through blocks LOG-*
+  say_aloud:                        # the number or range I name myself (block LOG-6)
+    remote: "about 9 000 euro a month, gross"
+  floor:                            # I do not go below; never said aloud — for decisions and numeric form fields
+    remote: "from 7 500 euro a month, gross"
+  current_or_last: "8 000 euro a month"
+  form_numeric_field: floor of the level in the form's currency
+languages:
+  native: Russian
+  english: C1          # sets the register targets in english-register
+paths:                              # large sources that are not copied into the pack
+  pack: ~/job-search/me
+  master_cv: ~/job-search/cv/master.docx
+  tracker: ~/Documents/job-tracker.xlsx
+
+fact_sources:                       # what the fact check compares blocks against, strongest first
+  - ~/job-search/cv/master.docx
+
+autonomy:                           # default: Claude prepares, I send. Rules only in my own words, with date
+  default: ask
+  rules: []
+  # - action: send_followup         # send_followup | send_note | submit_form | other (say which)
+  #   when: "follow-up 1 in an existing ATS thread, from the template, no new facts"
+  #   checks: "english-register passed; nothing from never-say; the gate line unchanged"
+  #   since: <date>
+  #   said: "<my words>"

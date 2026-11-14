@@ -16,6 +16,13 @@ Use these without asking. One place: `me/profile.yaml` (`contact`, `availability
 - Previously employed by / relatives at the company: No, unless the tracker says otherwise.
 - Salary: numeric field — the floor of your range for this level in the form's currency; free text — your fixed sentence; «depends on the scope» when you said so for this role.
 
+## Never twice
+Two sessions once sent the same three forms twice. So:
+- **One form, one session.** If a scheduled task or another session is working on forms, stop it and wait for it to finish before touching any form.
+- **Before every submit, no exceptions:** a confirmation email from this company in the last 2 days (mail connector), and the tracker row's status plus today's `recent_writes`. A confirmation, or the row already «Applied» → do not submit; close the tab and tell the candidate.
+- An open tab with a filled form is not proof that it was not sent: another session could have sent its own copy.
+- Without mail or tracker access, ask the candidate «did you already send X?» before the submit.
+
 ## Always leave for the candidate
 - Consents and agreements (privacy, terms, assessment rules, «I agree to use only my own words»), unless they said «tick everything» for a batch — the own-words pledge is never ticked for them.
 - Demographic self-identification beyond what they explicitly listed.

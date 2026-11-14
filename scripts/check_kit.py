@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""Check the kit itself (run in CI and before a release).
+
+1. Every kit path named in backticks in the kit's Markdown files exists
+   (templates/…, skills/…, schedules/…, scripts/…, bank/…, pack-template/…,
+   examples/…, docs/…, commands/…, tools/…), and every `me/…` file the
+   instructions name exists in pack-template/.
+2. The two copies of the rules agree: every line of CLAUDE.md (after its
+   title and the note about the copy) is also in skills/job-search-kit/SKILL.md.
+3. Every skill named as «skill `x`» or «`x` skill» exists.
+
+Exit code 1 on any problem.
+"""
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+KIT = Path(__file__).resolve().parent.parent
+TICK = re.compile(r"`([^`\s]+)`")
+KIT_DIRS = ("templates", "skills", "schedules", "scripts", "bank", "pack-template",
+            "examples", "docs", "commands", "tools")
+# files that describe paths inside a generated folder, not the kit
+SKIP_FILES = {"skills/company-trainer/SKILL.md", "CHANGELOG.md"}
+
+
+def md_files() -> list[Path]:
+    out = []
+    for p in KIT.rglob("*.md"):
+        rel = p.relative_to(KIT).as_posix()
+        if rel.startswith(("site/", ".git/", "node_modules/")) or "/node_modules/" in rel:
+            continue
+        out.append(p)
+    return sorted(out)
+
+
+def check_paths() -> list[str]:
+    problems = []
+    for f in md_files():
+        rel = f.relative_to(KIT).as_posix()
+        if rel in SKIP_FILES:
+            continue
+        for raw in TICK.findall(f.read_text(encoding="utf-8")):
+            p = re.sub(r"^\$\{CLAUDE_PLUGIN_ROOT(:-kit)?\}/", "", raw)
+            p = re.sub(r"^kit/", "", p).split("#")[0].rstrip(".,;:")
+            if any(c in p for c in "<*…{") or p.endswith("/"):
+                continue
+            if p.startswith("me/"):
+                if not (KIT / "pack-template" / p[3:]).exists():
+                    problems.append(f"{rel}: `{raw}` — not in pack-template/")
+            elif p.split("/")[0] in KIT_DIRS and "/" in p:
+                if not (KIT / p).exists():
+                    problems.append(f"{rel}: `{raw}` — no such file in the kit")
+    return problems
+
+
+def check_rules_copies() -> list[str]:
+    claude = (KIT / "CLAUDE.md").read_text(encoding="utf-8").splitlines()[3:]
+    router = set((KIT / "skills" / "job-search-kit" / "SKILL.md").read_text(encoding="utf-8").splitlines())
+    missing = [l for l in claude if l.strip() and l not in router and not l.startswith("The same rules are in")]
+    return [f"CLAUDE.md line not in skills/job-search-kit/SKILL.md: {l[:90]}" for l in missing]
+
+
+def check_skill_names() -> list[str]:
+    skills = {p.name for p in (KIT / "skills").iterdir() if p.is_dir()}
+    problems = []
+    pat = re.compile(r"skills? `([a-z0-9-]+)`|`([a-z0-9-]+)` skill")
+    for f in md_files():
+        for m in pat.finditer(f.read_text(encoding="utf-8")):
+            name = m.group(1) or m.group(2)
+            if name not in skills:
+                problems.append(f"{f.relative_to(KIT).as_posix()}: skill `{name}` does not exist")
+    return problems
+
+
+def main() -> int:
+    problems = check_paths() + check_rules_copies() + check_skill_names()
+    for p in problems:
+        print("ERROR  " + p)
+    print("OK" if not problems else f"{len(problems)} problem(s)")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

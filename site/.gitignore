@@ -1,6 +1,7 @@
 src/content/docs/how-it-works.md
 src/content/docs/ru/how-it-works.md
 src/content/docs/sources.md
+src/content/docs/ru/sources.md
 node_modules/
 dist/
 .astro/

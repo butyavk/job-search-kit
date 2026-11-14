@@ -62,7 +62,7 @@ Questions in one message; answers go to `me/profile.yaml` and `me/search-rules.m
 - native language and English level (`languages`): they set the second language of the blocks and the register targets;
 - employer-form answers they are willing to give (demographics only if they want).
 
-Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles and levels their CV supports; channels (remote, home country, visa-free, sponsorship, relocation) with what each means for them; a money floor per channel from public salary data, with sources; company types. They choose. Write the choices and what they chose not to filter. The template's timing rules (follow-up days, application days) are defaults: ask whether to keep them; unconfirmed ones keep the mark «default».
+Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles and levels their CV supports; channels (remote, home country, visa-free, sponsorship, relocation) with what each means for them; a money floor per channel from public salary data, with sources (written only to `profile.yaml` → `money`); company types. They choose. Write the choices and what they chose not to filter. The template's timing rules (follow-up days, application days) are defaults: ask whether to keep them; unconfirmed ones keep the mark «default».
 
 **The master CV** — every application is built from it (skill `tailoring-cv`):
 - an editable source exists (LaTeX, Word, Google Doc, Markdown): that is the master; write its path to `paths.master_cv` and keep its build engine;

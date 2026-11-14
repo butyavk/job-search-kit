@@ -13,7 +13,7 @@ The frame lives in one file, `me/search-rules.md`. Read it first in every search
 Only three hard filters:
 1. **A must-have the candidate cannot honestly meet** (another main language, a required certificate, citizenship, experience they do not have). Quote the requirement in full: «or a comparable stack», «is a plus», «and/or» remove the requirement, and a cut quote gives a false drop.
 2. **Geography, real rather than declared.** A country list without theirs, a time-zone window without theirs — out. Sort roles into channels: remote, a country without a visa, a country with sponsorship, relocation.
-3. **Money.** The floor per market is written in the frame in advance. No range in the posting — estimate it from the company type and the hiring market; do not treat it as a pass.
+3. **Money.** The floor per market is written in advance in `me/profile.yaml` → `money.floor` (the only place for the numbers). No range in the posting — estimate it from the company type and the hiring market; do not treat it as a pass.
 
 Level and company stage go into ranking, not filters. As filters they gave 2–3 live roles per hundred checked; as ranking rules, seven candidates in five days.
 

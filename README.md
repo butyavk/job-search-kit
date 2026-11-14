@@ -84,7 +84,9 @@ schedules/        prompts for the daily, weekly and monthly scheduled tasks
 bank/             the universal question bank: 134 questions, 26 core, role packs, 13 story archetypes
 pack-template/    an empty pack to copy as me/
 templates/        prep context, recruiter call, debrief, story split, design card, references, …
-scripts/          check_pack.py (pack check), english_check.py (English register)
+scripts/          check_pack.py (pack check), english_check.py (English register and never-say),
+                  check_kit.py (the kit's own consistency)
+tests/            regression tests on two made-up packs
 tools/            Apple Notes export (a source for the fact check)
 examples/         one made-up story cut into blocks
 docs/             how it works, in English and Russian

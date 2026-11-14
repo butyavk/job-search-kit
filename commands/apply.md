@@ -9,4 +9,6 @@ Vacancy: $ARGUMENTS
 3. `outreach`: one short note to the hiring manager or recruiter for the day of applying.
 4. When the candidate says «applied»: the tracker (`mark_applied`, channel, date; follow-up dates come from the tracker's rule) and the note's send time.
 
+Without a browser: everything goes into `FORM-ANSWERS.md` in the order of the form's fields; the candidate pastes it. Before any submit: the «Never twice» check in `job-application-forms`.
+
 Submitting the form and sending the note are the candidate's, unless an `autonomy` rule covers it and the candidate starts it in this session.

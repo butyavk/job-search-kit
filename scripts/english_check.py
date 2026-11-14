@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
 """Check an English text against the non-native C1 register.
 
-Usage: python3 english_check.py file.txt   or   echo "text" | python3 english_check.py
+Usage: python3 english_check.py [--me <pack>] [file.txt]   or   echo "text" | python3 english_check.py
 Targets: 12–15 words per sentence on average; long words (8+ letters) under 13%; longest sentence under ~30 words;
-contractions (don't, I'm): 0; idioms and «AI words»: 0.
+contractions (don't, I'm): 0; idioms and «AI words»: 0; phrases from the pack's never-say.md: 0.
+The pack is found like check_pack.py does: --me, then JOB_SEARCH_ME, then me/ next to the kit or in the working folder.
 """
-import re, sys
+import os, re, sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from check_pack import never_claims, never_say_phrases  # noqa: E402
+
+args = sys.argv[1:]
+me = None
+if args[:1] == ["--me"]:
+    me, args = Path(args[1]).expanduser(), args[2:]
+if me is None:
+    env = os.environ.get("JOB_SEARCH_ME")
+    cands = ([Path(env).expanduser()] if env else []) + [Path(__file__).resolve().parent.parent.parent / "me", Path.cwd() / "me"]
+    me = next((c for c in cands if (c / "never-say.md").exists()), None)
 
 IDIOMS = ["earn their keep", "connective tissue", "moved the needle", "low-hanging", "deep dive",
           "at the end of the day", "double down", "north star", "bandwidth", "in the weeds",
@@ -14,7 +28,7 @@ IDIOMS = ["earn their keep", "connective tissue", "moved the needle", "low-hangi
           "testament to", "underscore", "pivotal", "landscape", "realm", "crucial", "furthermore",
           "moreover", "cornerstone", "spearhead", "leverage", "passionate", "proven track record", "genuinely"]
 
-t = open(sys.argv[1], encoding="utf-8").read() if len(sys.argv) > 1 else sys.stdin.read()
+t = open(args[0], encoding="utf-8").read() if args else sys.stdin.read()
 s = [x for x in re.split(r'(?<=[.!?])\s+', t.replace('\n', ' ')) if len(x.split()) > 1]
 w = re.findall(r"[A-Za-z][A-Za-z'\-]*", t)
 lw = [x for x in w if len(x) >= 8]
@@ -28,3 +42,9 @@ print(f"long words: {100*len(lw)/len(w):.1f}% (target under 13%)")
 print(f"longest sentence: {max(len(x.split()) for x in s)} words (target under ~30)")
 print(f"contractions: {contr or 'none'}")
 print(f"idioms and AI words: {found or 'none'}")
+if me is not None:
+    banned = [p for p, _ in never_claims(me / "never-say.md")] + never_say_phrases(me / "never-say.md")
+    hits = [p for p in banned if re.search(r"(?<!\w)" + re.escape(p) + r"(?!\w)", t, re.I)]
+    print(f"never-say ({me}): {hits or 'none'}")
+else:
+    print("never-say: no pack found (pass --me <pack>)")

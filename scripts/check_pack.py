@@ -186,6 +186,36 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     return out
 
 
+NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,]\d{3})+(?![\d,.])|\d+(?:[.,]\d+)?)(\s?%)?")
+
+
+def norm_number(raw: str, pct: str | None) -> str:
+    if re.fullmatch(r"\d{1,3}(?:[ \u00a0,]\d{3})+", raw):  # 450 000 · 450,000 — thousands
+        n = re.sub(r"[ \u00a0,]", "", raw)
+    else:
+        n = raw.replace(",", ".")  # 2,1 — a decimal comma
+    return n + ("%" if pct else "")
+
+
+def fact_numbers(path: Path) -> set[str]:
+    if not path.exists():
+        return set()
+    return {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(path.read_text(encoding="utf-8"))}
+
+
+def block_numbers(en: str) -> list[str]:
+    """Numbers worth a source: percentages, decimals and whole numbers of 10 and more; years are skipped."""
+    out = []
+    for m in NUM_RE.finditer(en):
+        n = norm_number(m.group(1), m.group(2))
+        bare = n.rstrip("%")
+        if re.fullmatch(r"(19|20)\d\d", bare) and not n.endswith("%"):
+            continue
+        if n.endswith("%") or "." in bare or float(bare) >= 10:
+            out.append(n)
+    return out
+
+
 def register(en: str):
     sents = [s for s in SENT_SPLIT.split(en) if len(s.split()) > 1]
     words = WORD_RE.findall(en)
@@ -228,7 +258,7 @@ def main() -> int:
         return 0
 
     if not a.me.is_dir():
-        print(f"no candidate pack at {a.me}: pass --me <path to me/> or run /onboard")
+        print(f"no candidate pack at {a.me}: pass --me <path to me/> or run /start")
         return 1
     for name in ("recipes.md", "never-say.md", "facts.md"):
         if not (a.me / name).exists():
@@ -301,6 +331,15 @@ def main() -> int:
                 continue
             if pat.search(b["en"]):
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
+
+    known = fact_numbers(a.me / "facts.md")
+    if known:
+        for b in blocks.values():
+            if b["draft"]:
+                continue
+            loose = [n for n in block_numbers(b["en"]) if n not in known and n.rstrip("%") not in known]
+            if loose:
+                warnings.append(f"{b['file']}:{b['line']} {b['id']}: numbers not in facts.md: {', '.join(dict.fromkeys(loose))}")
 
     if total_words and long_words / total_words > 0.13:
         warnings.append(f"EN register: {100 * long_words / total_words:.1f}% words of 8+ letters (target under 13%): "

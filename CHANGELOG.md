@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.2.0 — 2026-11-14
+
+From the requirements review (72 requirements, statuses and plan: one document per release).
+
+Added
+- `job-application-forms` «Never twice»: one form, one session; before every submit, the confirmation email and the tracker row are checked.
+- `english_check.py` finds the pack and lists every phrase from `never-say.md` in the text.
+- `check_pack.py` warns when a number in a block is not in `facts.md` (thousands and decimal commas understood; years skipped).
+- `scripts/check_kit.py`: every file the instructions name exists, the two copies of the rules agree, every named skill exists. In CI.
+- Regression tests on two made-up packs (`tests/`), in CI.
+- What to do without a browser (`/apply` → the answers file) and without the tracker (`/today` → a table of changes).
+- Writing rules for a vacancy in another language.
+- The sources page in Russian on the site.
+
+Changed
+- The money floor lives only in `profile.yaml` → `money`; `search-rules.md` refers to it.
+- The pack check suggests `/start` (was the old `/onboard`) when there is no pack.
+
 ## 1.1.3 — 2026-11-14
 
 Fixed (fourth and fifth test runs: a tracker from `tracker-mcp new`, applications, a rejection, follow-ups, the funnel; a stage from the invitation to a debrief with a new fact)

@@ -18,6 +18,10 @@ jobs:
           python3 scripts/check_pack.py --me "$RUNNER_TEMP/me"
       - name: The English check runs
         run: echo "I build small teams. They ship often." | python3 scripts/english_check.py
+      - name: The kit is consistent (file references, the two copies of the rules, skill names)
+        run: python3 scripts/check_kit.py
+      - name: Regression tests on made-up packs
+        run: python3 -m unittest discover -s tests -v
       - name: Manifests are valid JSON
         run: |
           python3 -m json.tool .claude-plugin/plugin.json > /dev/null
