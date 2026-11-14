@@ -1,0 +1,44 @@
+# Publishes the version in .claude-plugin/plugin.json as a GitHub release, started by hand
+# (Actions → release → Run workflow): the tag v<version>, the notes from CHANGELOG.md, and one
+# zip per skill for claude.ai (Settings → Skills takes a skill as a zip) plus all of them in one.
+name: release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Version, notes, checks
+        id: v
+        run: |
+          v="$(python3 -c 'import json;print(json.load(open(".claude-plugin/plugin.json"))["version"])')"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          awk -v v="$v" '$1=="##" && $2==v {p=1; next} p && $1=="##" {exit} p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          test -s "$RUNNER_TEMP/notes.md" || { echo "no CHANGELOG entry for $v"; exit 1; }
+          if gh release view "v$v" > /dev/null 2>&1; then echo "v$v is already released"; exit 1; fi
+          python3 scripts/check_kit.py
+          python3 -m unittest discover -s tests
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Skill zips for claude.ai
+        run: |
+          mkdir -p "$RUNNER_TEMP/out/skills"
+          for d in skills/*/; do
+            n="$(basename "$d")"
+            (cd skills && zip -qr "$RUNNER_TEMP/out/skills/$n.zip" "$n")
+          done
+          (cd "$RUNNER_TEMP/out/skills" && zip -qr "$RUNNER_TEMP/out/job-search-kit-skills-${{ steps.v.outputs.version }}.zip" .)
+          ls "$RUNNER_TEMP/out/skills"
+      - name: Release
+        run: |
+          gh release create "v${{ steps.v.outputs.version }}" --target "$GITHUB_SHA" \
+            --title "job-search-kit ${{ steps.v.outputs.version }}" --notes-file "$RUNNER_TEMP/notes.md" \
+            "$RUNNER_TEMP"/out/skills/*.zip "$RUNNER_TEMP/out/job-search-kit-skills-${{ steps.v.outputs.version }}.zip"
+        env:
+          GH_TOKEN: ${{ github.token }}

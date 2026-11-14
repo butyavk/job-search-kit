@@ -18,8 +18,11 @@ Useful reports:
   ```bash
   cp -r pack-template /tmp/me && python3 scripts/check_pack.py --me /tmp/me
   echo "I build small teams. They ship often." | python3 scripts/english_check.py
+  python3 scripts/check_kit.py   # references, links, the two copies of the rules, skill names
+  python3 -m unittest discover -s tests
   claude plugin validate .      # if you have Claude Code
   ```
+- A change users will notice bumps the version in `.claude-plugin/plugin.json` (installed plugins update only on a new version) and gets a `## <version>` entry in `CHANGELOG.md`; CI checks the two match. The maintainer publishes it with Actions → release (a tag, the notes, one zip per skill for claude.ai).
 - A rule that came from a real search keeps its number and where it came from (see `docs/how-it-works.md`).
 
 ## License

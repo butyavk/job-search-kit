@@ -49,7 +49,7 @@ echo '@kit/CLAUDE.md' > CLAUDE.md
 ```
 Однострочный `CLAUDE.md` заставляет Claude Code загружать правила набора в каждой сессии, начатой в `job-search/` (сам он `kit/CLAUDE.md` не читает). В другом клиенте начните с «сначала прочитай kit/CLAUDE.md». Потом скажите «начнём поиск работы».
 
-**Проект claude.ai без shell:** загрузите навыки (`skills/*`, каждую папку архивом) в Настройках → Skills; `CLAUDE.md` — в инструкцию проекта; `commands/` (Claude читает их, когда вы называете команду), `bank/questions.md`, `pack-template/`, `schedules/` и `templates/` — в файлы проекта, каждый с путём в имени через `__` (`commands__debrief.md`, `templates__debrief.md`: некоторые имена повторяются в разных папках). Файлы пакета Claude выдаёт по одному, вы их загружаете. Команды — словами. Подробно: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
+**Проект claude.ai без shell:** загрузите навыки в Настройках → Skills — по архиву на навык, готовые архивы в последнем [релизе](https://github.com/butyavk/job-search-kit/releases/latest); `CLAUDE.md` — в инструкцию проекта; `commands/` (Claude читает их, когда вы называете команду), `bank/questions.md`, `pack-template/`, `schedules/` и `templates/` — в файлы проекта, каждый с путём в имени через `__` (`commands__debrief.md`, `templates__debrief.md`: некоторые имена повторяются в разных папках). Файлы пакета Claude выдаёт по одному, вы их загружаете. Команды — словами. Подробно: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
 
 **Трекер** — открытый MCP-сервер [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` его подключает (`uvx tracker-mcp new …`, потом одна строка `claude mcp add` или файл `.mcpb` для приложения). Нужны `uv` и tracker-mcp 0.7 или новее.
 

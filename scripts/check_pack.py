@@ -2,7 +2,7 @@
 """Check a candidate pack against the kit.
 
 Usage:
-    python3 kit/scripts/check_pack.py [--me PATH] [--kit PATH] [--strict]
+    python3 kit/scripts/check_pack.py [--me PATH] [--kit PATH] [--strict] [--ready] [--cv CV] [--mark-synced]
 
 The pack is --me, else $JOB_SEARCH_ME, else ../me next to the kit folder, else ./me. The script reads
 me/blocks/*.md, me/recipes.md, me/never-say.md and kit/bank/questions.md, and
@@ -239,6 +239,75 @@ def block_numbers(en: str) -> list[str]:
     return out
 
 
+UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen "
+                                    "fourteen fifteen sixteen seventeen eighteen nineteen".split())}
+TENS = {w: 10 * i for i, w in enumerate("_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()) if w != "_"}
+SCALES = {"hundred": 100, "thousand": 1000, "million": 1_000_000}
+WORDNUM_RE = re.compile(r"\b((?:(?:" + "|".join(list(TENS) + list(UNITS) + list(SCALES)) + r")[\s-]*)+)(per ?cent)?", re.I)
+
+
+def word_numbers(en: str) -> list[str]:
+    """Numbers written as words («two percent», «twenty-five», «three hundred»), in the same form as
+    block_numbers: percentages, and whole numbers of 10 and more."""
+    out = []
+    for m in WORDNUM_RE.finditer(en):
+        total = cur = 0
+        for w in re.split(r"[\s-]+", m.group(1).strip().lower()):
+            if w in UNITS:
+                cur += UNITS[w]
+            elif w in TENS:
+                cur += TENS[w]
+            elif w == "hundred":
+                cur = max(cur, 1) * 100
+            elif w in SCALES:
+                total += max(cur, 1) * SCALES[w]
+                cur = 0
+        n = total + cur
+        if m.group(2):
+            out.append(f"{n}%")
+        elif n >= 10:
+            out.append(str(n))
+    return out
+
+
+def known_number(n: str, known: set[str], rounded: bool = False) -> bool:
+    """In facts.md as written; a number in words may also be a fact rounded («about two percent» = 2.1%)."""
+    if n in known:
+        return True
+    if n.endswith("%") and n.rstrip("%") in known and not rounded:   # «2.1» written beside a «%» sign in facts
+        return True
+    if not rounded:
+        return False
+    pct, val = n.endswith("%"), float(n.rstrip("%"))
+    for k in known:
+        if k.endswith("%") == pct:
+            try:
+                if round(float(k.rstrip("%"))) == val:
+                    return True
+            except ValueError:
+                pass
+    return False
+
+
+def read_cv(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    if path.suffix.lower() == ".pdf":
+        import shutil
+        import subprocess
+        if not shutil.which("pdftotext"):
+            return None
+        return subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True).stdout
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if path.suffix.lower() == ".tex":   # drop commands and comments, keep the words
+        text = re.sub(r"(?<!\\)%.*", "", text)
+        text = text.replace("\\%", "%")
+        text = re.sub(r"\\[a-zA-Z]+\*?(\[[^\]]*\])?", " ", text)
+    elif path.suffix.lower() in (".html", ".htm"):
+        text = re.sub(r"<[^>]+>", " ", text)
+    return text
+
+
 def register(en: str):
     sents = [s for s in SENT_SPLIT.split(en) if len(s.split()) > 1]
     words = WORD_RE.findall(en)
@@ -267,6 +336,8 @@ def main() -> int:
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--ready", action="store_true",
                     help="fail until the pack can be used: no placeholders in profile and facts, the pitch I01 confirmed")
+    ap.add_argument("--cv", type=Path, default=None,
+                    help="also check a CV (.tex, .md, .txt, .html, or .pdf with pdftotext): every number in it must be in facts.md")
     ap.add_argument("--mark-synced", action="store_true",
                     help="record that the pack was just copied to the claude.ai project")
     a = ap.parse_args()
@@ -387,9 +458,23 @@ def main() -> int:
         for b in blocks.values():
             if b["draft"]:
                 continue
-            loose = [n for n in block_numbers(b["en"]) + block_numbers(b["ru"]) if n not in known and n.rstrip("%") not in known]
+            loose = [n for n in block_numbers(b["en"]) + block_numbers(b["ru"]) if not known_number(n, known)]
+            loose += [n for n in word_numbers(b["en"]) if not known_number(n, known, rounded=True)]
             if loose:
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: numbers not in facts.md: {', '.join(dict.fromkeys(loose))}")
+
+    if a.cv is not None:
+        cv_text = read_cv(a.cv)
+        if cv_text is None:
+            errors.append(f"--cv: cannot read {a.cv} (a .pdf needs pdftotext)")
+        else:
+            cv_loose = [n for n in block_numbers(cv_text) if not known_number(n, known)]
+            cv_loose += [n for n in word_numbers(cv_text) if not known_number(n, known, rounded=True)]
+            if cv_loose:
+                errors.append(f"CV {a.cv.name}: numbers not in facts.md: {', '.join(dict.fromkeys(cv_loose))} "
+                              "(a difference between the CV and facts.md is a question for the candidate)")
+            else:
+                print(f"CV {a.cv.name}: every number is in facts.md")
 
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8")

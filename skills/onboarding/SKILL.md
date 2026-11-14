@@ -70,7 +70,7 @@ Then **propose the frame** (skill `job-search`, section 1): 2–3 role titles an
 **The master CV** — every application is built from it (skill `tailoring-cv`):
 - an editable source exists (LaTeX, Word, Google Doc, Markdown): that is the master; write its path to `paths.master_cv` and keep its build engine;
 - only a PDF, or plain text with no layout (.txt, a pasted CV): offer to build it once as an editable master (LaTeX or HTML printed to PDF), keeping the layout close; the candidate checks every line against the PDF before it is used;
-- then the reserve the skill asks for: variant bullets and skill lines, `FACT:` notes with the source of each number. Facts in the master and in `me/facts.md` must match; a difference is a question, not a choice.
+- then the reserve the skill asks for: variant bullets and skill lines, `FACT:` notes with the source of each number. Facts in the master and in `me/facts.md` must match (`check_pack.py --cv <master>` lists the numbers that do not); a difference is a question, not a choice.
 
 **The LinkedIn profile** (if they use LinkedIn): a headline and an «About» from the pitch block, the positions matching the master CV, «Open to work» visible to recruiters only if they are employed. Claude drafts; the candidate edits the profile.
 

@@ -37,3 +37,11 @@ jobs:
         run: |
           npm install -g @anthropic-ai/claude-code > /dev/null 2>&1
           claude plugin validate .
+      - name: The plugin version has a CHANGELOG entry
+        run: |
+          v="$(python3 -c 'import json;print(json.load(open(".claude-plugin/plugin.json"))["version"])')"
+          grep -q "^## $v " CHANGELOG.md || { echo "CHANGELOG.md has no '## $v' entry"; exit 1; }
+      - name: Hooks are valid JSON and the hook script runs
+        run: |
+          python3 -m json.tool hooks/hooks.json > /dev/null
+          sh hooks/session-start.sh

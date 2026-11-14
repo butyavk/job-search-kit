@@ -68,6 +68,7 @@ Build files per company (`Name_Surname__CV (Company).pdf`); the copy attached to
 
 ## Verification before «ready»
 - diff the tailored source against the master and account for every factual change;
+- `python3 <kit>/scripts/check_pack.py --cv <the tailored source or PDF>`: every number in it is in `me/facts.md`;
 - compile; `pdfinfo` (page count), `pdffonts`, `pdftotext` (every rendered bullet exists verbatim in the master; no leftover markup);
 - the positioning line renders on one line and contains no banned words or vacancy phrases;
 - coverage table at ≥80% of true must-have terms;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1 — 2026-11-14
+
+Added
+- GitHub releases: Actions → release publishes the version with its notes and one zip per skill for claude.ai (the install pages point there). CI checks that the plugin version has a CHANGELOG entry and that the hook runs.
+- `check_pack.py --cv <CV>`: every number in the CV (.tex, .md, .txt, .html, .pdf) must be in `me/facts.md`; used in tailoring, onboarding and `/review`.
+- Numbers written as words in blocks («five percent», «twenty-five») are checked against `me/facts.md`; a rounded fact counts («about two percent» = 2.1%).
+- CONTRIBUTING: the checks to run and how a version is published.
+
 ## 1.3.0 — 2026-11-14
 
 Fixed (three independent reviews: requirements audit, a newcomer run in Spanish, tracker-mcp 0.7)

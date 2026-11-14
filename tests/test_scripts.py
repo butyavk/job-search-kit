@@ -160,6 +160,25 @@ class PackCheckBreakage(unittest.TestCase):
         self.assertNotEqual(code, 0, out)
         self.assertNotIn("Traceback", out)
 
+    def test_number_in_words_is_checked(self):
+        code, out = self.broken(lambda d: (d / "blocks" / "10-payouts.md").write_text(
+            (d / "blocks" / "10-payouts.md").read_text(encoding="utf-8").replace("about two percent of our payouts failed and",
+                                                                                  "about five percent of our payouts failed and"), encoding="utf-8"))
+        self.assertIn("5%", out)
+
+    def test_cv_numbers_against_facts(self):
+        d = Path(tempfile.mkdtemp())
+        good, bad = d / "good.txt", d / "bad.tex"
+        good.write_text("Fintrek, 2022-2026. Failed payouts from 2.1% to 0.4%.\n", encoding="utf-8")
+        bad.write_text("\\item Failed payouts from 2.1\\% to 0.3\\% % a comment with 99\n", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(good))
+        self.assertEqual(code, 0, out)
+        self.assertIn("every number is in facts.md", out)
+        code, out = run("check_pack.py", "--me", str(FIX / "maria"), "--cv", str(bad))
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("0.3%", out)
+        self.assertNotIn("99", out.split("CV bad.tex")[1].split("\n")[0])
+
 
 class EnglishCheck(unittest.TestCase):
     def test_register_numbers(self):

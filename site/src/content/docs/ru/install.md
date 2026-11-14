@@ -20,7 +20,7 @@ echo '@kit/CLAUDE.md' > CLAUDE.md
 Однострочный `CLAUDE.md` заставляет Claude Code загружать правила набора в каждой сессии, начатой в `job-search/` (сам он `kit/CLAUDE.md` не читает). В другом клиенте начните с «сначала прочитай kit/CLAUDE.md». Потом скажите «начнём поиск работы».
 
 ## Проект claude.ai без shell
-- Навыки: каждую папку из `skills/` — архивом в Настройках → Skills.
+- Навыки: в Настройках → Skills, по архиву на навык — готовые архивы в последнем [релизе](https://github.com/butyavk/job-search-kit/releases/latest).
 - Инструкция проекта: текст `CLAUDE.md`.
 - Файлы проекта: `commands/` (слэш-команд там нет: Claude читает файл команды, когда вы её называете), `bank/questions.md`, `pack-template/`, `templates/`, `schedules/` — каждый с путём в имени через `__` (`commands__debrief.md`, `templates__debrief.md`: некоторые имена повторяются в разных папках).
 - Файлы пакета Claude выдаёт по одному, вы их загружаете; команды — словами.
