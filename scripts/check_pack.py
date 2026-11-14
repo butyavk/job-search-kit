@@ -247,6 +247,18 @@ def _scalar(rest: str):
         return "", "block", None
     if re.fullmatch(r"\[\](\s+#.*)?|~|null", s):
         return "", "empty-list", None
+    m = re.fullmatch(r"\[([^\[\]{}]*)\](\s+#.*)?", s)
+    if m and " #" not in m.group(1):   # a one-line list of plain or quoted words: [privacy consents, "own-words pledge", age]
+        items = []
+        for part in m.group(1).split(","):
+            part = part.strip()
+            q = re.fullmatch(r'"([^"\\]*)"|\'((?:[^\']|\'\')*)\'', part)
+            if q:
+                part = q.group(1) if q.group(1) is not None else q.group(2).replace("''", "'")
+            elif not part or part[0] in PLAIN_BAD_START or ": " in part or part[0] in "\"'":
+                return None, None, "a one-line list with an item that is not a plain or quoted word"
+            items.append(part)
+        return items, "flow-list", None
     v = re.split(r"\s+#", s, maxsplit=1)[0].rstrip()
     if v[0] in PLAIN_BAD_START:
         return None, None, f"a value that starts with «{v[0]}» (flow style, tags, anchors, aliases): quote it"
@@ -366,6 +378,9 @@ def read_profile(text: str):
         else:
             if kind in ("plain", "quoted"):
                 values[path] = val
+            elif kind == "flow-list":
+                for i, item in enumerate(val, 1):
+                    values[f"{path}.[{i}]"] = item
             frames.append([ind, key, "key", False])
     if block is not None:
         body = [l for l in block[3]]

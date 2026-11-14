@@ -938,7 +938,8 @@ class SweepThree(unittest.TestCase):
 
         words = ["remote", "eu", "floor", "say_aloud", "native", "money", "paths", "pack", "notes", "a_b"]
         vals = ['"from 7 500 euro, gross"', "'O''Brien'", "plain text", "C# dev", "https://x.io/a#b", '"x: y"',
-                "'#not comment'", "value  # comment", "~/Documents/x", "12 000", '"esc \\"q\\" \\u00e9"', ">", "|"]
+                "'#not comment'", "value  # comment", "~/Documents/x", "12 000", '"esc \\"q\\" \\u00e9"', ">", "|",
+                '[privacy consents, "own-words pledge", C#, 7 500]', "[]"]
 
         def gen(r, depth=0, ind=0):
             lines = []
