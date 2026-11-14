@@ -24,6 +24,17 @@ Fixed (the second sweep)
 - The hook reads `paths.pack` only at the first level of `paths:`, and a `pack:` written twice counts as not recorded.
 - `check_kit.py` answers broken files with one line too.
 
+Fixed (a third, independent check; each test seen failing on the code before its fix)
+- The profile is read in a strict YAML subset by one reader (`read_profile`) that gives the same values as a YAML reader: 1 500 generated profiles are compared with PyYAML in CI. Outside the subset is an error: flow mappings, tags, anchors and aliases, `?` keys, tabs, an indented first key, quoted keys, a space before the colon, more than one space after `-`. One-line lists of words (`[privacy consents, age]`) are part of it. The kit's own template had placeholders with «: » that made it invalid YAML; fixed.
+- Money: the floor and the current salary are found in any shape (a list, a block scalar, nested keys); every `say_aloud` value counts as known.
+- `values.yaml`: a value names something — words with capitals, the small linking words of names and titles, scripts without capitals; a lower-case word («forward mail», «do not ask») and order words with capitals («Approve All», «Wire Money») stop the run, known titles excepted (Forward Deployed, Email Marketing, Prompt Engineer, Open Source); initials and short abbreviations (Ivan S. Rykov, Eng.), em and en dashes and «O’Brien» pass; UTC offsets run from −12:00 to +14:00.
+- A program, a folder or a link that anyone may write to — the file itself, its folder or any folder above it, by the path as written and as resolved — is not trusted by a scheduled run.
+- Numbers: «Kubernetes 64 nodes» and «In May 12 engineers joined» are counts, not a version or a date.
+- Never-claim rows: « / » with spaces separates claims, so I/O, CI/CD and A/B stay whole; short capitals in an English list (ML, AI, LLM) are claims.
+- Autonomy: a second quote key is scanned like any condition; accents, «…», ‘ ’ and the no-break space are allowed in conditions, and accents do not hide a word (delété).
+- The hook reads a profile saved with a BOM, warns about `pack:` nested deeper than `paths:`, and says so when `JOB_SEARCH_ME` is set but is not a folder instead of using `./me`.
+- The kit's tests compare its tracker tool list and arguments with tracker-mcp itself (CI installs it).
+
 ## 1.5.1 — 2026-11-14
 
 Fixed
