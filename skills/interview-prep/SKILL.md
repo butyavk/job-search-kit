@@ -41,7 +41,7 @@ format and people → topic weights and plan → material and trainer → learn 
 ### Step 1. Format and people
 - Sources: the company's interview guide, recruiter emails, Glassdoor-type reviews, the values page, the engineering blog, vacancies of neighbouring teams.
 - For each interviewer: role, team, what they do in public (posts, talks, public code). This gives likely topics and 1–2 questions for them at the end. Never mention their personal profiles aloud: it sounds like studying the person rather than the company.
-- **The recruiter call** comes first almost everywhere: money and format, contract and country, timing and stages, rules on recording and AI, who the interviewers are. Prep: `templates/recruiter-call.md`.
+- **The recruiter call** comes first almost everywhere: money and format, contract and country, timing and stages, rules on recording and AI, who the interviewers are. Recording or an AI notetaker on the candidate's side only where the company allows and the candidate agrees (`forms.recording_consent`); a notetaker that joins calls by itself is turned off for interviews unless both agree. Prep: `templates/recruiter-call.md`.
 - **Unknown company or little public data** (anonymous posting, agency): work from the posting, mark every estimate «from the posting», turn cells without a source into questions for the recruiter. Do not invent the company.
 
 ### Step 2. Weights and plan

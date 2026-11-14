@@ -14,18 +14,18 @@ Use these without asking. One place: `me/profile.yaml` (`contact`, `availability
 - Work authorisation by region and sponsorship: <…>.
   Read what the sponsorship question is about: «to remain in your current location» is about where the candidate lives now (usually «No» if they already have the right there); «to work in <the job's country>» is about the job. Mixing the two is a common wrong answer.
 - Office / hybrid willingness: <…>.
-- Previously employed by / relatives at the company: No, unless the tracker says otherwise.
+- Previously employed by / relatives at the company: from `forms:` in the profile (`worked_at_company_before`, `relatives_at_company`); a company the candidate may have a history with → ask.
 - Salary: numeric field — the floor of your range for this level in the form's currency; free text — your fixed sentence; «depends on the scope» when you said so for this role.
 
 ## Never twice
 Two sessions once sent the same three forms twice. So:
-- **One form, one session.** If a scheduled task or another session is working on forms, stop it and wait for it to finish before touching any form.
-- **Before every submit, no exceptions:** a confirmation email from this company in the last 2 days (mail connector), and the tracker row's status plus today's `recent_writes`. A confirmation, or the row already «Applied» → do not submit; close the tab and tell the candidate.
+- **One form, one session.** Scheduled runs never touch forms. If another live session may be working on forms, ask the candidate before touching any form; there is no lock, so the question is the check.
+- **Before every submit, no exceptions:** a confirmation email from this company in the last 14 days (mail connector); the tracker row's status plus today's `recent_writes`; and the form itself — many ATS show «you have already applied» or prefill a past application. A confirmation, or the row already «Applied» → do not submit; close the tab and tell the candidate.
 - An open tab with a filled form is not proof that it was not sent: another session could have sent its own copy.
 - Without mail or tracker access, ask the candidate «did you already send X?» before the submit.
 
 ## Always leave for the candidate
-- Consents and agreements (privacy, terms, assessment rules, «I agree to use only my own words»), unless they said «tick everything» for a batch — the own-words pledge is never ticked for them.
+- Consents and agreements (privacy, terms, assessment rules, «I agree to use only my own words») — always the candidate's, even when they say «tick everything».
 - Demographic self-identification beyond what they explicitly listed.
 - Personal commitments (travel, relocation, schedule).
 - Facts you do not have: street address, grades, references, salary they have not named.

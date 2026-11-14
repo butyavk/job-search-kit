@@ -4,7 +4,7 @@ argument-hint: "[nothing, or 'quick']"
 ---
 Run `schedules/daily.md` in this session ($ARGUMENTS). The same text runs as the morning scheduled task.
 
-Read only and prepare: nothing is sent, submitted or accepted. Clear facts go to the tracker through its MCP server (dry run, then write); anything unclear goes into the summary as a question. A live response from a company (a call, a slot, a take-home, an offer) gets its own prep session (`/prep`), not a paragraph here.
+Read only and prepare: nothing is sent, submitted or accepted. Clear facts go to the tracker through its MCP server: a dry run, then the write after the candidate's yes in this session (a scheduled run stops at the dry run); anything unclear goes into the summary as a question. A live response from a company (a call, a slot, a take-home, an offer) gets its own prep session (`/prep`), not a paragraph here.
 
 Without the tracker's MCP server: list the changes as a table (row or company → field → was → now) for the candidate to make by hand, and take follow-ups from the spreadsheet's dates.
 

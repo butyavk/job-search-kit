@@ -84,6 +84,42 @@ class PackCheck(unittest.TestCase):
             self.assertIn("changed since the last copy", out)
 
 
+class PackCheckBreakage(unittest.TestCase):
+    """Broken copies of maria that the check must catch."""
+
+    def broken(self, edit):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        edit(d)
+        return run("check_pack.py", "--me", str(d))
+
+    def test_wrong_heading_level(self):
+        code, out = self.broken(lambda d: (d / "blocks" / "20-hiring.md").write_text(
+            (d / "blocks" / "20-hiring.md").read_text(encoding="utf-8").replace("#### HIR-O1", "### HIR-O1"), encoding="utf-8"))
+        self.assertNotEqual(code, 0, out)
+        self.assertIn("a heading that is not a block", out)
+
+    def test_wrong_language_code(self):
+        code, out = self.broken(lambda d: (d / "blocks" / "20-hiring.md").write_text(
+            (d / "blocks" / "20-hiring.md").read_text(encoding="utf-8").replace("- RU: В Fintrek я перестроила", "- DE: В Fintrek я перестроила"), encoding="utf-8"))
+        self.assertIn("«DE:», the profile says RU", out)
+
+    def test_autonomy_rule_needs_date_and_words(self):
+        code, out = self.broken(lambda d: (d / "profile.yaml").write_text(
+            (d / "profile.yaml").read_text(encoding="utf-8").replace("  rules: []", "  rules:\n  - action: send_followup\n    when: \"x\""), encoding="utf-8"))
+        self.assertIn("autonomy rule without", out)
+
+    def test_todo_in_confirmed_block(self):
+        code, out = self.broken(lambda d: (d / "blocks" / "20-hiring.md").write_text(
+            (d / "blocks" / "20-hiring.md").read_text(encoding="utf-8").replace("hired five engineers in a year.", "hired TODO engineers in a year."), encoding="utf-8"))
+        self.assertIn("placeholder", out)
+
+    def test_number_in_native_line(self):
+        code, out = self.broken(lambda d: (d / "blocks" / "10-payouts.md").write_text(
+            (d / "blocks" / "10-payouts.md").read_text(encoding="utf-8").replace("с 2,1% до 0,4%", "с 2,1% до 0,3%"), encoding="utf-8"))
+        self.assertIn("0.3%", out)
+
+
 class EnglishCheck(unittest.TestCase):
     def test_register_numbers(self):
         code, out = run("english_check.py", stdin="I build small teams. They ship often.")
@@ -95,6 +131,8 @@ class EnglishCheck(unittest.TestCase):
                      stdin="I led managers at Fintrek. So, yeah, we did fine.")
         self.assertIn("'led managers'", out)
         self.assertIn("'so, yeah'", out)
+        code, out = run("english_check.py", "--me", str(FIX / "maria"), stdin="I led\nmanagers there.")
+        self.assertNotEqual(code, 0, out)  # a hit fails, line breaks do not hide it
 
     def test_contraction_and_idiom(self):
         _, out = run("english_check.py", stdin="I don't think we should deep dive into it. We leverage data.")

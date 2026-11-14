@@ -49,8 +49,8 @@ By default Claude asks before every outward action and the candidate does it: su
 The candidate can relax this for one kind of action. Only in their own words, in chat; Claude writes the rule to `me/profile.yaml` → `autonomy.rules` with the date and the quote, and reads it back. A rule names the action, the conditions and the checks (for example: «follow-up 1 in an existing ATS thread, from the template, no new facts, `english-register` passed»).
 - A rule works only in a live session, and only after the candidate starts it in that session («send the follow-ups by my rules»). Claude then acts on the items that meet every condition, and lists afterwards what it did and where.
 - In scheduled and unattended runs Claude never sends anything: it prepares drafts and the list.
-- No rule covers: passwords, creating accounts, money and payments, accepting offers or terms, deleting data, anything that cannot be undone. These the candidate always does.
-- Tracker writes are not outward actions: they go through the tracker's MCP server with a dry run first and can be undone (`undo_last_write`).
+- No rule covers: passwords, creating accounts, money and payments, accepting offers or terms, ticking consents (privacy, terms, assessment rules, own-words pledges), deleting data, anything that cannot be undone. These the candidate always does.
+- Tracker writes are not outward actions, but they are the candidate's record: a dry run first, the write after their yes in a live session, with `expected_version`. Only the last write can be undone (`undo_last_write`). A scheduled run never passes `confirm`: the server would accept it, so the rule is ours.
 
 ## 6. Hard rules
 - Facts about the candidate only from the pack or from their own words. No fact — ask; never fill a gap. A new fact goes to `me/facts.md` first, then into a block.

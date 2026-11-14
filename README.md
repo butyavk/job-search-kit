@@ -25,7 +25,7 @@ Everything else is plain words: «compose an answer to B03», «add a fact», «
 **What runs by itself:** the daily check every morning (a push only when there is something to do), a weekly search pass, a monthly review — as scheduled tasks where your Claude app has them (`schedules/`). Follow-up dates also go to your calendar from the tracker.
 
 ## Your data stays yours
-Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit only reads it. The pack never goes into this repository (`.gitignore` blocks it).
+Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit reads it and writes to it only what you confirm. The pack never goes into this repository (`.gitignore` blocks it).
 
 **Answer blocks** are the heart of the pack: small checked sentences — the whole story, the first line, context, your action, the result, the lesson — in English and your native language. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview. See `examples/example-story.md`.
 

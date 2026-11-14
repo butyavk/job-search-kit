@@ -80,6 +80,9 @@ The format check does not prove the facts. Once a month (`/review`) and after bi
 2. Freeze the pack (a copy with the date).
 3. A **separate agent**, which did not write the blocks, checks every block against every source and gives a verdict per block: `OK`, `CONFLICT` (a source says otherwise — quote both), `OVERCLAIM` (the block says more than the source), `NOT FOUND` (no source), `EN≠XX` (the two language lines differ in meaning). Without an agent, do it in a fresh session with only the files.
 4. Claude shows the candidate only what is not `OK`, one question per item, and fixes blocks and facts after their answer.
+5. The verdicts go to `me/fact-check-<date>.md`, so the next check starts from them.
+
+Notes from 1:1s and feedback about other people are sources for the candidate's own facts only: they are never quoted, paraphrased or named in anything an employer reads.
 
 ## From an interview into blocks
 After `/debrief`: each new phrasing that worked → a block or a block edit; each speech error → a line in `me/voice.md` or `me/never-say.md`; each new question → a row in the bank (next ID in its section) and a recipe.

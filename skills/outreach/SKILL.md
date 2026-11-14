@@ -14,10 +14,12 @@ In this order, for one role:
 3. **People the candidate knows there** — first-degree contacts, former colleagues (search by past companies in the pack), second-degree contacts with many mutual connections: a possible referral.
 4. **Peers** — engineers or managers in the same team — only as a source of context, not a cold channel.
 
+Opening a profile can show the person «viewed your profile»: research in a live session, and say so if the candidate prefers private browsing mode in LinkedIn settings.
+
 For each person: name, title, since when, region, degree of connection, why they are relevant, source link. Do not guess who the hiring manager is: «not found with confidence» is an answer.
 
 ## 2. Who not to write to
-- People in `me/never-say.md` or the frame's «do not contact» list. Ask before writing to anyone the candidate has a history with.
+- People in `me/never-say.md` → «People not to contact» (also for references, offer replies and withdrawals). Ask before writing to anyone the candidate has a history with.
 - Possible future reports, and well-known public figures at the company, cold — no.
 - **One team, one direction at a time.** Do not approach the same team from two sides on the same day. Write to the second person after the first replies or after a week.
 - Nobody written to in the last 14 days, and anybody with a «do not follow up» note in the tracker's follow-up log.

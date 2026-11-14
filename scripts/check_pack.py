@@ -83,13 +83,17 @@ def parse_blocks(blocks_dir: Path):
                            "types": [], "en": "", "ru": "", "notes": [], "draft": False}
                 blocks[bid] = current
                 continue
+            if line.startswith("###") and not m:
+                errors.append(f"{path.name}:{n}: a heading that is not a block — a block starts with «#### ID · Title»")
+                current = None
+                continue
             if current is None:
                 continue
             if line.startswith("## ") or line.startswith("# "):
                 current = None
                 continue
             if not current["types"] and line.startswith("`"):
-                if "черновик" in line or "draft" in line:
+                if re.search(r"\bdraft\b|черновик", line):
                     current["draft"] = True
                 for part in line.split(" · "):
                     m_t = re.fullmatch(r"`([A-Z])`", part.strip())
@@ -100,6 +104,7 @@ def parse_blocks(blocks_dir: Path):
                 current["en"] = line[5:].strip()
             elif re.match(r"^- (?!EN:)[A-Z]{2}:", line):
                 current["ru"] = line[5:].strip()  # the native-language line, whatever its code
+                current["l2code"] = line[2:4]
             elif line.startswith("- ⚠"):
                 current["notes"].append(line)
     for b in blocks.values():
@@ -186,6 +191,12 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
     return out
 
 
+LANG_CODES = {"russian": "RU", "ukrainian": "UK", "belarusian": "BE", "german": "DE", "spanish": "ES",
+              "french": "FR", "italian": "IT", "portuguese": "PT", "polish": "PL", "dutch": "NL",
+              "turkish": "TR", "georgian": "KA", "armenian": "HY", "kazakh": "KK", "serbian": "SR",
+              "chinese": "ZH", "japanese": "JA", "korean": "KO", "hebrew": "HE", "arabic": "AR", "hindi": "HI",
+              "русский": "RU", "украинский": "UK"}
+
 NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,]\d{3})+(?![\d,.])|\d+(?:[.,]\d+)?)(\s?%)?")
 
 
@@ -198,9 +209,17 @@ def norm_number(raw: str, pct: str | None) -> str:
 
 
 def fact_numbers(path: Path) -> set[str]:
+    """Numbers stated as facts: table cells after the ID and before the source and confirmation columns."""
     if not path.exists():
         return set()
-    return {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(path.read_text(encoding="utf-8"))}
+    out = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("| F-"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        for cell in cells[1:-2] if len(cells) > 3 else cells[1:]:
+            out |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(cell)}
+    return out
 
 
 def block_numbers(en: str) -> list[str]:
@@ -269,6 +288,11 @@ def main() -> int:
         mn = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
         if mn and mn.group(1).strip().strip("\"'").lower() in ("english", "en"):
             NEED_L2 = False
+    expect_code = ""
+    if prof_path.exists():
+        mn2 = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
+        lang = mn2.group(1).strip().strip("\"'").lower() if mn2 else ""
+        expect_code = LANG_CODES.get(lang, lang.upper() if re.fullmatch(r"[a-z]{2}", lang) else "")
     blocks, errors = parse_blocks(a.me / "blocks")
     questions = parse_questions(a.kit / "bank" / "questions.md")
     recipes, empty = parse_recipes(a.me / "recipes.md")
@@ -310,8 +334,10 @@ def main() -> int:
         if contr:
             warnings.append(f"{where}: contractions {contr}")
         # one-word slots such as <company> or <city> are filled per vacancy; longer ones are unfinished text
-        if not b["draft"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>", b["en"] + b["ru"]):
-            warnings.append(f"{where}: confirmed block still has a <placeholder>")
+        if not b["draft"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>|\bTODO\b|\bTBD\b|\[[^\]]*\b(?:number|name|date|company|цифра|имя|дата)\b[^\]]*\]", b["en"] + b["ru"]):
+            warnings.append(f"{where}: confirmed block still has a placeholder (<…>, TODO, [number])")
+        if expect_code and b.get("l2code") and b["l2code"] != expect_code:
+            errors.append(f"{where}: the native-language line is «{b['l2code']}:», the profile says {expect_code}")
         if DANGLING_EN.match(b["en"]) or DANGLING_RU.match(b["ru"]):
             warnings.append(f"{where}: does not stand alone (starts with a link word); name the project or the subject")
 
@@ -333,13 +359,25 @@ def main() -> int:
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
     known = fact_numbers(a.me / "facts.md")
-    if known:
+    if (a.me / "facts.md").exists():
         for b in blocks.values():
             if b["draft"]:
                 continue
-            loose = [n for n in block_numbers(b["en"]) if n not in known and n.rstrip("%") not in known]
+            loose = [n for n in block_numbers(b["en"]) + block_numbers(b["ru"]) if n not in known and n.rstrip("%") not in known]
             if loose:
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: numbers not in facts.md: {', '.join(dict.fromkeys(loose))}")
+
+    if prof_path.exists():
+        ptxt = prof_path.read_text(encoding="utf-8")
+        for rule in re.findall(r"^  - action:.*?(?=^  - |^\S|\Z)", ptxt, re.M | re.S):
+            if not re.search(r"^\s+since:\s*\d{4}-\d{2}-\d{2}", rule, re.M) or not re.search(r"^\s+(?:quote|said):\s*\S", rule, re.M):
+                errors.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
+    for name in ("facts.md", "profile.yaml", "search-rules.md"):
+        f = a.me / name
+        if f.exists():
+            left = len(re.findall(r"<[^<>\n]{1,80}>|\bTODO\b", "\n".join(l for l in f.read_text(encoding="utf-8").splitlines() if not l.lstrip().startswith("#"))))
+            if left:
+                warnings.append(f"{name}: {left} placeholder(s) left to fill")
 
     if total_words and long_words / total_words > 0.13:
         warnings.append(f"EN register: {100 * long_words / total_words:.1f}% words of 8+ letters (target under 13%): "

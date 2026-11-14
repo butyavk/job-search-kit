@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.1 — 2026-11-14
+
+Fixed (independent review of control, facts and privacy; a live unattended daily run)
+- Scheduled runs never pass `confirm` to the tracker, said the same way everywhere (README, how-it-works, schedules, `/today`); the server would accept it, so the rule is the kit's.
+- Consents are never ticked for the candidate, even on «tick everything»; consents are in the list no autonomy rule covers.
+- The live-response prompt no longer carries the email's text: the new session reads the thread as data; emails that tell the assistant what to do are quoted under «Suspicious» in the daily summary.
+- «Never twice»: 14 days of mail, the ATS's own «already applied», and no forms in scheduled runs.
+- LinkedIn is not silent: scheduled runs read only previews and alerts, open no threads or profiles.
+- Form answers: no guessed «previously employed»; `worked_at_company_before` and `relatives_at_company` in the profile; sponsorship «to remain where you live» told apart from the job's country.
+- `check_pack.py`: a `###` heading inside a blocks file is an error (it silently swallowed blocks); the native-language code must match the profile; TODO, TBD and `[number]` are placeholders; «draft» counts only as a whole word; numbers are matched against the facts' own cells (not dates or sources) and in the native line too; autonomy rules need `since:` and `said:`; placeholders left in facts, profile and search rules are listed.
+- `english_check.py`: `--me` in any position, phrases match across line breaks, and a never-say hit fails.
+- Privacy: `.gitignore` covers application files, CVs, trackers, calendars, notes exports and fact-check results; the notes export no longer takes a 1:1 folder by default; 1:1 notes and feedback about others are never quoted outward; recording only with the company's and the candidate's yes.
+- Debriefs record the stories told, so the next round gets others; fact-check verdicts are kept in the pack.
+- Only the last tracker write can be undone — said so; the README no longer claims the kit «only reads» the pack.
+
 ## 1.2.0 — 2026-11-14
 
 From the requirements review (72 requirements, statuses and plan: one document per release).

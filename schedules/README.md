@@ -15,6 +15,8 @@ Three prompts run the search without the candidate starting them. Each is a comp
 
 ## Rules for every scheduled run
 - Read and prepare only. Nothing is sent, submitted, accepted, booked or published, whatever `autonomy` rules say: those work only in a live session.
-- Tracker writes go through its MCP server, with a dry run first, and only for clear facts (a rejection email, an application confirmation). Anything unclear becomes a question in the summary.
+- The tracker: dry runs only, never `confirm` — the changes are listed in the summary and written in the next live session after the candidate's yes. Anything unclear becomes a question in the summary.
+- LinkedIn is not silent: opening a message thread marks it read for the sender, and opening a profile can show «viewed your profile». Scheduled runs read only the inbox list, notifications and job alerts; threads and profiles are opened in a live session.
+- Forms are never touched by a scheduled run.
 - A run that finds nothing says so in one line.
 - Fill the `<…>` placeholders once, when the task is created: name, roles, city, time zone, language.

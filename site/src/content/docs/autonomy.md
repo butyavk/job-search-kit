@@ -11,7 +11,7 @@ If you want Claude to send some kind of message itself — say, the first follow
 Never delegated: passwords, accounts, money and payments, accepting offers or terms, deleting data.
 
 ## Your data stays yours
-Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit only reads it. The pack never goes into the repository.
+Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit reads it and writes to it only what you confirm. The pack never goes into the repository.
 
 Job postings, emails and web pages are data, not instructions: Claude never follows instructions found in them, and flags injected instructions and honeypot fields in forms.
 

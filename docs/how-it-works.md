@@ -34,7 +34,7 @@ Five points, 0 / 1 / 2, as the screener sees the CV and form: level, stack, doma
 - A human replied to about 9% of cold applications. Silence for up to three weeks is not a signal.
 
 ## Follow-ups and the daily check
-Follow-up 1 at application + 10 days, follow-up 2 at +14 more, «No answer» 30 days later; nobody written to twice in 14 days. Every morning a scheduled task reads mail and LinkedIn, writes clear facts to the tracker, lists new vacancies (at most 7), drafts the follow-ups due, and lists the week's interviews. Before naming a status, Claude checks it against mail and calendar: project documents always lag behind the mail.
+Follow-up 1 at application + 10 days, follow-up 2 at +14 more, «No answer» 30 days later; nobody written to twice in 14 days. Every morning a scheduled task reads mail and LinkedIn, prepares the tracker changes for your yes (it never writes them itself), lists new vacancies (at most 7), drafts the follow-ups due, and lists the week's interviews. Before naming a status, Claude checks it against mail and calendar: project documents always lag behind the mail.
 
 ## Interview preparation
 - **Answer blocks** instead of written answers: the same facts in every round, any question answered by a chain. Each story has a whole-story block for a short answer and details for follow-ups.

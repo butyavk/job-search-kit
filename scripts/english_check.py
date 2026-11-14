@@ -14,8 +14,10 @@ from check_pack import never_claims, never_say_phrases  # noqa: E402
 
 args = sys.argv[1:]
 me = None
-if args[:1] == ["--me"]:
-    me, args = Path(args[1]).expanduser(), args[2:]
+if "--me" in args:
+    i = args.index("--me")
+    me = Path(args[i + 1]).expanduser()
+    args = args[:i] + args[i + 2:]
 if me is None:
     env = os.environ.get("JOB_SEARCH_ME")
     cands = ([Path(env).expanduser()] if env else []) + [Path(__file__).resolve().parent.parent.parent / "me", Path.cwd() / "me"]
@@ -44,7 +46,11 @@ print(f"contractions: {contr or 'none'}")
 print(f"idioms and AI words: {found or 'none'}")
 if me is not None:
     banned = [p for p, _ in never_claims(me / "never-say.md")] + never_say_phrases(me / "never-say.md")
-    hits = [p for p in banned if re.search(r"(?<!\w)" + re.escape(p) + r"(?!\w)", t, re.I)]
+    def loose(p):  # any run of spaces or line breaks between the words
+        return r"(?<!\w)" + r"\s+".join(re.escape(w) for w in p.split()) + r"(?!\w)"
+    hits = [p for p in banned if re.search(loose(p), t, re.I)]
     print(f"never-say ({me}): {hits or 'none'}")
+    if hits:
+        sys.exit(1)
 else:
     print("never-say: no pack found (pass --me <pack>)")

@@ -5,3 +5,12 @@ me/
 .DS_Store
 __pycache__/
 companies/
+applications/
+*.pdf
+*.tex
+*.docx
+*.csv
+*.ics
+notes-export*
+.synced.json
+fact-check-*.md

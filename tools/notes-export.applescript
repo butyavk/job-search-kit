@@ -4,7 +4,7 @@
 -- Settings are the three lines below: folders to take whole, folders to skip, and words that pick notes from the other folders.
 
 set outFile to (POSIX path of (path to home folder)) & "Documents/notes-export.txt"
-set keepFolders to {"Work", "1-1"} -- whole folders
+set keepFolders to {"Work"} -- whole folders; add a 1:1 folder only if you need it, and keep the export local
 set skipFolders to {"Personal", "Recently Deleted"} -- never export (passwords, keys, private)
 set keys to {"feedback", "CTO", "review"} -- from other folders, only notes with these words
 

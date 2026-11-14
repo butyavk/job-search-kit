@@ -30,7 +30,9 @@ forms:                              # only what I am willing to give; leave the 
   ethnicity: <>
   veteran: <>
   criminal_convictions: <>
-  recording_consent: <true/false>
+  recording_consent: <true/false>   # may a call recorder or AI notetaker run on my side, where the company allows
+  worked_at_company_before: []      # companies I worked at or consulted for
+  relatives_at_company: []
   post_employment_restrictions: <No / Yes: what>   # «agreements or restrictions with current or past employers»
   primary_language: "<main language or framework, as I would say it in a form>"
   open_source_links: "<links, or one honest sentence if there are none>"
@@ -62,5 +64,5 @@ autonomy:                           # default: Claude prepares, I send. Rules on
   # - action: send_followup         # send_followup | send_note | submit_form | other (say which)
   #   when: "follow-up 1 in an existing ATS thread, from the template, no new facts"
   #   checks: "english-register passed; nothing from never-say; the gate line unchanged"
-  #   since: <date>
+  #   since: <YYYY-MM-DD>
   #   said: "<my words>"
