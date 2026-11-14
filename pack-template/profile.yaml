@@ -8,7 +8,7 @@ contacts:
 location:
   city: <city>
   country: <country>
-  timezone: <IANA zone, e.g. Europe/London: it follows summer time>
+  timezone: <IANA zone, e.g. Europe/London — it follows summer time>
   line_cv: "<City, Country (UTC+N) · Remote, open to relocation>"
 target:
   track: <manager / engineer / product>   # check_pack counts the ◆ questions of this track
@@ -17,9 +17,9 @@ status:
   start_date: <Immediately / 2 weeks / ...>
   citizenship: <country>
   residence_country: <country>
-  contract: "<how I work: employee, contractor, own company>"
+  contract: "<how I work — employee, contractor, own company>"
 work_authorization:                 # per country where I search; true = I have the right, no sponsor needed
-  home_country: <country of citizenship or residence: I have the right there>
+  home_country: <country of citizenship or residence — I have the right there>
   eu: <true/false>
   uk: <true/false>
   us: <true/false>
@@ -32,7 +32,7 @@ forms:                              # only what I am willing to give; leave the 
   recording_consent: <true/false>   # may a call recorder or AI notetaker run on my side, where the company allows
   worked_at_company_before: []      # companies I worked at or consulted for
   relatives_at_company: []
-  post_employment_restrictions: <No / Yes: what>   # «agreements or restrictions with current or past employers»
+  post_employment_restrictions: <No / Yes — what>   # «agreements or restrictions with current or past employers»
   primary_language: "<main language or framework, as I would say it in a form>"
   open_source_links: "<links, or one honest sentence if there are none>"
   accessibility_adjustments: ""     # empty unless I want to ask for some
@@ -44,7 +44,7 @@ money:                              # said aloud only through blocks LOG-*
   current_or_last: "<current or last salary; say it only if asked directly>"
   form_numeric_field: floor of the level in the form's currency
 languages:
-  native: <native language: the second line of every block; English → no second line>
+  native: <native language — the second line of every block; English → no second line>
   english: <B2 / C1 / C2 / native>  # sets the register targets in english-register
   <other language>: <level>
 paths:                              # large sources that are not copied into the pack

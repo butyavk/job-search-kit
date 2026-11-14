@@ -206,90 +206,185 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
         else:
             # «Adyen; PSD2; fraud, underwriting» lists single words that are claims: each is checked.
             # A false ban here is only a warning; a word left out would be a claim never checked.
-            parts = [p.strip() for p in re.split(r"[;/]|, | or ", claim)]
+            parts = [p.strip() for p in re.split(r";|\s/\s|, | or ", claim)]   # I/O, CI/CD, A/B stay whole
         for part in parts:
             part = part.strip().strip("«»\"' ")
             # a short title (CTO, VP, PhD) only when it is quoted or the whole claim
-            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == claim.strip("«»\"' "))
+            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (
+                quoted or part == claim.strip("«»\"' ") or not re.search(r"[А-Яа-яЁё]", claim))   # ML, AI, LLM
             if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
                 continue  # placeholders and Russian descriptions need a human; their English terms are still checked
             out.append((part, allowed))
     return out
 
 
-def yaml_scalars(text: str) -> tuple[dict[str, str], list[str]]:
-    """The profile's scalar values by their dotted path (`languages.native`), read the way a YAML
-    reader takes them: by indentation, not by the first matching line anywhere. Also the keys set
-    twice under one parent, which a reader would silently take the last of."""
+KEY = r"[A-Za-z0-9_<(][A-Za-z0-9_ <>().'/-]*?"
+PLAIN_BAD_START = set("{[]}!&*?|>%@`,")
+
+
+def _scalar(rest: str):
+    """A value after «key:» or «- »: (value, kind, error). kind: 'plain', 'quoted', 'empty', 'block', 'list'."""
+    s = rest.strip()
+    if not s or s.startswith("#"):
+        return "", "empty", None
+    if s[0] in "\"'":
+        if s[0] == '"':
+            m = re.match(r'"((?:[^"\\]|\\.)*)"(\s+#.*)?\s*$', s)
+            if not m:
+                return None, None, "a double-quoted value that does not end with its quote"
+            body = m.group(1)
+            if "\\" in body:
+                try:
+                    body = json.loads('"' + body + '"')
+                except ValueError:
+                    return None, None, "an escape in a double-quoted value that is not JSON's (\\n, \\\", \\u…)"
+            return body, "quoted", None
+        m = re.match(r"'((?:[^']|'')*)'(\s+#.*)?\s*$", s)
+        if not m:
+            return None, None, "a single-quoted value that does not end with its quote"
+        return m.group(1).replace("''", "'"), "quoted", None
+    if re.fullmatch(r"[|>][-+]?(\s+#.*)?", s):
+        return "", "block", None
+    if re.fullmatch(r"\[\](\s+#.*)?|~|null", s):
+        return "", "empty-list", None
+    v = re.split(r"\s+#", s, maxsplit=1)[0].rstrip()
+    if v[0] in PLAIN_BAD_START:
+        return None, None, f"a value that starts with «{v[0]}» (flow style, tags, anchors, aliases): quote it"
+    if ": " in v or v.endswith(":") or "\t" in v:
+        return None, None, "a value with «: » in it: quote it"
+    return v, "plain", None
+
+
+def read_profile(text: str):
+    """The profile in the strict YAML subset the kit reads, and the same values a YAML reader
+    gives for it. Returns (values by dotted path, keys set twice, syntax errors). Anything outside
+    the subset — flow style, tags, anchors and aliases, «?» keys, tabs, a first key not at column 0,
+    quoted keys, a space before the colon, more than one space after «-» — is an error, so what
+    the checks read is what a YAML reader reads (CONTRIBUTING: allow, do not block)."""
     values: dict[str, str] = {}
     dups: list[str] = []
-    stack: list[tuple[int, str]] = []          # (indent, key) of the open mappings
-    seen: dict[str, set[str]] = {}
-    item = 0
-    block_from = None                          # inside a | or > block scalar: lines deeper than this
-    for raw in text.splitlines():
-        if not raw.strip() or raw.lstrip().startswith("#"):
-            continue
-        ind = len(raw) - len(raw.lstrip())
-        if block_from is not None:
-            if ind > block_from:
+    errors: list[str] = []
+    frames: list[list] = []          # [indent, name, kind ('key'|'item'), open (key waiting for children)]
+    seen: dict[str, set] = {}
+    items: dict[str, int] = {}
+    block = None                     # (indent of its key, path, kind, lines)
+    lines = text.split("\n")
+    for n, raw in enumerate(lines, 1):
+        if block is not None:
+            ind0 = len(raw) - len(raw.lstrip(" "))
+            content = [len(l) - len(l.lstrip(" ")) for l in block[3] if l.strip()]
+            floor = content[0] if content else block[0] + 1   # the first line sets the block's indent
+            if not raw.strip() or ind0 >= floor:
+                block[3].append(raw)
                 continue
-            block_from = None
-        line = raw.strip()
-        if line.startswith("- ") or line == "-":   # a list item opens a fresh mapping
-            item += 1
-            while stack and stack[-1][0] >= ind:
-                stack.pop()
-            stack.append((ind, f"[{item}]"))
-            line = line[1:].strip()
+            body = [l for l in block[3]]
+            while body and not body[-1].strip():
+                body.pop()
+            strip = min((len(l) - len(l.lstrip(" ")) for l in body if l.strip()), default=0)
+            body = [l[strip:] for l in body]
+            values[block[1]] = ("\n" if block[2] == "|" else " ").join(body).strip() if block[2] == "|" else \
+                re.sub(r"(?<!\n)\n(?!\n)", " ", "\n".join(body)).strip()
+            block = None
+        if not raw.strip() or raw.lstrip(" ").startswith("#"):
+            continue
+        if "\t" in raw[: len(raw) - len(raw.lstrip())] or raw.startswith("\ufeff"):
+            errors.append(f"profile.yaml:{n}: a tab in the indentation; use spaces")
+            continue
+        ind = len(raw) - len(raw.lstrip(" "))
+        line = raw[ind:]
+        if line[0] in "?!&*%@{[" or line.startswith(("<<", "---", "...")):
+            errors.append(f"profile.yaml:{n}: «{line[0]}» at the start of a line (complex keys, tags, anchors, "
+                          "flow style, documents) is not used in a profile")
+            continue
+        if not frames and ind != 0:
+            errors.append(f"profile.yaml:{n}: the first key is indented; top-level keys start at column 0")
+            continue
+        is_item = line == "-" or line.startswith("- ")
+        if is_item:
+            if line.startswith("-  "):
+                errors.append(f"profile.yaml:{n}: more than one space after «-»")
+                continue
+            while frames and (frames[-1][0] > ind or (frames[-1][0] == ind and not (
+                    frames[-1][2] == "key" and frames[-1][3] in (True, "list")))):
+                frames.pop()
+            if frames and frames[-1][2] == "key":
+                if frames[-1][3] not in (True, "list"):
+                    errors.append(f"profile.yaml:{n}: a list item under a key that already has a value")
+                    continue
+                frames[-1][3] = "list"   # a key's list: its later items attach to it too
+            parent = ".".join(f[1] for f in frames)
+            items[parent] = items.get(parent, 0) + 1
+            name = f"[{items[parent]}]"
+            frames.append([ind, name, "item", False])
+            line = line[2:] if len(line) > 1 else ""
             ind += 2
             if not line:
                 continue
-        m = re.match(r"""(?:"([^"]+)"|'([^']+)'|([^\s:#][^:#]*?))\s*:(?:\s+|$)(.*)$""", line)
-        if not m:
+            m = re.match(rf"({KEY}):(?:\s+(.*)|$)", line)
+            if not m or line[0] in "\"'":
+                val, kind, err = _scalar(line)
+                if err:
+                    errors.append(f"profile.yaml:{n}: {err}")
+                elif kind == "block":
+                    block = (ind - 2, f"{parent}.{name}" if parent else name, line.strip()[0], [])
+                else:
+                    values[f"{parent}.{name}" if parent else name] = val
+                continue
+        else:
+            if re.match(r"""["']""", line):
+                errors.append(f"profile.yaml:{n}: a quoted key; write keys bare")
+                continue
+            m = re.match(rf"({KEY}):(?:\s+(.*)|$)", line)
+            if not m:
+                errors.append(f"profile.yaml:{n}: not «key: value» (a space before the colon, or another form)")
+                continue
+        key = m.group(1)
+        if key != key.strip():
+            errors.append(f"profile.yaml:{n}: a space before the colon")
             continue
-        key = (m.group(1) or m.group(2) or m.group(3)).strip()
-        while stack and stack[-1][0] >= ind:
-            stack.pop()
-        parent = ".".join(k for _, k in stack)
+        while frames and frames[-1][0] >= ind:
+            frames.pop()
+        if frames and frames[-1][2] == "key" and frames[-1][3] not in (True, "map"):
+            errors.append(f"profile.yaml:{n}: «{key}» is indented under a key that already has a value or a list")
+            continue
+        if frames and frames[-1][2] == "key":
+            frames[-1][3] = "map"
+        parent = ".".join(f[1] for f in frames)
         if key in seen.setdefault(parent, set()):
             dups.append(f"{parent}.{key}" if parent else key)
         seen[parent].add(key)
-        rest = m.group(4)
-        q = re.match(r"""\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^']|'')*)')""", rest)
-        if q:   # a quoted value ends at its closing quote; a comment may follow
-            val = q.group(1) if q.group(1) is not None else q.group(2).replace("''", "'")
-            val = "'" + val + "'"   # kept quoted here, unquoted below
-        else:
-            val = re.split(r"\s+#", rest, maxsplit=1)[0]
-        val = val.strip()
         path = f"{parent}.{key}" if parent else key
-        if val[:1] in ("|", ">"):
-            block_from = ind
-            values[path] = ""
-        elif val:
-            values[path] = val[1:-1] if q else val
-        stack.append((ind, key))
+        val, kind, err = _scalar(m.group(2) or "")
+        if err:
+            errors.append(f"profile.yaml:{n}: {err}")
+            continue
+        if kind == "block":
+            block = (ind, path, (m.group(2) or "").strip()[0], [])
+            frames.append([ind, key, "key", False])
+        elif kind == "empty":
+            frames.append([ind, key, "key", True])
+        else:
+            if kind in ("plain", "quoted"):
+                values[path] = val
+            frames.append([ind, key, "key", False])
+    if block is not None:
+        body = [l for l in block[3]]
+        strip = min((len(l) - len(l.lstrip(" ")) for l in body if l.strip()), default=0)
+        body = [l[strip:] for l in body]
+        values[block[1]] = "\n".join(body).strip() if block[2] == "|" else re.sub(r"(?<!\n)\n(?!\n)", " ", "\n".join(body)).strip()
+    return values, dups, errors
+
+
+def yaml_scalars(text: str) -> tuple[dict[str, str], list[str]]:
+    """The profile's scalar values by dotted path (`languages.native`, `money.floor.remote`,
+    `money.floor.[1]` for a list item), as a YAML reader takes them, and the keys set twice."""
+    values, dups, _ = read_profile(text)
     return values, dups
 
 
 def profile_syntax_errors(text: str) -> list[str]:
-    """YAML the kit's readers do not follow, refused so that what the checks read is what a YAML
-    reader reads: quoted keys, a space before the colon, anchors, aliases and merge keys, and flow
-    mappings ({…}) — the profile is written one key per line."""
-    out = []
-    for n, raw in enumerate(text.splitlines(), 1):
-        line = raw.split(" #")[0] if not raw.lstrip().startswith("#") else ""
-        body = re.sub(r"^\s*-\s+", "", line)
-        if re.match(r"""\s*["'][^"']*["']\s*:""", body):
-            out.append(f"profile.yaml:{n}: a quoted key; write keys bare (`autonomy:`, not `\"autonomy\":`)")
-        elif re.match(r"\s*[\w.-]+[ \t]+:(?:\s|$)", body):
-            out.append(f"profile.yaml:{n}: a space before the colon; write `key: value`")
-        if re.search(r"""(?:^|:\s|-\s)\s*[&*][\w-]+\s*$|^\s*<<\s*:""", body):
-            out.append(f"profile.yaml:{n}: anchors, aliases and merge keys (&x, *x, <<) are not used in a profile")
-        if re.search(r""":\s*\{""", body):
-            out.append(f"profile.yaml:{n}: a {{…}} mapping; write one key per line")
-    return out
+    """Everything in the profile outside the strict YAML subset the kit reads (read_profile)."""
+    return read_profile(text)[2]
 
 
 def native_is_english(value: str) -> bool:
@@ -382,13 +477,14 @@ NOT_AMOUNTS = re.compile(
     r"|\b[A-Z]{1,6}-[A-Z]?\d+\b"                           # block and fact IDs: PAY-S1, F-99
     r"|\+\d[\d\s().-]{6,}\d"                               # phone numbers
     r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
-    r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
+    r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS
+    + r"|\b" + MONTHS.replace(r"\b\.?", r"\b") + r"\s+\d{1,2}\b(?!\s+[a-z])"   # 15 March, March 15 (not «May 12 engineers»)
     r"|\b(?:ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|ES|RFC|WCAG|OAuth)\s?/?\d[\d.]*"   # standards: ISO 27001, HTTP/2
     # a version: one or two digits, or a dotted number; never one followed by %, a scale or more digits
     r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform"
     r"|Rust|TypeScript|Spark|Windows|iOS|Android|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s"
     r"|Kubernetes|Java ?SE|Swift ?UI|Kafka|Elasticsearch|Redis|Spring ?Boot|C#|macOS|log4j|Laravel|Symfony|Unity"
-    r"|Xcode|Gradle|Hadoop|Flink|Cassandra|MongoDB)\s?/?(?:\d+\.\d+(?:\.\d+)*|\d{1,2})(?!\d|[.,]\d|\s?(?:%|[kKM]\b|x\b"
+    r"|Xcode|Gradle|Hadoop|Flink|Cassandra|MongoDB)\s?/?(?:\d+\.\d+(?:\.\d+)*|\d{1,2}(?!\s+[a-z]+s\b))(?!\d|[.,]\d|\s?(?:%|[kKM]\b|x\b"
     r"|million|thousand|billion|percent))"
     r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
     r"|\b\d+(?:st|nd|rd|th)\b|\b\d+(?:signals|FA|D)\b"         # ordinals and names: 3rd, 37signals, 2FA, 3D
@@ -608,22 +704,24 @@ def autonomy_errors(ptxt: str) -> list[str]:
         if action is None:
             out.append("profile.yaml: an autonomy rule without `action:` — it does not count")
             continue
-        said_raw = keys.get("said", keys.get("quote", ""))
+        said_key = "said" if "said" in keys else "quote"
+        said_raw = keys.get(said_key, "")
         said_text = re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw).split("#")[0] if not said_raw.lstrip().startswith(("|", ">")) \
             else re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw)
         said_text = said_text.strip().strip("\"'")
         if not re.match(r"\s*\d{4}-\d{2}-\d{2}", keys.get("since", "")) or not said_text or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
         act = unicodedata.normalize("NFKC", action.split("#")[0].strip().strip("\"'"))
-        what = " ".join(f"{k}: {v}" for k, v in keys.items() if k not in ("said", "quote"))
-        plain = fold(unicodedata.normalize("NFKC", what))   # the words as they read, without invisible characters
+        what = " ".join(f"{k}: {v}" for k, v in keys.items() if k != said_key)   # a second quote key is scanned
+        # the words as they read: compatibility forms folded, invisible characters out, accents off (delété)
+        plain = "".join(c for c in unicodedata.normalize("NFKD", fold(what)) if unicodedata.category(c) != "Mn")
         if not re.fullmatch(r"send_followup|send_note", act):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup or send_note; "
                        "nothing else can become a rule")
         elif NO_RULE.search(plain):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
-        elif re.search(r"[^\x20-\x7e«»’“”—–]", what.replace("\n", " ")):   # allow, do not block: printable ASCII
+        elif re.search(r"[^\x20-\x7e«»‘’“”—–…\u00a0]", plain.replace("\n", " ")):   # allow, do not block: ASCII and its marks
             out.append(f"profile.yaml: autonomy rule «{act}»: write its conditions in plain English letters, with no "
                        "invisible or look-alike characters (only `said:` holds the candidate's own words, in any language)")
     return out
@@ -649,12 +747,17 @@ def safe_place(p: str, search: Path | None) -> bool:
     tmp = os.path.realpath(tempfile.gettempdir()).casefold()
     if real == tmp or real.startswith(tmp.rstrip("/") + "/"):
         return False
-    for anc in Path(os.path.realpath(os.path.expanduser(p))).parents:   # anyone may write there: not trusted
+    given_path = Path(os.path.abspath(os.path.expanduser(p)))
+    real_path = Path(os.path.realpath(os.path.expanduser(p)))
+    # anyone may write to it, or to a folder above it (by the path as written and as resolved): not trusted
+    for anc, follow in [(given_path, False), (real_path, True), *((a, True) for a in given_path.parents),
+                        *((a, True) for a in real_path.parents)]:
         try:
-            if os.stat(anc).st_mode & stat.S_IWOTH:
-                return False
+            mode = (os.stat(anc) if follow else os.lstat(anc)).st_mode
         except OSError:
             continue
+        if mode & stat.S_IWOTH and not stat.S_ISLNK(mode):
+            return False
     if search is not None:
         s = os.path.realpath(search).casefold().rstrip("/")
         if any(x == s or x.startswith(s + "/") for x in (real, given)):
@@ -949,7 +1052,7 @@ def main() -> int:
         # Read by the YAML reader, so nesting, quotes and comments are taken as a YAML reader takes them
         for key, val in prof_values.items():
             nums = set(block_numbers(val)) | set(word_numbers(val))
-            if key == "money.say_aloud" or key.startswith("money.say_aloud."):
+            if re.match(r"money\.say_aloud(?:\.|$)", key):          # nested keys and list items too
                 known |= nums
             elif re.match(r"money\.(?:floor|current_or_last)(?:\.|$)", key):
                 floor_numbers |= {n for n in nums if float(n.rstrip("%")) >= 100}

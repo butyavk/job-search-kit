@@ -3,7 +3,11 @@
 # The output goes into the session's context, so the kit's rules are read first.
 # It prints fixed text and two paths only: nothing from the pack's files reaches the session through it.
 pack=""
-if [ -n "$JOB_SEARCH_ME" ] && [ -d "$JOB_SEARCH_ME" ]; then
+if [ -n "$JOB_SEARCH_ME" ]; then
+  if [ ! -d "$JOB_SEARCH_ME" ]; then   # one pack lookup: a wrong value is said, never replaced by ./me
+    echo "job-search-kit: JOB_SEARCH_ME is set but is not a folder; fix it or unset it before using a pack."
+    exit 0
+  fi
   pack="$JOB_SEARCH_ME"
 elif [ -f ./me/profile.yaml ]; then
   pack="./me"
@@ -19,6 +23,7 @@ echo "job-search-kit: a candidate pack is here. Before anything else, load the j
 # read as YAML would: `pack:` at the first level inside the top-level `paths:` block, nowhere else;
 # written more than once (where a reader would take the last), it counts as not recorded
 recorded=$(awk -v q="'" '
+  NR == 1 { sub(/^\357\273\277/, "") }   # a profile saved with a BOM
   /^[^[:space:]#]/ { inpaths = ($0 ~ /^paths:[[:space:]]*(#.*)?$/); child = -1; next }
   inpaths && /^[[:space:]]+[^[:space:]#]/ {
     match($0, /^[[:space:]]+/); ind = RLENGTH

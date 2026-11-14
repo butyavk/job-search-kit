@@ -18,9 +18,9 @@ status:
   start_date: <Immediately / 2 weeks / ...>
   citizenship: <country>
   residence_country: <country>
-  contract: "<how I work: employee, contractor, own company>"
+  contract: "<how I work — employee, contractor, own company>"
 work_authorization:                 # per country where I search; true = I have the right, no sponsor needed
-  home_country: <country of citizenship or residence: I have the right there>
+  home_country: <country of citizenship or residence — I have the right there>
   eu: <true/false>
   uk: <true/false>
   us: <true/false>

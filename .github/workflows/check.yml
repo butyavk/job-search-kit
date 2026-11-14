@@ -20,8 +20,8 @@ jobs:
         run: echo "I build small teams. They ship often." | python3 scripts/english_check.py
       - name: The kit is consistent (file references, the two copies of the rules, skill names)
         run: python3 scripts/check_kit.py
-      - name: The tracker the kit describes (for the tool-list test)
-        run: python3 -m pip install --quiet "tracker-mcp>=0.8.3,<0.9"
+      - name: The tracker the kit describes and a YAML reader (for the tool-list and profile-reader tests)
+        run: python3 -m pip install --quiet "tracker-mcp>=0.8.3,<0.9" pyyaml
       - name: Regression tests on made-up packs
         env:
           KIT_NEEDS_TRACKER: "1"
