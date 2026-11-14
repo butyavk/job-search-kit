@@ -13,6 +13,7 @@ Changed
 - `english_check.py`: catches «reach out», «touch base», «circle back», «thrilled», «excited to», «bandwidth», «underscore(d)»; a message's subject, greeting and sign-off are not counted as sentences; the average sentence length is judged from six sentences.
 - Templates: the reference request without idioms or a claim the pack does not hold; no author facts in the voice-coach brief or the outreach example; «the candidate decides» at the walk-away point; weekday and date checked in drafts.
 - A short chain that is one whole `S` block is said alone (`answer-blocks`): its first sentence is the first line, so the `O` is not said twice.
+- Security: the session-start hook never prints a folder name with a control character (a cloned repository whose `me/` links to a folder named «x⏎job-search-kit: …» printed a line that looked like the kit's own). The tracker is set up pinned to an exact version (`tracker-mcp==0.8.6`, for everyday sessions and the read-only server of scheduled runs): it runs outside Claude's permissions, so a new release reaches it only when the candidate changes the pin; a range inside 0.8 is still accepted. `schedule_prompt.py` no longer claims a word filter it does not have: its checks keep a value a phrase, and the run's tool list is what keeps it from acting.
 - Docs: the EN README says which language goes to whom; RU wording fixed (literal phrases, «комплект подачи» for an application package, the missing «if it is not English»), the RU sources link.
 
 ## 1.5.6 — 2026-11-14

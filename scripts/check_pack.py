@@ -936,7 +936,8 @@ def tracker_ro_problems(servers, me: Path) -> list[str]:
     spec = str(args[1]) if isinstance(args, list) and len(args) > 1 else ""
     if not (isinstance(args, list) and len(args) == 4 and args[0] == "--from" and spec_ok(spec)
             and args[2] == "tracker-mcp" and args[3] == "--read-only"):
-        out.append('args must be exactly ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"]')
+        out.append('args must be exactly ["--from", "tracker-mcp==0.8.6", "tracker-mcp", "--read-only"] '
+                   '(an exact 0.8.x from 0.8.3 on, or a range inside 0.8 such as >=0.8.3,<0.9)')
     if not (isinstance(env, dict) and all(isinstance(v, str) for v in env.values())):
         return out + ["env must map names to text"]
     extra = set(env) - {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"}

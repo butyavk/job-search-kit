@@ -13,11 +13,11 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 2. **Existing tracker?** Ask where it is. `uvx tracker-mcp init <file or Google Sheets URL>` writes a config that maps its columns and statuses; show the mapping and fix it with the candidate.
 3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` (other languages: `en`, then rename the statuses in its config) creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 4. **Connect the server:**
-   - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp`
+   - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx --from tracker-mcp==0.8.6 tracker-mcp`. The exact version is a choice for safety: the server runs as the candidate, outside Claude's permissions, so a new release reaches it only when they change the pin (`uvx --refresh` does not change it); a range such as `>=0.8.3,<0.9` works too.
    - For Claude Code scheduled runs, a read-only server list of their own, `me/schedules/tracker-ro.mcp.json` (not a second `claude mcp add`, so everyday sessions see only `tracker`):
      ```json
      {"mcpServers": {"tracker-ro": {"command": "<absolute path to uvx: run `which uvx`>",
-       "args": ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"],
+       "args": ["--from", "tracker-mcp==0.8.6", "tracker-mcp", "--read-only"],
        "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
      ```
      The read-only server previews and refuses every write. `schedules/README.md` runs it with `--strict-mcp-config`, so the read-write server is not loaded in that run.

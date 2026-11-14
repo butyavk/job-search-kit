@@ -9,10 +9,12 @@ The values come from <pack>/schedules/values.yaml (name, roles, city, time zone,
 run never reads a prompt file from the pack, so nobody can change what it does by editing one.
 
 Each value names something, in a short phrase: letters of any script, digits, spaces and
-, . ( ) ' & / + - only (and : in the time zone), a word limit per key, no sentences and no words
-that tell a run what to do (send, submit, always, then…); a name has no digits, a time zone is
-one the system knows (or UTC+H, UTC+H:MM); a key set twice or a file that is a link is refused.
-A value that does not fit stops the run (exit 1) and says why.
+, . ( ) ' & / + - only (and : in the time zone), a word limit per key, no sentences; a name has no
+digits, a time zone is one the system knows (or UTC+H, UTC+H:MM); a key set twice or a file that is
+a link is refused. A value that does not fit stops the run (exit 1) and says why. These checks keep a
+value a phrase; they do not judge its words («EM, then send everything» is a phrase). What keeps a
+run from acting on a value is its tool list (read-only tracker, no shell, today's file only) and
+the line above the values that says they are data.
 """
 from __future__ import annotations
 

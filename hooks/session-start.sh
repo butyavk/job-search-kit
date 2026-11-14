@@ -14,6 +14,7 @@ elif [ -f ./me/profile.yaml ]; then
 fi
 [ -z "$pack" ] && exit 0
 here=$(cd "$pack" 2>/dev/null && pwd -P)
+case "$here" in *[[:cntrl:]]*) here="" ;; esac   # a folder name with a newline could pose as the kit's own line
 echo "job-search-kit: a candidate pack is here. Before anything else, load the job-search-kit skill (the kit's rules: Claude prepares, the candidate sends) and say in one line which pack is connected."
 [ -n "$here" ] && echo "job-search-kit: the pack's folder is $here"
 # The kit's own folder changes with every plugin version: scheduled runs and commands use this one
