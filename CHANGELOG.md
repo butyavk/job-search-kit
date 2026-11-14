@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.2 — 2026-11-14
+
+Fixed (third test run: a real vacancy from a company board, through the gate to the form)
+- Standing form answers live in one place, `profile.yaml`, with new keys for common questions (post-employment restrictions, primary language, open-source links, accessibility); `search-rules.md` keeps only wording.
+- `tailoring-cv` stops when there is no master CV and sends to onboarding, instead of building from blocks.
+- `job-search`: a yes/no «are you located in …» form question is a geography zero.
+- claude.ai: Claude writes project files itself where it has a tool for them.
+
 ## 1.1.1 — 2026-11-14
 
 Fixed (found in two test runs with made-up candidates)

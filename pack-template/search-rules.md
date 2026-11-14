@@ -34,11 +34,9 @@ Level · stack · domain · geography · money. A zero — no cold application (
 (for example: remote counts double; a route through a person +2)
 
 ## Facts for forms
-- Contacts and links (LinkedIn, GitHub).
-- Notice period: …
-- Work authorization and sponsorship by country: …
-- Employment form (employee, contractor, EOR): …
-- Experience wording: «…».
+Contacts, start date, work authorization, employment form and the standing form answers live in `profile.yaml` (one place). Here only what is wording:
+- Experience wording: «…» (years, level, team sizes as I say them).
+- «Why this company» frame: «…».
 
 ## Message rules
 - First sentence of a cold note: «…».

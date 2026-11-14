@@ -31,6 +31,10 @@ forms:                              # only what I am willing to give; leave the 
   veteran: <>
   criminal_convictions: <>
   recording_consent: <true/false>
+  post_employment_restrictions: <No / Yes: what>   # «agreements or restrictions with current or past employers»
+  primary_language: "<main language or framework, as I would say it in a form>"
+  open_source_links: "<links, or one honest sentence if there are none>"
+  accessibility_adjustments: ""     # empty unless I want to ask for some
 money:                              # said aloud only through blocks LOG-*
   say_aloud:                        # the number or range I name myself (block LOG-6)
     <level or country>: "<about ... a month/year, gross>"

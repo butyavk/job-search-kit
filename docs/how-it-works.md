@@ -63,6 +63,6 @@ Follow-up 1 at application + 10 days, follow-up 2 at +14 more, «No answer» 30 
 - Skills: zip each folder in `skills/` and upload it in Settings → Skills.
 - Project instructions: the text of `CLAUDE.md`.
 - Project files: `bank/questions.md`, `pack-template/` (onboarding uses it), `templates/` you need, `schedules/` for scheduled tasks. If the project does not keep folders, name files with their path: `me__facts.md`, `me__blocks__10-work.md`.
-- Claude does not write project files itself: after each change it gives the whole file and says which one to replace.
+- Without a tool for project files, Claude cannot write them: after each change it gives the whole file and says which one to replace. With one (some setups have it), it writes them itself.
 - The pack check: Claude goes through the checklist in the `answer-blocks` skill. The independent fact check needs a session that can start a separate agent (Claude Code or the desktop app).
 - The tracker: the desktop app with the tracker-mcp `.mcpb`; in the browser only, keep the spreadsheet by hand from Claude's row changes.

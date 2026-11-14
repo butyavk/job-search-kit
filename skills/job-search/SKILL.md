@@ -40,6 +40,7 @@ Any conclusion about a vacancy — open, closed, «no other roles», date, range
 - **Age is a risk and a place in the queue, not a filter.** Senior roles take 60–75 days to fill. Fresh posts (up to ~4 days) go first, within 24 hours. Older than ~14 days — check that the role is really alive: its ATS page is open, and there is a sign of life in the last 2–3 weeks (`updated_at` or «Reposted», «Actively reviewing applicants», fresh posts by the recruiter or hiring manager). Older than 90 days with no sign of life — the end of the queue (roughly a fifth of postings never end in a hire). Applying cold to an old role is fine; add a note to a person the same day.
 - **Applicants**: logged-in LinkedIn (the guest view lags).
 - **Range and format**: LinkedIn sometimes shows a range or «hybrid» that the ATS does not have.
+- **A yes/no location question in the form** («Are you located in the UK or Poland?») is a hard filter: «No» is a geography zero, whatever the text says about remote.
 - **Signals of the hiring form**: 401(k), HSA = US employment; «B2B contract», «tax allowance» = contractor. The country dropdown in the form is often more honest than the text. If all the company's other roles are on-site, remote will not appear.
 - A location contradiction («Remote» in the text, a city on the card) is the first question for the recruiter.
 - Company headcount: from its LinkedIn page at the time of the check.
