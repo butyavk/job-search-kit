@@ -28,7 +28,7 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 6. Write the path to `me/profile.yaml` → `paths.tracker`.
 
 No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet by hand, with the columns of `templates/tracker.csv` (the same as `tracker-mcp new` makes, plus Gate); Claude gives the exact row changes as a table. The rules the server would apply, done by hand:
-- Status, one of: Not applied, Applied, Screening, Interview, Offer, Rejected, Withdrawn, No response, Closed (Furthest stage: Screening, Interview or Offer).
+- Status, one of: Not applied, Applied, Screening, Interview, Offer, Rejected, Withdrawn, No response, Closed (Furthest stage: Screening, Interview or Offer). These are the English names; a tracker made with `--lang ru` or renamed has its own, and `describe_tracker` maps them — use the tracker's names with the candidate.
 - Follow-up date: Applied on + 10 days; after a follow-up is sent, + 14 days from the sending; a reply from the company clears it.
 - No response: 30 days after the last touch with no follow-up due.
 Where claude.ai can run code, Claude can also `pip install tracker-mcp` in its sandbox and make the file there (`tracker-mcp new job-tracker.xlsx`) for the candidate to download. Later, the desktop app's `.mcpb` can point at that same file (a .csv, or saved from Excel as .xlsx) — no terminal needed.
@@ -46,7 +46,7 @@ Where claude.ai can run code, Claude can also `pip install tracker-mcp` in its s
 - After each event, one sentence from the candidate is enough: «applied to X via the site», «X rejected», «sent follow-up to X», «don't write to X before Friday». Claude finds the row, shows the change, writes after «yes».
 - Applications: `mark_applied` (date, channel); the server sets the follow-up dates by the rule in its config.
 - Follow-ups: `followups_due`, `log_followup` after sending, `reschedule_followup` for «not before …» notes.
-- Silence: `stale_applications(days=…)` with the frame's «No answer» days (default 30, counted from the last touch), then `close_stale` after a dry run and a yes. A row whose follow-up is still due is not silent yet: send the follow-up first.
+- Silence: `stale_applications(days=…)` with the frame's «No response» days (default 30, counted from the last touch), then `close_stale` after a dry run and a yes. A row whose follow-up is still due is not silent yet: send the follow-up first.
 - The picture: `funnel`, `reply_times` (by channel), `summary`.
 - Mail: `match_emails` links messages to rows.
 

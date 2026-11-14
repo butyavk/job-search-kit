@@ -62,7 +62,7 @@ autonomy:                           # default: Claude prepares, I send. Rules on
   default: ask
   rules: []
   # - action: send_followup         # send_followup | send_note only; forms carry consents, which no rule covers
-  #   when: "follow-up 1 in an existing ATS thread, from the template, no new facts"
+  #   when: "follow-up 1 in an existing ATS thread, from templates/messages.md, no new facts"
   #   checks: "english-register passed; nothing from never-say; the gate line unchanged"
   #   since: <YYYY-MM-DD>
   #   said: "<my words>"

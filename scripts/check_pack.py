@@ -1109,6 +1109,11 @@ def main() -> int:
                 warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» is in the never-claim table")
 
     known = fact_numbers(a.me / "facts.md")
+    if prof_path.exists() and any(k.startswith("money.") for k in prof_values) \
+            and not str(prof_values.get("money.approach", "")).strip():
+        # the money answers (calls, written replies, forms) choose by it: flexible, or a number first
+        warnings.append("profile.yaml: money has no «approach» (flexible — the recruiter names the range first, "
+                        "or a number first); the kit's money answers choose by it")
     if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
         floor_numbers: set[str] = set()
         # only say_aloud is said; the floor and the current salary must never appear in a block.

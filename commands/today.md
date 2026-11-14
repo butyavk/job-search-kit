@@ -8,4 +8,4 @@ Read only and prepare: nothing is sent, submitted or accepted. Clear facts go to
 
 Without the tracker's MCP server: list the changes as a table (row or company → field → was → now, the columns of `templates/tracker.csv`) for the candidate to make by hand, and take follow-ups from the spreadsheet's dates.
 
-End with one message: what came in, what changed in the tracker (row → was → now), new vacancies (at most 7 rows), what to send today (company → person → channel → text), interviews in the next 7 days. Nothing new — one line.
+End with one message in the candidate's language (each employer draft in its own quote block, in the vacancy's language): what came in, what changed in the tracker (row → was → now), new vacancies (at most 7 rows), what to send today (company → person → channel → text), interviews in the next 7 days. Nothing new — one line.

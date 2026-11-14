@@ -6,7 +6,7 @@ description: Claude prepares; you send. What you can delegate, what never is, an
 ## Claude prepares; you send
 By default Claude asks before every outward action, and you do it: submit, send, accept, book. Saying in a message «submit these two» is your yes for exactly those.
 
-If you want Claude to send some kind of message itself — say, the first follow-up in an existing ATS thread, from the template — tell it the rule. It writes the rule into your profile with the date and your words. A rule works only in a live session that you start; scheduled runs never send anything.
+If you want Claude to send some kind of message itself — say, the first follow-up in an existing ATS thread, from the kit's template — tell it the rule. It writes the rule into your profile with the date and your words. A rule works only in a live session that you start; scheduled runs never send anything.
 
 Never under a rule: submitting application forms (they carry consents; a form whose consents you ticked is submitted only on your yes for that form), passwords, accounts, money and payments, accepting offers or terms, ticking consents (privacy, terms, assessment rules), deleting data, anything that cannot be undone.
 

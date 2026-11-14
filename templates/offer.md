@@ -33,7 +33,7 @@ Unclear → questions for the recruiter:
 - In the moment: «Thank you — I need a day to look at the whole package.»
 - Counter (one number, tied to the role): «…»
 - If the base is capped: review in <N> months against <metrics>, number and date in the offer; signing bonus; equity.
-- Walk-away point: below the floor → «Thank you, this is well below what I am looking for» — and decide together.
+- Walk-away point: below the floor → «Thank you, this is well below what I am looking for» — and the candidate decides.
 
 ## Decision log
 | Date | What happened | What I said or sent |

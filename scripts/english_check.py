@@ -32,10 +32,11 @@ if me is None:
 IDIOMS = ["earn their keep", "connective tissue", "move the needle", "low-hanging", "deep dive",
           "at the end of the day", "double down", "north star", "have the bandwidth", "no bandwidth",
           "in the weeds", "boil the ocean", "tip of the iceberg", "hit the ground running", "wear many hats",
-          "boil down to"]   # «That said» is matched only where it opens a sentence (OPENERS)
+          "boil down to", "bandwidth", "reach out", "touch base", "circle back", "hope this finds you well",
+          "thrilled", "excited to"]   # «That said» is matched only where it opens a sentence (OPENERS)
 OPENERS = [r"(?:^|[.!?]\s+)That said\b(?!\s+(?:nothing|something|it|that|so|no|yes|a|the)\b)"]   # «That said» opening a sentence, with or without a comma
 AI_WORDS = ["delve", "robust", "seamless", "holistic", "synergy",
-            "testament to", "underscores", "pivotal", "landscape", "realm", "crucial", "furthermore",
+            "testament to", "underscore", "pivotal", "landscape", "realm", "crucial", "furthermore",
             "moreover", "cornerstone", "spearhead", "leverage", "passionate", "proven track record", "genuinely"]
 
 if not args and sys.stdin.isatty():   # nothing piped in: say how to use it instead of waiting in silence
@@ -43,6 +44,24 @@ if not args and sys.stdin.isatty():   # nothing piped in: say how to use it inst
     sys.exit(2)
 t = open(args[0], encoding="utf-8").read() if args else sys.stdin.read()
 t = fold(t).replace("\u2019", "'").replace("\u2018", "'")   # curly apostrophes count as straight ones
+# a message's frame is not its sentences: the subject, the greeting, the sign-off and the name under it
+# have no full stop and would be counted into the first and the last sentence
+_lines = [x for x in t.splitlines()]
+_body = []
+_skip_name = False
+for _l in _lines:
+    _x = _l.strip().lstrip(">").strip()
+    if _skip_name and _x and len(_x.split()) <= 4 and not re.search(r"[.!?]$", _x):
+        _skip_name = False
+        continue
+    _skip_name = False
+    if re.match(r"(?i)subject\s*:", _x) or re.fullmatch(r"(?i)(hi|hello|dear)\b[^.!?\n]{0,60},?", _x):
+        continue
+    if re.fullmatch(r"(?i)(best regards|kind regards|regards|best|many thanks|thanks|thank you|sincerely|cheers),?", _x):
+        _skip_name = True
+        continue
+    _body.append(_l)
+t = "\n".join(_body)
 s = [x for x in re.split(r'(?<=[.!?])\s+', t.replace('\n', ' ')) if len(x.split()) > 1]
 w = re.findall(r"[A-Za-z][A-Za-z'\-]*", t)
 lw = [x for x in w if len(x) >= 8]
@@ -90,12 +109,12 @@ if not t.strip():
 off = []
 if w and s and is_english:
     avg, longp = len(w) / len(s), 100 * len(lw) / len(w)
-    if not native_en and not 12 <= avg <= 15:
+    if not native_en and not 12 <= avg <= 15 and len(s) >= 6:   # a 2–5 sentence reply: the average says little
         off.append(f"{avg:.1f} words per sentence")
     if not native_en and longp >= 13:
         off.append(f"{longp:.1f}% long words")
     print(f"words: {len(w)}, sentences: {len(s)}")
-    tgt = "" if native_en else " (target 12–15)"
+    tgt = "" if native_en else (" (target 12–15)" if len(s) >= 6 else " (target 12–15; under 6 sentences it is not judged)")
     print(f"average words per sentence: {len(w)/len(s):.1f}{tgt}")
     print(f"long words: {100*len(lw)/len(w):.1f}%" + ("" if native_en else " (target under 13%)"))
     print(f"longest sentence: {max(len(x.split()) for x in s)} words (target under ~30)")

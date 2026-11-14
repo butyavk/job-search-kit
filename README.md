@@ -30,7 +30,7 @@ Everything about you lives in a separate folder, the **pack** `me/`: facts with 
 **Answer blocks** are the heart of the pack: small checked sentences — the whole story, the first line, context, your action, the result, the lesson — in English, plus your native language if it is not English. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview. See `examples/example-story.md`.
 
 ## Autonomy
-By default Claude asks before every outward action, and you do it: submit, send, accept, book. If you want Claude to send some kind of message itself — say, the first follow-up in an existing ATS thread, from the template — tell it the rule; it writes it into your profile with the date and your words. Rules work only in a live session that you start; scheduled runs never send anything. Passwords, accounts, money, offers and the consents in application forms are always yours; no rule covers submitting a form.
+By default Claude asks before every outward action, and you do it: submit, send, accept, book. If you want Claude to send some kind of message itself — say, the first follow-up in an existing ATS thread, from the kit's template (`templates/messages.md`) — tell it the rule; it writes it into your profile with the date and your words. Rules work only in a live session that you start; scheduled runs never send anything. Passwords, accounts, money, offers and the consents in application forms are always yours; no rule covers submitting a form.
 
 ## Install
 
@@ -85,7 +85,7 @@ skills/           13 skills: job-search-kit (entry), onboarding, answer-blocks, 
 schedules/        prompts for the daily, weekly and monthly scheduled tasks
 bank/             the universal question bank: 134 questions, 26 core, role packs, 13 story archetypes
 pack-template/    an empty pack to copy as me/
-templates/        prep context, recruiter call, debrief, story split, design card, references, …
+templates/        prep context, recruiter call, debrief, message skeletons, story split, design card, references, …
 scripts/          check_pack.py (pack check), english_check.py (English register and never-say),
                   check_kit.py (the kit's own consistency), schedule_prompt.py (a scheduled run's prompt)
 tests/            regression tests on two made-up packs
@@ -94,6 +94,8 @@ examples/         one made-up story cut into blocks
 docs/             how it works, in English and Russian
 site/             the GitHub Pages site (Astro Starlight), built from docs/ and the sources list
 ```
+
+The kit's own files (skills, commands, templates) are in English: Claude reads them. Claude talks to you in your language and writes everything an employer reads in the vacancy's language.
 
 ## Preparing for an interview
 The cycle for every stage: `/prep` → learn the one-page sheet → a daily `/mock drill` → a full mock two days before → the interview → `/debrief` the same day. Step by step: [the site](https://butyavk.github.io/job-search-kit/prep/).

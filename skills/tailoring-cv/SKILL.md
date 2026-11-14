@@ -10,7 +10,7 @@ The vacancy-specific CV source and its PDF; a cover letter only when the form ha
 
 ## Source of truth
 1. The CV source the candidate named.
-2. Otherwise the master CV (`paths.master_cv` in `me/profile.yaml`): facts, formal history, structure. No master yet, or the path does not open: stop and set it up first (skill `onboarding`, «The master CV»); never build a CV from the pack's blocks alone.
+2. Otherwise the master CV in the vacancy's language (`paths.master_cv` in `me/profile.yaml`; a second language — `paths.master_cv_<code>`, such as `master_cv_de`; none in that language — ask, never translate on the fly): facts, formal history, structure. No master yet, or the path does not open: stop and set it up first (skill `onboarding`, «The master CV»); never build a CV from the pack's blocks alone.
 3. The vacancy text — for relevance only, never as evidence about the candidate.
 
 Keep a reserve in the master (variant bullets, variant skill lines, `FACT:` and `ASK:` comments under the document) so every variant is built by **selection and order**, and a wording change is made once in the master. A small generator (spec per vacancy → build → PDF) pays off from the tenth application on.

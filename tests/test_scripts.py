@@ -957,6 +957,17 @@ class SweepTwo(unittest.TestCase):
         self.assertIn("Check the kit itself", out)
         self.assertNotIn("\nOK", out)                     # the help, not a run of the check
 
+    def test_money_without_an_approach_is_said(self):
+        # the money answers choose by money.approach; a profile without it got the kit's numbering silently
+        d = self.pack()
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertNotIn("money has no «approach»", out)
+        prof = d / "profile.yaml"
+        prof.write_text("\n".join(l for l in prof.read_text(encoding="utf-8").splitlines()
+                                  if not l.strip().startswith("approach:")) + "\n", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("money has no «approach»", out)
+
     def test_world_writable_folders_are_not_trusted(self):
         cp = self.cp()
         shared = Path(tempfile.mkdtemp(dir=Path.home()))

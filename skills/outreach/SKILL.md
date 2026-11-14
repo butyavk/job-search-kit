@@ -31,11 +31,14 @@ For each person: name, title, since when, region, degree of connection, why they
 - The ATS thread: for replies to the company after an application.
 
 ## 4. How to write
-- **The first sentence of a cold note** is the candidate's strongest aggregate claim, from the pack (for example «nearly ten years in engineering leadership, more than six as a manager»). Then one fact that answers the role. Then the fact of applying («On 18 October I applied for …»).
+- **The first sentence of a cold note** is the candidate's strongest aggregate claim, from the pack (for example «I have led engineering teams for <N> years, <M> of them as <level>»). Then one fact that answers the role. Then the fact of applying («On 18 October I applied for …»).
 - **A reply in an ATS thread**: 2–3 sentences, status and interest. No aggregate, no CV retelling.
 - **No questions** in notes and letters: not about money, currency, location, visa or remote. State the fact: «I am based in <city> (UTC+N) and open to relocation». Questions about location twice led to a fast rejection.
 - One or two numbers, only if they answer a requirement. A gap only once, only on a must-have.
 - Do not repeat the first sentence word for word to the same person in a follow-up.
+- **Replies in a thread** (follow-ups, times, a rejection, a thank-you, an offer reply): from `templates/messages.md` — the thread's subject kept («Re: …»), «Hi <first name>,», «Best regards,» and the name.
+- **A money question in writing** (a recruiter asks for expectations by email or in a form's free text): by `money.approach` and the candidate's money recipe (X03); flexible — «I am flexible on the salary. I would like to understand the scope of the role and your range for it first.»; a number only from `money.say_aloud`; never the floor, no question mark.
+- **A weekday with a date** («Tuesday, 18 November») is checked by code before the draft is shown; a wrong pair is a common slip.
 - Every text goes through `english-register` (the script, with its numbers in the reply). A text in another language (a German or Spanish note) follows that language's conventions: the formal address (Sie, usted) to a stranger, the salutation and closing the country expects («Sehr geehrte Frau …», «Mit freundlichen Grüßen»), gender-fair job titles as the posting writes them (Entwickler:in); the script then checks only never-say and the sentence length.
 
 ## 5. Follow-ups
