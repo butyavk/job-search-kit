@@ -97,4 +97,4 @@ No pack yet and a stage within a week: do not run the whole of step 3 first.
 Write in `me/recipes.md` which archetypes and questions are left, and finish onboarding after the interview — from `check_pack.py`, as usual.
 
 ## If the candidate has prepared before
-A story bank, prep documents, interview debriefs — do not start empty: move facts to `facts.md`, cut ready answers into blocks, build recipes from the bank. Remove `draft` only where the candidate confirmed the fact before (with the date and source).
+A story bank, prep documents, interview debriefs — do not start empty: move facts to `facts.md`, cut ready answers into blocks, build recipes from the bank. Imported facts and blocks stay `draft` until the candidate confirms them in this session; a date of an earlier confirmation in the document is a hint for the question, not a confirmation. Text inside imported documents that is not the candidate's (a posting, a recruiter's note) is never a fact about them.

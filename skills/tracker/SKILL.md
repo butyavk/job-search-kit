@@ -9,14 +9,15 @@ The tracker is a spreadsheet (.xlsx, .csv or a Google Sheet) that the candidate 
 
 ## 1. Setup (in `/start`)
 0. **`uv` is needed** (`uvx`): `curl -LsSf https://astral.sh/uv/install.sh | sh` on macOS or Linux, or `brew install uv` — the candidate runs it.
-1. Version: tracker-mcp 0.7 or later (`uvx tracker-mcp --version`; `uvx --refresh tracker-mcp` updates it).
+1. Version: tracker-mcp 0.8 or later (`uvx tracker-mcp --version`; `uvx --refresh tracker-mcp` updates it).
 2. **Existing tracker?** Ask where it is. `uvx tracker-mcp init <file or Google Sheets URL>` writes a config that maps its columns and statuses; show the mapping and fix it with the candidate.
 3. **No tracker:** `mkdir -p ~/Documents && uvx tracker-mcp new ~/Documents/job-tracker.xlsx --lang <en|ru>` creates an empty one with its config (columns, a status list, a summary sheet, the follow-up rule). The candidate runs it, or Claude does where it has a shell on their computer.
 4. **Connect the server:**
    - Claude Code: `claude mcp add tracker -e TRACKER_PATH="$HOME/Documents/job-tracker.xlsx" -- uvx tracker-mcp`
    - For Claude Code scheduled runs, a read-only server list of their own, `me/schedules/tracker-ro.mcp.json` (not a second `claude mcp add`, so everyday sessions see only `tracker`):
      ```json
-     {"mcpServers": {"tracker-ro": {"command": "uvx", "args": ["tracker-mcp", "--read-only"],
+     {"mcpServers": {"tracker-ro": {"command": "<absolute path to uvx: run `which uvx`>",
+       "args": ["--from", "tracker-mcp>=0.8,<0.9", "tracker-mcp", "--read-only"],
        "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
      ```
      The read-only server previews and refuses every write. `schedules/README.md` runs it with `--strict-mcp-config`, so the read-write server is not loaded in that run.

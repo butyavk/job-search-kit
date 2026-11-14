@@ -51,7 +51,7 @@ echo '@kit/CLAUDE.md' > CLAUDE.md
 
 **Проект claude.ai без shell:** загрузите навыки в Настройках → Skills — по архиву на навык, готовые архивы в последнем [релизе](https://github.com/butyavk/job-search-kit/releases/latest); `CLAUDE.md` — в инструкцию проекта; `commands/` (Claude читает их, когда вы называете команду), `bank/questions.md`, `pack-template/`, `schedules/` и `templates/` — в файлы проекта, каждый с путём в имени через `__` (`commands__debrief.md`, `templates__debrief.md`: некоторые имена повторяются в разных папках). Файлы пакета Claude выдаёт по одному, вы их загружаете. Команды — словами. Подробно: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
 
-**Трекер** — открытый MCP-сервер [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` его подключает (`uvx tracker-mcp new …`, потом одна строка `claude mcp add` или файл `.mcpb` для приложения). Нужны `uv` и tracker-mcp 0.7 или новее.
+**Трекер** — открытый MCP-сервер [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` его подключает (`uvx tracker-mcp new …`, потом одна строка `claude mcp add` или файл `.mcpb` для приложения). Нужны `uv` и tracker-mcp 0.8 или новее.
 
 ## Что подключить
 Набор работает с тем, что есть у вашего Claude; каждое подключение открывает свою часть пути.

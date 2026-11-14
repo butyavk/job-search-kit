@@ -318,6 +318,54 @@ def read_cv(path: Path) -> str | None:
     return text
 
 
+NO_RULE = re.compile(r"password|account|payment|\bpay\b|money|salary|offer|accept|consent|terms|delete|"
+                     r"submit_form|submit a form|sign", re.I)
+
+
+def autonomy_errors(ptxt: str) -> list[str]:
+    """Rules in profile.yaml → autonomy.rules: each one a block entry with action, since (a date) and
+    said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5)."""
+    m = re.search(r"^autonomy:[^\n]*\n((?:[ \t]+[^\n]*\n?|\n)*)", ptxt, re.M)
+    if not m:
+        return []
+    body = "\n".join(l for l in m.group(1).splitlines() if not l.lstrip().startswith("#"))
+    mr = re.search(r"^([ \t]*)rules:[ \t]*(.*)$", body, re.M)
+    if not mr:
+        return []
+    inline = mr.group(2).split("#")[0].strip()
+    if inline and inline != "[]":
+        return ["profile.yaml: autonomy.rules must be a list with one key per line (not «" + inline[:40] + "»)"]
+    rest = body[mr.end():]
+    entries = re.split(r"^[ \t]*- (?=\w)", rest, flags=re.M)[1:]
+    out = []
+    for e in entries:
+        action = re.search(r"(?:^|\n)\s*action:\s*([^\n]+)", "\n" + e)
+        if not action:
+            out.append("profile.yaml: an autonomy rule without `action:` — it does not count")
+            continue
+        if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or \
+                not re.search(r"(?:^|\n)\s*(?:quote|said):\s*\S", "\n" + e):
+            out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
+        what = action.group(1) + " " + " ".join(re.findall(r"(?:^|\n)\s*when:\s*([^\n]+)", "\n" + e))
+        if NO_RULE.search(what):
+            out.append(f"profile.yaml: autonomy rule «{action.group(1).strip()[:40]}» covers what no rule may "
+                       "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
+    return out
+
+
+def prompt_drift(kit_prompt: Path, filled: Path) -> list[str]:
+    """Lines of a filled schedule prompt that are not the kit's line with its <…> filled in."""
+    pats = []
+    for line in kit_prompt.read_text(encoding="utf-8").splitlines():
+        parts = re.split(r"<[^<>\n]{1,80}>", line.strip())
+        pats.append(re.compile(r"\s*" + r".+?".join(re.escape(x) for x in parts) + r"\s*$"))
+    extra = []
+    for line in filled.read_text(encoding="utf-8").splitlines():
+        if line.strip() and not any(pt.match(line) for pt in pats):
+            extra.append(line.strip()[:70])
+    return extra
+
+
 def register(en: str):
     sents = [s for s in SENT_SPLIT.split(en) if len(s.split()) > 1]
     words = WORD_RE.findall(en)
@@ -488,9 +536,14 @@ def main() -> int:
 
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8")
-        for rule in re.findall(r"^[ \t]*- action:.*?(?=^[ \t]*- |^\S|\Z)", ptxt, re.M | re.S):
-            if not re.search(r"^\s+since:\s*\d{4}-\d{2}-\d{2}", rule, re.M) or not re.search(r"^\s+(?:quote|said):\s*\S", rule, re.M):
-                errors.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
+        errors += autonomy_errors(ptxt)
+    for name in ("daily.md", "weekly.md", "monthly.md"):
+        filled, kit_prompt = a.me / "schedules" / name, a.kit / "schedules" / name
+        if filled.exists() and kit_prompt.exists():
+            extra = prompt_drift(kit_prompt, filled)
+            if extra:
+                warnings.append(f"schedules/{name}: {len(extra)} line(s) differ from the kit's prompt beyond the <…> "
+                                f"values (an old copy after a kit update, or an edit nobody asked for): «{extra[0]}»")
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
         f = a.me / name
         if f.exists():

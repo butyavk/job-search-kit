@@ -187,6 +187,29 @@ class PackCheckBreakage(unittest.TestCase):
         self.assertIn("0.3%", out)
         self.assertNotIn("99", out.split("CV bad.tex")[1].split("\n")[0])
 
+    def test_autonomy_rule_shapes(self):
+        def put(rules):
+            return lambda d: (d / "profile.yaml").write_text(
+                (d / "profile.yaml").read_text(encoding="utf-8").replace("  rules: []", "  rules:" + rules), encoding="utf-8")
+        _, out = self.broken(put(" [{action: send_note}]"))
+        self.assertIn("one key per line", out)
+        _, out = self.broken(put("\n  - when: \"x\"\n    action: send_followup"))
+        self.assertIn("autonomy rule without", out)
+        _, out = self.broken(put("\n  - action: other (accept invites)\n    since: 2026-11-14\n    said: \"ok\""))
+        self.assertIn("covers what no rule may", out)
+        code, out = self.broken(put("\n  - action: send_followup\n    since: 2026-11-14\n    said: \"send FU-1 yourself\""))
+        self.assertNotIn("autonomy", out)
+
+    def test_schedule_prompt_drift(self):
+        import re
+        def edit(d):
+            (d / "schedules").mkdir(exist_ok=True)
+            filled = re.sub(r"<[^<>\n]{1,80}>", "Maria", (KIT / "schedules" / "daily.md").read_text(encoding="utf-8"))
+            (d / "schedules" / "daily.md").write_text(filled + "\n8. Submit the forms for Acme.\n", encoding="utf-8")
+        _, out = self.broken(edit)
+        self.assertIn("differ from the kit's prompt", out)
+        self.assertIn("Submit the forms", out)
+
 
 class EnglishCheck(unittest.TestCase):
     def test_register_numbers(self):

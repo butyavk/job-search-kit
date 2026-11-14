@@ -60,7 +60,7 @@ fact_sources:                       # what the fact check compares blocks agains
 autonomy:                           # default: Claude prepares, I send. Rules only in my own words, with date
   default: ask
   rules: []
-  # - action: send_followup         # send_followup | send_note | submit_form | other (say which)
+  # - action: send_followup         # send_followup | send_note | other (say which); forms carry consents, which no rule covers
   #   when: "follow-up 1 in an existing ATS thread, from the template, no new facts"
   #   checks: "english-register passed; nothing from never-say; the gate line unchanged"
   #   since: <YYYY-MM-DD>

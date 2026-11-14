@@ -1,2 +1,3 @@
-{"mcpServers": {"tracker-ro": {"command": "uvx", "args": ["tracker-mcp", "--read-only"],
+{"mcpServers": {"tracker-ro": {"command": "<absolute path to uvx: run `which uvx`>",
+  "args": ["--from", "tracker-mcp>=0.8,<0.9", "tracker-mcp", "--read-only"],
   "env": {"TRACKER_PATH": "<absolute path to the tracker>"}}}}
