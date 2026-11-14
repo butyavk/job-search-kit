@@ -32,6 +32,11 @@ Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are o
 - EN: I am flexible on the number. What range do you have for this role?
 - XX: <…>
 
+#### LOG-8 · Their range works
+`O` · salary · ~6 s · draft
+- EN: Your range works for me. The salary is not the most important part for me; it depends on <the scope, the team, the product>. I am very flexible.
+- XX: <…>
+
 #### ASK-1 · What the team does now
 `O` · questions to ask · draft
 - EN: What does the team own today, and what would the new person take on first?

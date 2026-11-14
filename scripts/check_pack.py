@@ -211,8 +211,9 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
         for part in parts:
             part = part.strip().strip("«»\"' ")
             # a short title (CTO, VP, PhD) only when it is quoted or the whole claim
-            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (
-                quoted or part == claim.strip("«»\"' ") or not re.search(r"[А-Яа-яЁё]", claim))   # ML, AI, LLM
+            english_list = not re.search(r"[А-Яа-яЁё]", claim) and len(parts) > 1
+            short_ok = (re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == claim.strip("«»\"' ") or english_list)) \
+                or (english_list and re.fullmatch(r"[A-Z][a-z]|[A-Z]#|[A-Z]\+\+|R", part))   # ML, AI; Go, C#, C++, R
             if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
                 continue  # placeholders and Russian descriptions need a human; their English terms are still checked
             out.append((part, allowed))
@@ -272,7 +273,8 @@ def _scalar(rest: str):
 
 def read_profile(text: str):
     """The profile in the strict YAML subset the kit reads, and the same values a YAML reader
-    gives for it. Returns (values by dotted path, keys set twice, syntax errors). Anything outside
+    gives for it. Scalars are kept as written text: «7.500» stays «7.500» (a YAML reader would make it
+    7.5, which is not what a candidate means by a salary), «yes» stays «yes». Returns (values by dotted path, keys set twice, syntax errors). Anything outside
     the subset — flow style, tags, anchors and aliases, «?» keys, tabs, a first key not at column 0,
     quoted keys, a space before the colon, more than one space after «-» — is an error, so what
     the checks read is what a YAML reader reads (CONTRIBUTING: allow, do not block)."""

@@ -3,6 +3,8 @@ name: check
 on:
   push:
   pull_request:
+  schedule:
+    - cron: "23 5 * * 1"   # weekly: catches a tracker-mcp change made after the kit's last push
 
 jobs:
   check:
@@ -49,3 +51,19 @@ jobs:
         run: |
           python3 -m json.tool hooks/hooks.json > /dev/null
           sh hooks/session-start.sh
+
+  tracker-main:
+    # the tracker the kit will meet next: its main branch, before it is released. A tool that starts
+    # or stops writing there fails here first, so the kit's «ask» list is updated in time.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: tracker-mcp from its main branch
+        run: python3 -m pip install --quiet "tracker-mcp @ git+https://github.com/butyavk/tracker-mcp@main"
+      - name: The kit's tracker contract against it
+        env:
+          KIT_NEEDS_TRACKER: "1"
+        run: python3 -m unittest tests.test_scripts.TrackerContract -v

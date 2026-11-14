@@ -1147,3 +1147,23 @@ class SweepFour(unittest.TestCase):
                 continue
             self.assertNotRegex(f.read_text(encoding="utf-8"), r"(?i)floor[^.\n]{0,40}never said|never said[^.\n]{0,20}floor",
                                 f.relative_to(KIT))
+
+
+class SweepFive(unittest.TestCase):
+    cp = SweepTwo.cp
+    pack = SweepTwo.pack
+
+    def test_short_names_in_an_english_list(self):
+        cp = self.cp()
+        d = self.pack()
+        ns = d / "never-say.md"
+        ns.write_text(ns.read_text(encoding="utf-8").replace("| «led managers» |", "| Go or Rust; C# / C++ | x | — |\n"
+                      "| Go / Ruby писал | x | — |\n| «led managers» |", 1), encoding="utf-8")
+        phrases = [p for p, _ in cp.never_claims(ns)]
+        for name in ("Go", "Rust", "C#", "C++"):
+            self.assertIn(name, phrases)
+        self.assertEqual(phrases.count("Go"), 1)          # the Russian row's «Go» stays a description
+
+    def test_scalars_are_read_as_written(self):
+        v = self.cp().read_profile("money:\n  floor: 7.500\nok: yes\n")[0]
+        self.assertEqual((v["money.floor"], v["ok"]), ("7.500", "yes"))

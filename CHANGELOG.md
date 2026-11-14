@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.4 — 2026-11-14
+
+Changed
+- Money: the floor is the candidate's real expectation, usually kept to themselves. Onboarding describes a common way through: ask for the company's level first, answer that it works and that you are flexible, get through the interviews, and talk money once the offer is near. The template has a block for the second step (LOG-8, «Your range works for me…»), and X03 points to it.
+
+Fixed
+- Never-claim rows written in English as a list check short names too: Go, C#, C++, R, and capitals such as ML or AI.
+- The profile reader says plainly that it keeps values as written («7.500» stays «7.500»).
+- CI also runs the kit's tracker contract against tracker-mcp's main branch, and once a week: a tool that starts or stops writing is caught before the tracker is released.
+
 ## 1.5.3 — 2026-11-14
 
 Changed
