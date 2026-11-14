@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 — 2026-11-14
+
+Fixed
+- `check_pack.py`: a never-claim row written as a description («QA, фронтенд, дизайн подчинялись мне») no longer turns its short fragments (QA) into banned words; a short title (CTO, VP, PhD) counts only when it is the whole claim or quoted. The CV is checked against never-claim phrases, not bare tool names a CV rightly lists.
+
 ## 1.5.0 — 2026-11-14
 
 Safety (a fifth review: red team, claude.ai, a German and a Russian newcomer, docs and scripts)

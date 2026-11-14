@@ -191,12 +191,14 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
         cells = [c.strip() for c in line.strip("|").split("|")]
         allowed = set(REF_RE.findall(line))
         quoted = re.findall(r"«([^»]+)»|\"([^\"]+)\"", cells[0])   # «a» or «b»: the quoted parts
-        parts = [x or y for x, y in quoted] or re.split(r"[;/]|, | or | или ", cells[0])
+        described = not quoted and re.search(r"[А-Яа-яЁё]", cells[0])   # «QA, фронтенд … подчинялись мне»
+        parts = [x or y for x, y in quoted] or re.split(r"[;/]|, | or ", cells[0])
         for part in parts:
             part = part.strip().strip("«»\"' ")
-            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part)   # CTO, VP, PhD
-            if (len(part) < 4 and not short_ok) or "<" in part or (not quoted and re.search(r"[А-Яа-яЁё]", part)):
-                continue  # Russian descriptions and placeholders need a human
+            # a short title (CTO, VP, PhD) only when it is the whole claim, not a fragment of a list
+            short_ok = re.fullmatch(r"[A-Z]{2,4}|PhD", part) and (quoted or part == cells[0].strip().strip("«»\"' "))
+            if (len(part) < 4 and not short_ok) or "<" in part or (described and re.search(r"[А-Яа-яЁё]", part)):
+                continue  # placeholders and Russian descriptions need a human; their English terms are still checked
             out.append((part, allowed))
     return out
 
@@ -852,7 +854,7 @@ def main() -> int:
             else:
                 print(f"CV {a.cv.name}: every number is in facts.md")
             for phrase, _ in never_claims(a.me / "never-say.md"):
-                if loose_pat(phrase).search(cv_text):
+                if " " in phrase.strip() and loose_pat(phrase).search(cv_text):   # phrases: a CV lists bare tool names
                     warnings.append(f"CV {a.cv.name}: «{phrase}» is in the never-claim table")
 
     if prof_path.exists():
