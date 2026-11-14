@@ -997,6 +997,19 @@ class SweepTwo(unittest.TestCase):
         self.assertNotIn("already approved", p.stdout)
         self.assertIn("does not record this folder", p.stdout)
 
+    def test_a_banned_number_only_said_the_banned_way(self):
+        # the number beside the claim's own words is the banned claim; the same number said the allowed way is not
+        cp = self.cp()
+        ban = "10x end to end (Mollie)"
+        self.assertTrue(cp.bans_number("For Mollie, responses became 10x faster end to end.", "10", ban))
+        self.assertFalse(cp.bans_number("Responses 5-7x faster end to end, and up to 10x on the worst endpoints, "
+                                        "for Mollie.", "10", ban))
+        ab = "+40% / −30% как итог A/B"
+        self.assertTrue(cp.bans_number("Picked through an A/B test: accuracy rose 40% at 30% lower cost.", "40%", ab))
+        self.assertFalse(cp.bans_number("Picked through an A/B test. After the move, accuracy rose 40%.", "40%", ab))
+        self.assertTrue(cp.bans_number("With SDK UI blocks, partner setup time fell 85%.", "85%", "−85% setup time у партнёров"))
+        self.assertFalse(cp.bans_number("Hired 85% of the team from referrals.", "85%", "−85% setup time у партнёров"))
+
     def test_world_writable_folders_are_not_trusted(self):
         cp = self.cp()
         shared = Path(tempfile.mkdtemp(dir=Path.home()))

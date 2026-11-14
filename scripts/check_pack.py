@@ -253,17 +253,50 @@ def never_claim_numbers(path: Path) -> list[tuple[str, str, set]]:
     return out
 
 
+_TOK = re.compile(r"A/B|[A-Za-z][A-Za-z/+#'-]*|[^\W\d_A-Za-z]+|\d+(?:[.,]\d+)?\s?(?:\\?%|x\b|×)?")
+_STOP = {"the", "and", "for", "with", "a", "an", "of", "to", "in", "on", "at", "up"}
+
+
+def _tokens(text: str) -> list[str]:
+    text = re.sub(r"\\[a-zA-Z]+\*?|[{}]", " ", text.replace("\u2212", "-"))   # LaTeX: \textbf{10x} reads «10x»
+    return _TOK.findall(text)
+
+
+def _is_num(tok: str, n: str) -> bool:
+    return bool(re.fullmatch(r"\d+(?:[.,]\d+)?", n.rstrip("%"))) and re.match(r"\d", tok) is not None \
+        and re.sub(r"[^\d.,]", "", tok) == n.rstrip("%") and (not n.endswith("%") or "%" in tok)
+
+
 def claim_words(claim: str) -> list[str]:
-    """The claim's own English words (setup, Mollie, A/B): a number counts only beside one of them,
-    so the same 40% of another fact is not taken for the banned one."""
-    stop = {"the", "and", "for", "with", "end"}
-    return [w for w in re.findall(r"[A-Za-z][A-Za-z/+#]{2,}|A/B", claim) if w.lower() not in stop]
+    """The claim's own English words (setup, Mollie, A/B)."""
+    return [w for w in _tokens(claim) if re.match(r"[A-Za-z]", w) and len(w) > 1 and w.lower() not in _STOP]
 
 
 def bans_number(text: str, n: str, claim: str) -> bool:
-    words = claim_words(claim)
-    return n in block_numbers(text) and bool(words) and any(
-        re.search(r"(?<![A-Za-z])" + re.escape(w) + r"(?![A-Za-z])", text, re.I) for w in words)
+    """The banned number said the banned way: beside the words that stand next to it in the claim
+    («10x end to end», «85% setup time»; three words either side), or, when the claim has none next to
+    it («+40% / −30% как итог A/B»), in one sentence with one of the claim's words. So «up to 10x on the
+    worst endpoints» and the 40% of another fact are not taken for the banned ones."""
+    if n not in block_numbers(text):
+        return False
+    ct = _tokens(claim)
+    near = set()
+    for i, t in enumerate(ct):
+        if _is_num(t, n):
+            near |= {w.lower() for w in ct[max(0, i - 2):i + 3]   # English words only: «у партнёров» is the note
+                     if re.match(r"[A-Za-z]", w) and len(w) > 1 and w.lower() not in _STOP}
+    words = {w.lower() for w in claim_words(claim)}
+    for sentence in re.split(r"(?<=[.!?])\s+", re.sub(r"\s+", " ", text)):
+        tt = _tokens(sentence)
+        for i, t in enumerate(tt):
+            if not _is_num(t, n):
+                continue
+            if near:
+                if near & {w.lower() for w in tt[max(0, i - 3):i + 4]}:
+                    return True
+            elif words & {w.lower() for w in tt}:
+                return True
+    return False
 
 
 KEY = r"""[^\s:#{}\[\],&*!|>'"%@`?\-][^:#{}\[\]]*?"""   # Zürich, São Paulo, Staff+ (EU), R&D lead, UTC+1

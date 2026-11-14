@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.8 — 2026-11-14
+
+Fixed
+- A banned number from the never-claim table counts only when it is said the banned way: beside the words that stand next to it in the row («10x end to end», «85% setup time», three words either side), or, when the row has none next to it («+40% / −30% как итог A/B»), in the same sentence as one of the row's words. «Up to 10x on the worst endpoints» and «an A/B test. After the move, accuracy rose 40%» are no longer flagged; a LaTeX `\textbf{85\%}` is read as 85%.
+
 ## 1.5.7 — 2026-11-14
 
 Added
