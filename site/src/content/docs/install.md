@@ -38,4 +38,4 @@ Each connection unlocks a part of the path; the kit works with whatever your Cla
 | Scheduled tasks | the daily check, the weekly pass, the monthly review |
 
 ## Update
-`/plugin update`, or `git pull` in `kit/`. Your pack is separate and never touched by an update.
+Plugin: `claude plugin marketplace update job-search-kit`, then `claude plugin update job-search-kit@job-search-kit`, and restart (or `/plugin` in the app → the marketplace → update). Folder: `git pull` in `kit/`. Your pack is separate and never touched by an update.

@@ -39,7 +39,7 @@
 /plugin marketplace add butyavk/job-search-kit
 /plugin install job-search-kit@job-search-kit
 ```
-Потом в пустой папке для поиска: `/start`.
+Потом в пустой папке для поиска: `/start`. Обновить потом: `claude plugin marketplace update job-search-kit`, затем `claude plugin update job-search-kit@job-search-kit` (в режиме папки — `git pull` в `kit/`). Пакет обновление не трогает.
 
 **Папкой** (любой Claude с доступом к файлам): склонируйте набор как `kit/` рядом с будущим `me/`:
 ```

@@ -32,7 +32,7 @@ format and people → topic weights and plan → material and trainer → learn 
 ```
 
 ### Step 0. Project and context file
-- One project per company (or one folder). The first document is the context file: role, money and terms from the posting, stages with dates, people, where things are, working rules.
+- One project per company, or one folder: `companies/<company>/` next to `me/` (never inside the kit) with `context.md`, the prep document, `learning-sheet.md`, debriefs. The first document is the context file: role, money and terms from the posting, stages with dates, people, where things are, working rules.
 - Read the pack first: `me/never-say.md`, then `me/facts.md` (open questions), then `me/recipes.md` and the blocks.
 - No pack yet — `/start`. Stories in another form — cut them into blocks (`answer-blocks`). Remove bridges to a previous company from ready answers («At <old company> I would…»).
 - CV: the version sent for this vacancy, saved and unchanged.
@@ -57,7 +57,7 @@ Stories across rounds: `templates/story-split.md` — one row per round with its
 ### Step 4. Learn: from the document to memory
 The prep document is the reserve. What the candidate takes into the room is the **learning sheet** (`templates/learning-sheet.md`), built from the document in the same session:
 - **Stories, not answers.** 5–7 stories cover almost every likely question. Each gets an anchor in four steps — the answer in one sentence → the situation → what I did → the number and the lesson — plus what not to say. The candidate learns the anchor, not the text: the words in the interview will differ, the facts will not.
-- **A map on one page:** the 12–16 most likely questions → the first sentence, learned word for word → which story. Two questions for the interviewer, word for word.
+- **A map on one page:** the 12–16 most likely questions → the first sentence, learned word for word → which story. Two questions for the interviewer, word for word. A likely question with no story in the pack is a gap for step 3 (compose with the candidate, `answer-blocks`), never a sheet row with words of Claude's own.
 - **Recall, not rereading.** Read an anchor once, close it, tell it aloud. Rereading feels like knowing and does not hold under pressure.
 - **Aloud, timed, shuffled.** 60–90 seconds an answer, a case up to 60; the questions in random order, as an interviewer asks them.
 - **Repeat only the misses.** A mark per question in every drill: ✓ — the first sentence and all four steps, no prompt, in time; ~ — a pause, too long, or no number; ✗ — not recalled or off the point. ✗ comes back the same evening and the next morning; ✓ two days running leaves the drill.

@@ -39,7 +39,7 @@ By default Claude asks before every outward action, and you do it: submit, send,
 /plugin marketplace add butyavk/job-search-kit
 /plugin install job-search-kit@job-search-kit
 ```
-Then, in an empty folder for your search: `/start`.
+Then, in an empty folder for your search: `/start`. To update later: `claude plugin marketplace update job-search-kit`, then `claude plugin update job-search-kit@job-search-kit` (folder mode: `git pull` in `kit/`). The pack is never touched.
 
 **As a folder** (any Claude with file access): clone it as `kit/` next to your future `me/`:
 ```

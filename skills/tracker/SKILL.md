@@ -30,7 +30,7 @@ No MCP client at all (claude.ai web only): the candidate keeps the spreadsheet b
 - After each event, one sentence from the candidate is enough: «applied to X via the site», «X rejected», «sent follow-up to X», «don't write to X before Friday». Claude finds the row, shows the change, writes after «yes».
 - Applications: `mark_applied` (date, channel); the server sets the follow-up dates by the rule in its config.
 - Follow-ups: `followups_due`, `log_followup` after sending, `reschedule_followup` for «not before …» notes.
-- Silence: `stale_applications`, then `close_stale` by the rule, after a dry run.
+- Silence: `stale_applications(days=…)` with the frame's «No answer» days (default 30, counted from the last touch), then `close_stale` after a dry run and a yes. A row whose follow-up is still due is not silent yet: send the follow-up first.
 - The picture: `funnel`, `reply_times` (by channel), `summary`.
 - Mail: `match_emails` links messages to rows.
 

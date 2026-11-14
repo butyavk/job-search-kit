@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.3 — 2026-11-14
+
+Fixed (fourth and fifth test runs: a tracker from `tracker-mcp new`, applications, a rejection, follow-ups, the funnel; a stage from the invitation to a debrief with a new fact)
+- The daily check no longer writes to the tracker on its own: the server writes only after the candidate's yes, so a scheduled run lists dry runs in the summary, as the weekly and monthly runs already did.
+- Silence: `stale_applications` takes the frame's «No answer» days, and a row with a follow-up still due is not closed as silent.
+- Where company work lives in folder mode: `companies/<company>/` next to `me/`; a likely question without a story is a gap to compose, not a sheet row.
+- How to update the plugin: the real commands (`claude plugin marketplace update`, then `claude plugin update`), now in both READMEs.
+
 ## 1.1.2 — 2026-11-14
 
 Fixed (third test run: a real vacancy from a company board, through the gate to the form)

@@ -4,3 +4,4 @@ me/
 *.xlsx
 .DS_Store
 __pycache__/
+companies/
