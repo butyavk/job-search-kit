@@ -61,6 +61,7 @@ Recipe columns: «First line» — the ID of an `O` (or `S`) block; «Short» an
 - A new story: the `S` block first, then details. A new block takes the next free number in its topic. IDs never change: recipes and prep documents point to them.
 - An outdated or wrong block — do not delete it: fix the text and add `⚠ corrected <date>: was …`. If the meaning changed completely — a new block, and mark the old one `⚠ outdated since <date>, use <ID>`.
 - A fact the candidate has not confirmed — the block keeps `· draft` in its type line; drafts never go into answers.
+- A confirmed wording with slots that `/prep` fills per company or vacancy (`<one concrete thing in this role>`) is marked `· template` in its type line; its slots are not unfinished text.
 - After editing: `python3 <kit>/scripts/check_pack.py` (it finds the pack itself: `--me`, `$JOB_SEARCH_ME`, `../me` next to the kit, `./me`) — links, duplicate IDs, register, bans, drafts, coverage. No shell (claude.ai) — the checklist below.
 
 ## Checklist without the script

@@ -1167,3 +1167,17 @@ class SweepFive(unittest.TestCase):
     def test_scalars_are_read_as_written(self):
         v = self.cp().read_profile("money:\n  floor: 7.500\nok: yes\n")[0]
         self.assertEqual((v["money.floor"], v["ok"]), ("7.500", "yes"))
+
+
+class Templates(unittest.TestCase):
+    def test_a_template_block_may_keep_its_slots(self):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        (d / "blocks" / "60-company.md").write_text(
+            "# Company\n\n#### ROLE-O1 · Role\n`O` · role · ~10 s · template\n"
+            "- EN: What excites me most is <one concrete thing in this role>.\n- RU: Больше всего — <одна вещь в роли>.\n\n"
+            "#### ROLE-O2 · Role\n`O` · role · ~10 s\n- EN: What excites me most is <one concrete thing>.\n- RU: <одна вещь>.\n",
+            encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertNotIn("ROLE-O1: confirmed block still has a placeholder", out)
+        self.assertIn("ROLE-O2: confirmed block still has a placeholder", out)

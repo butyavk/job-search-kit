@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.5 — 2026-11-14
+
+Changed
+- A block marked `· template` (or `· шаблон`) is a confirmed wording whose `<…>` slots `/prep` fills per company or vacancy; its slots no longer count as unfinished text. Answers to «what excites you about this role», «what would you change», «your competitors» and «your first hires» can now be prepared once and kept confirmed.
+
 ## 1.5.4 — 2026-11-14
 
 Changed

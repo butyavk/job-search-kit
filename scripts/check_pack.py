@@ -84,7 +84,7 @@ def parse_blocks(blocks_dir: Path):
                 if bid in blocks:
                     errors.append(f"{path.name}:{n}: duplicate block ID {bid} (first in {blocks[bid]['file']})")
                 current = {"id": bid, "title": m.group(2), "file": path.name, "line": n,
-                           "types": [], "en": "", "ru": "", "notes": [], "draft": False}
+                           "types": [], "en": "", "ru": "", "notes": [], "draft": False, "template": False}
                 blocks[bid] = current
                 continue
             if line.startswith("###") and not m:
@@ -99,6 +99,8 @@ def parse_blocks(blocks_dir: Path):
             if not current["types"] and line.startswith("`"):
                 if re.search(r"\bdraft\b|черновик", line):
                     current["draft"] = True
+                if re.search(r"\btemplate\b|шаблон", line):   # confirmed wording with slots filled per company
+                    current["template"] = True
                 for part in line.split(" · "):
                     m_t = re.fullmatch(r"`([A-Z])`", part.strip())
                     if not m_t:
@@ -1027,7 +1029,7 @@ def main() -> int:
         if contr and NEED_L2:   # a native English speaker's contractions are their own voice
             warnings.append(f"{where}: contractions {contr}")
         # one-word slots such as <company> or <city> are filled per vacancy; longer ones are unfinished text
-        if not b["draft"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>|\bTODO\b|\bTBD\b|\[[^\]]*\b(?:number|name|date|company|цифра|имя|дата)\b[^\]]*\]", b["en"] + b["ru"]):
+        if not b["draft"] and not b["template"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>|\bTODO\b|\bTBD\b|\[[^\]]*\b(?:number|name|date|company|цифра|имя|дата)\b[^\]]*\]", b["en"] + b["ru"]):
             warnings.append(f"{where}: confirmed block still has a placeholder (<…>, TODO, [number])")
         if expect_code and b.get("l2code") and b["l2code"] != expect_code:
             errors.append(f"{where}: the native-language line is «{b['l2code']}:», the profile says {expect_code}")
