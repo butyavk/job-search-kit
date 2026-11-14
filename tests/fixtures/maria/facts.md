@@ -21,7 +21,7 @@
 | ID | Fact | Source | Confirmed |
 | --- | --- | --- | --- |
 | F-06 | I found the payout retry bug myself; the team built the fix | said 2026-11-14 | 2026-11-14 |
-| F-07 | The payments team ran a weekly 24/7 on-call rotation; I took a shift too | said in the GitLab HM call debrief, 2026-11-20 | 2026-11-20 |
+| F-07 | The payments team ran a weekly 24/7 on-call rotation; I took a shift too | said in a debrief, 2026-11-14 | 2026-11-14 |
 
 ## Open questions (ask the candidate; do not use yet)
 - How long did the migration take?
