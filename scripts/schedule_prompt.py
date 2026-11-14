@@ -8,8 +8,11 @@ The values come from <pack>/schedules/values.yaml (name, roles, city, time zone,
 <stage>, <the date it came>) stay as they are. The prompt text is always the kit's: a scheduled
 run never reads a prompt file from the pack, so nobody can change what it does by editing one.
 
-Each value is a short phrase: letters, digits, spaces and , . ( ) ' & / + - only, and a word
-limit per key. A value that does not fit stops the run (exit 1) and says why.
+Each value names something, in a short phrase: letters of any script, digits, spaces and
+, . ( ) ' & / + - only (and : in the time zone), a word limit per key, no sentences and no words
+that tell a run what to do (send, submit, always, then…); a name has no digits, a time zone is
+one the system knows (or UTC+H, UTC+H:MM); a key set twice or a file that is a link is refused.
+A value that does not fit stops the run (exit 1) and says why.
 """
 from __future__ import annotations
 
@@ -20,13 +23,14 @@ import unicodedata
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(KIT / "scripts"))
+from check_pack import friendly_errors  # noqa: E402
 KEYS = {"name": 6, "roles": 8, "city": 6, "time zone": 4, "language": 4}   # key -> most words
 RUN_TIME = {"<date>", "<company>", "<stage>", "<the date it came>"}
-ALLOWED = re.compile(r"[\w ,.()'&/+\-]+")
 ABBREV = {"st", "mt", "ft", "ste", "sr", "jr", "dr", "mr", "mrs", "ms", "sta", "san"}   # «St. Petersburg»
 # a value names something; a verb that tells a run what to do has no place in it
 ORDERS = re.compile(r"\b(?:send\w*|submit\w*|apply|applying|reply\w*|respond\w*|accept\w*|pay|paying|delete\w*|"
-                    r"remove\w*|ignore\w*|forget\w*|always|never|must|should|run|execute|fetch\w*|open|click\w*|"
+                    r"remove\w*|ignore\w*|forget\w*|always|never|must|should|run|execute|fetch\w*|click\w*|"
                     r"email\w*|forward\w*|share|book|install\w*|do|don't|please|instead|override\w*|rules?|"
                     r"instructions?|prompt|then)\b", re.I)
 
@@ -126,4 +130,5 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    friendly_errors()
     sys.exit(main(sys.argv[1:]))

@@ -51,7 +51,7 @@ The one-line `CLAUDE.md` makes Claude Code load the kit's rules in every session
 
 **claude.ai project:** turn on code execution, upload the skill zips and add the project files from the latest [release](https://github.com/butyavk/job-search-kit/releases/latest), and put `CLAUDE.md` into the project instructions. Commands become plain words; Claude gives you each pack file to add. Step by step: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
 
-**The tracker** is the open-source MCP server [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` sets it up (`uvx tracker-mcp new …`, then one `claude mcp add` line, or the `.mcpb` file for the desktop app). Requires `uv` and tracker-mcp 0.8 or later.
+**The tracker** is the open-source MCP server [tracker-mcp](https://github.com/butyavk/tracker-mcp); `/start` sets it up (`uvx tracker-mcp new …`, then one `claude mcp add` line, or the `.mcpb` file for the desktop app). Requires `uv` and tracker-mcp 0.8.3 or later.
 
 ## What to connect
 The kit works with whatever your Claude has; each connection unlocks a part of the path.

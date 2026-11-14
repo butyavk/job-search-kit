@@ -10,8 +10,9 @@ import os, re, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_pack import never_claims, never_say_phrases  # noqa: E402
+from check_pack import friendly_errors, native_is_english, never_claims, never_say_phrases, phrase_pattern, yaml_scalars  # noqa: E402
 
+friendly_errors()
 args = sys.argv[1:]
 if args and args[0] in ("-h", "--help"):
     print(__doc__.strip())
@@ -81,10 +82,8 @@ found += ["that said"] if is_english and any(re.search(o, t) for o in OPENERS) e
 ai = [i for i in AI_WORDS if re.search(idiom_re(i), t, re.I)] if is_english else []
 native_en = False   # a native English speaker: contractions and idioms are their own register
 if me is not None and (me / "profile.yaml").exists():
-    mn = re.search(r"^\s*native:[ \t]*([^#\n]*)", (me / "profile.yaml").read_text(encoding="utf-8-sig"), re.M)
-    nv = mn.group(1).strip().strip("\"'").lower() if mn else ""
-    native_en = bool(nv and not nv.startswith("<") and re.match(
-        r"^(?:(?:british|american|australian|canadian|irish|us|uk)\s+)?english\b(?!\s*(?:,|and|\+|/))|^en(?:[-_][a-z]{2})?$", nv))
+    native_en = native_is_english(yaml_scalars((me / "profile.yaml").read_text(encoding="utf-8-sig"))[0]
+                                  .get("languages.native", ""))
 if not t.strip():
     sys.exit("no text")
 off = []
@@ -108,10 +107,8 @@ print(f"contractions: {contr or 'none'}" + (" (native English: fine)" if native_
 print(f"idioms: {found or 'none'}" + (" (native English: fine)" if native_en and found else ""))
 print(f"AI words: {ai or 'none'}")
 if me is not None:
-    def loose(p):  # any run of spaces or line breaks between the words
-        return r"(?<!\w)" + r"\s+".join(re.escape(w.replace("’", "'")).replace("'", "['’]") for w in p.split()) + r"(?!\w)"
-    hits = [p for p, _ in never_claims(me / "never-say.md") if re.search(loose(p), t, re.I)]
-    fillers = [p for p in never_say_phrases(me / "never-say.md") if re.search(loose(p), t, re.I)]
+    hits = [p for p, _ in never_claims(me / "never-say.md") if phrase_pattern(p).search(t)]
+    fillers = [p for p in never_say_phrases(me / "never-say.md") if phrase_pattern(p).search(t)]
     print(f"never-claim ({me}): {hits or 'none'}")
     print(f"speech fillers from never-say: {fillers or 'none'} (a slip in speech; in writing, cut them)")
 else:

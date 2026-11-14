@@ -16,7 +16,13 @@ echo "job-search-kit: a candidate pack is here. Before anything else, load the j
 [ -n "$CLAUDE_PLUGIN_ROOT" ] && echo "job-search-kit: the kit (plugin) is at $CLAUDE_PLUGIN_ROOT; a cron line or a schedule that names another version's folder must be re-pointed here"
 # paths.pack in the profile names the candidate's own pack by its absolute path; a me/ that came
 # with a cloned project has another path, a relative one, a placeholder, or none
-recorded=$(sed -n 's/^[[:space:]]*pack:[[:space:]]*["'\'']\{0,1\}\([^"'\''#]*\).*/\1/p' "$pack/profile.yaml" 2>/dev/null | head -n 1 | sed 's/[[:space:]]*$//')
+# read as YAML would: `pack:` one level inside the top-level `paths:` block, nowhere else
+recorded=$(awk '
+  /^[^[:space:]#]/ { inpaths = ($0 ~ /^paths:[[:space:]]*(#.*)?$/); next }
+  inpaths && /^[[:space:]]+pack:/ {
+    v = $0; sub(/^[[:space:]]+pack:[[:space:]]*/, "", v); sub(/[[:space:]]+#.*$/, "", v)
+    gsub(/^["\047]|["\047][[:space:]]*$/, "", v); sub(/[[:space:]]+$/, "", v); print v; exit
+  }' "$pack/profile.yaml" 2>/dev/null)
 case "$recorded" in "~"*) recorded="$HOME${recorded#\~}" ;; esac   # the value is data: never evaluated
 want=""
 case "$recorded" in

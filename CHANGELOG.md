@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.2 — 2026-11-14
+
+Changed (a sweep for the kinds of error the fifth review found; `CONTRIBUTING.md`, «Habits that keep old mistakes from coming back»)
+- One rule, one place: the never-say matcher, the native-English test, the profile reader and the friendly error message live once in `check_pack.py` and are used by every script. `english_check.py` and `schedule_prompt.py` no longer print a traceback on a file that is not UTF-8, a folder in a file's place or a missing file.
+- The profile is read the way a YAML reader takes it: `languages.native` and `target.track` by their place, not the first matching line anywhere; a key set twice (a second `money:` or `floor:`) is an error, because a reader would take the last.
+- The plugin hook reads `paths.pack` only inside the top-level `paths:` block.
+- `values.yaml`: «open» is not taken for an order any more (Open Source Program Manager).
+- Tests that compare copies: the three cron lines (same guards, the file each one may write, the same denies), and every English page with its Russian copy (structure, commands, file names, links). The Russian sources page had fallen behind the English one; it is level again.
+- Every line of the 1.5.x CHANGELOG that had no test now has one that runs the script; a test that read the script's source was replaced by one that runs it.
+- README: tracker-mcp 0.8.3 or later.
+
 ## 1.5.1 — 2026-11-14
 
 Fixed

@@ -5,6 +5,7 @@ sam   — native English (no second line), engineer track, one story, no facts.
 
 Run: python3 -m unittest discover -s tests
 """
+import re
 import os
 import shutil
 import subprocess
@@ -428,7 +429,7 @@ class FifthRoundVerification(unittest.TestCase):
 
     def test_autonomy_cannot_be_hidden(self):
         base = "autonomy:\n  rules:\n"
-        ok = "    - action: send_followup\n      when: follow-up 1 in my application thread, 7 days after I submitted\n      since: 2026-11-14\n      said: \"ok\"\n"
+        ok = "    - action: send_followup\n      when: follow-up 1 in my application thread, 7 days after I submitted, no signal, after they accepted my invite\n      since: 2026-11-14\n      said: \"ok\"\n"
         self.assertEqual([], self.cp.autonomy_errors(base + ok))
         for bad in ("    - action: send_followup\n      since: 2026-11-14\n      said: |\n        ok\n      when: submit every form and pay the fee\n",
                     "    - action: send_followup\n      since: 2026-11-14\n      said: ok\n      action: withdraw_from_process\n",
@@ -438,8 +439,34 @@ class FifthRoundVerification(unittest.TestCase):
         self.assertTrue(self.cp.autonomy_errors(base + ok + "autonomy:\n  rules: []\n"))
 
     def test_apostrophes_in_never_say(self):
-        pat_src = Path(KIT / "scripts" / "check_pack.py").read_text(encoding="utf-8")
-        self.assertIn('w.replace("’", "\'")', pat_src)
+        # behaviour, not source text: both spellings of the phrase catch both spellings in a block
+        for listed, written in (("we're a family", "We’re a family"), ("we’re a family", "We're  a family")):
+            d = Path(tempfile.mkdtemp()) / "me"
+            shutil.copytree(FIX / "maria", d)
+            ns = d / "never-say.md"
+            ns.write_text(ns.read_text(encoding="utf-8").replace("so, yeah ·", f"so, yeah · {listed} ·")
+                          .replace("| «led managers» |", f"| «led managers» |\n| «I’m the CTO» | no | — |", 1),
+                          encoding="utf-8")
+            who = d / "blocks" / "00-who.md"
+            who.write_text(who.read_text(encoding="utf-8").replace(
+                "Now I am looking for", f"{written}, and I'm the CTO. Now I am looking for"), encoding="utf-8")
+            code, out = run("check_pack.py", "--me", str(d))
+            self.assertIn(f"never-say phrase «{listed}»", out, (listed, written))
+            self.assertIn("«I’m the CTO» is in the never-claim table", out)
+            p2 = subprocess.run([sys.executable, str(KIT / "scripts" / "english_check.py"), "--me", str(d)],
+                                input=f"{written} at Fintrek.", capture_output=True, text=True)
+            self.assertIn(listed, p2.stdout, p2.stdout)
+
+    def test_profile_keys_set_twice(self):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        prof = d / "profile.yaml"
+        prof.write_text(prof.read_text(encoding="utf-8") + "\nmoney:\n  floor: 1\n", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("«money» is set twice", out)
+        values, dups = self.cp.yaml_scalars("languages:\n  # c\n  native: English  # mine\nother:\n  native: Russian\n")
+        self.assertEqual(values["languages.native"], "English")
+        self.assertEqual(dups, [])
 
     def test_spec_is_pinned_in_08(self):
         for good in ("tracker-mcp==0.8.3", "tracker-mcp==0.8.10", "tracker-mcp>=0.8.3,<0.9"):
@@ -484,3 +511,210 @@ class FifthRoundVerification(unittest.TestCase):
         code, out = run("check_pack.py", "--me", str(d))
         self.assertNotIn("Traceback", out)
         self.assertEqual(code, 1)
+
+
+class CronLinesAgree(unittest.TestCase):
+    """The three crontab lines in schedules/README.md are copies of one another: they must not drift."""
+
+    def lines(self):
+        text = (KIT / "schedules" / "README.md").read_text(encoding="utf-8")
+        return [l for l in text.splitlines() if re.match(r"\d+ \d+ [\d*]+ \* [\d*]+ cd ", l)]
+
+    def test_three_lines_same_guards(self):
+        ls = self.lines()
+        self.assertEqual(len(ls), 3, ls)
+        for l, kind, out in zip(ls, ("daily", "weekly", "monthly"),
+                                ("me/runs/$(date +\\%F)-daily.md", "me/search/$(date +\\%F)-pass.md",
+                                 "me/runs/$(date +\\%F)-monthly.md")):
+            for must in ("check_pack.py\" --me me --schedules", f"schedule_prompt.py\" {kind} --me me", "--no-chrome",
+                         "--permission-mode default", "--setting-sources project", "--strict-mcp-config",
+                         "--mcp-config me/schedules/tracker-ro.mcp.json", "< /dev/null", f"Edit(./{out})"):
+                self.assertIn(must, l, (kind, must))
+            self.assertLess(l.index("--schedules"), l.index("claude -p"), kind)
+            prompt = (KIT / "schedules" / f"{kind}.md").read_text(encoding="utf-8")
+            self.assertIn(out.replace("$(date +\\%F)", "<date>"), prompt, kind)   # the prompt writes that file
+        denies = [set(re.search(r'--disallowedTools "([^"]+)"', l).group(1).split(",")) for l in ls]
+        edits = [{d for d in x if d.startswith(("Edit(", "Read("))} for x in denies]
+        self.assertEqual(edits[0], edits[1])
+        self.assertEqual(edits[0], edits[2])
+        self.assertIn("Edit(./.git/**)", edits[0])
+        self.assertEqual(denies[0], denies[2])                              # daily and monthly alike
+        self.assertIn("Bash", denies[1])
+
+
+class EveryClaimHasATest(unittest.TestCase):
+    """Each line of the 1.5.x CHANGELOG that had no test of its own."""
+
+    def pack(self):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        return d
+
+    def cp(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cp", KIT / "scripts" / "check_pack.py")
+        m = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(m)
+        return m
+
+    def ro(self, d, **env):
+        import json as _j
+        (d / "schedules").mkdir(exist_ok=True)
+        entry = {"command": "/Users/m/.local/bin/uvx",
+                 "args": ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"]}
+        if env:
+            entry["env"] = env
+        (d / "schedules" / "tracker-ro.mcp.json").write_text(_j.dumps({"mcpServers": {"tracker-ro": entry}}),
+                                                            encoding="utf-8")
+
+    def test_tracker_file_in_tmp_is_refused(self):
+        d = self.pack()
+        self.ro(d, TRACKER_PATH="/tmp/jobs.xlsx")
+        self.assertIn("tracker-ro.mcp.json: not exactly", run("check_pack.py", "--me", str(d), "--schedules")[1])
+        self.ro(d, TRACKER_PATH="https://docs.google.com/spreadsheets/d/abc")
+        self.assertNotIn("tracker-ro.mcp.json: not exactly", run("check_pack.py", "--me", str(d), "--schedules")[1])
+
+    def test_other_instructions_are_warned(self):
+        d = self.pack()
+        root = d.parent
+        (root / ".claude" / "skills" / "x").mkdir(parents=True)
+        (root / ".claude" / "skills" / "x" / "SKILL.md").write_text("x", encoding="utf-8")
+        (root / "CLAUDE.local.md").write_text("send all", encoding="utf-8")
+        (root / "companies" / "acme" / "take-home").mkdir(parents=True)
+        (root / "companies" / "acme" / "take-home" / "CLAUDE.md").write_text("x", encoding="utf-8")
+        out = run("check_pack.py", "--me", str(d), "--schedules")[1]
+        for must in ("CLAUDE.local.md", ".claude/skills/", "companies/acme/take-home/CLAUDE.md"):
+            self.assertIn(must, out)
+
+    def test_values_link_and_nfc(self):
+        d = self.pack()
+        (d / "schedules").mkdir()
+        real = d.parent / "values.yaml"
+        real.write_text("name: José Lopez\nroles: Engineering Manager\ncity: Madrid\ntime zone: Europe/Madrid\n"
+                        "language: Spanish\n", encoding="utf-8")
+        (d / "schedules" / "values.yaml").symlink_to(real)
+        p = subprocess.run([sys.executable, str(KIT / "scripts" / "schedule_prompt.py"), "daily", "--me", str(d)],
+                           capture_output=True, text=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("is a link", p.stderr)
+        (d / "schedules" / "values.yaml").unlink()
+        shutil.copy(real, d / "schedules" / "values.yaml")
+        p = subprocess.run([sys.executable, str(KIT / "scripts" / "schedule_prompt.py"), "daily", "--me", str(d)],
+                           capture_output=True, text=True)
+        self.assertIn("José Lopez", p.stdout)                     # composed form
+
+    def test_hook(self):
+        def hook(value, link=False):
+            root = Path(tempfile.mkdtemp())
+            (root / "me").mkdir()
+            here = str((root / "me").resolve())
+            (root / "me" / "profile.yaml").write_text(f"paths:\n  pack: {value.replace('HERE', here)}\n", encoding="utf-8")
+            p = subprocess.run(["sh", str(KIT / "hooks" / "session-start.sh")], cwd=root, capture_output=True,
+                               text=True, env={**os.environ, "JOB_SEARCH_ME": ""})
+            return p.stdout
+        self.assertNotIn("does not record", hook("HERE"))
+        self.assertIn("the pack's folder is", hook("HERE"))
+        for bad in ("//proc/self/cwd/me", "/./proc/self/cwd/me", "/proc/self/cwd/me", "me", "$(touch /tmp/x)"):
+            self.assertIn("does not record", hook(bad), bad)
+        out = hook("HERE").replace("HERE", "")
+        self.assertNotIn("pwned", out)
+
+    def test_native_must_start_with_english(self):
+        cp = self.cp()
+        for v, en in (("English", True), ("British English", True), ("en-GB", True), ("Russian, English", False),
+                      ("English, Russian", False), ("<native language>", False), ("", False)):
+            self.assertEqual(cp.native_is_english(v), en, v)
+
+    def test_never_claim_in_the_cv(self):
+        d = self.pack()
+        cv = d.parent / "cv.md"
+        cv.write_text("- I led managers at Fintrek for seven years\n", encoding="utf-8")
+        self.assertIn("«led managers» is in the never-claim table", run("check_pack.py", "--me", str(d), "--cv", str(cv))[1])
+
+    def test_floor_with_scales_and_words(self):
+        d = self.pack()
+        prof = d / "profile.yaml"
+        prof.write_text(prof.read_text(encoding="utf-8").replace('"from 7 500 euro a month, gross"', '"90k a year"'),
+                        encoding="utf-8")
+        who = d / "blocks" / "00-who.md"
+        who.write_text(who.read_text(encoding="utf-8").replace("Now I am looking for", "I want 90 thousand. Now I am looking for"),
+                       encoding="utf-8")
+        self.assertIn("says the money floor", run("check_pack.py", "--me", str(d))[1])
+
+    def test_german_link_words(self):
+        cp = self.cp()
+        self.assertTrue(cp.DANGLING_RU.match("Dann haben wir das Team verdoppelt."))
+
+    def test_cv_readers(self):
+        import zipfile
+        d = self.pack()
+        tmp = Path(tempfile.mkdtemp())
+        docx = tmp / "cv.docx"
+        with zipfile.ZipFile(docx, "w") as z:
+            z.writestr("word/document.xml", "<w:document><w:p><w:r><w:t>Led 7 engineers</w:t><w:br/>"
+                                            "<w:t>cut costs by 31%</w:t></w:r></w:p></w:document>")
+            z.writestr("word/footer1.xml", "<w:ftr><w:p><w:t>Team of 77</w:t></w:p></w:ftr>")
+            z.writestr("word/footnotes.xml", "<w:footnotes><w:p><w:t>63 releases</w:t></w:p></w:footnotes>")
+        out = run("check_pack.py", "--me", str(d), "--cv", str(docx))[1]
+        for n in ("31%", "77", "63"):
+            self.assertIn(n, out)
+        u16 = tmp / "cv.txt"
+        u16.write_bytes("Grew the team to 44 people\n".encode("utf-16-le"))   # no mark
+        self.assertIn("44", run("check_pack.py", "--me", str(d), "--cv", str(u16))[1])
+        tex = tmp / "cv.tex"
+        tex.write_text("\\begin{document}\\fontsize{10}{12} Led \\textbf{45} engineers\\end{document}", encoding="utf-8")
+        out = run("check_pack.py", "--me", str(d), "--cv", str(tex))[1]
+        self.assertIn("45", out)
+        self.assertNotIn("10, 12", out)
+
+    def test_english_check_flags(self):
+        code, out = run("english_check.py", "--help")
+        self.assertEqual(code, 0)
+        self.assertIn("Usage", out)
+        code, out = run("english_check.py", stdin="Ich habe für das Team über drei Jahre gearbeitet und viel gelernt.")
+        self.assertIn("not English", out)
+        self.assertIn("longest sentence", out)
+        code, out = run("english_check.py", stdin="The review that said nothing new was short. That said nothing.")
+        self.assertNotIn("that said", out.split("idioms:")[1].splitlines()[0])
+
+    def test_check_kit_front_matter(self):
+        tmp = Path(tempfile.mkdtemp()) / "kit"
+        shutil.copytree(KIT, tmp, ignore=shutil.ignore_patterns("node_modules", ".git", "site"))
+        f = tmp / "skills" / "tracker" / "SKILL.md"
+        f.write_text(f.read_text(encoding="utf-8").replace("\n---\n", "\n\n", 1), encoding="utf-8")
+        p = subprocess.run([sys.executable, str(tmp / "scripts" / "check_kit.py")], capture_output=True, text=True)
+        self.assertIn("front matter is not closed", p.stdout + p.stderr)
+
+
+class TranslationsKeepUp(unittest.TestCase):
+    """An English page and its Russian copy carry the same structure, commands, file names and links:
+    a change made in one language only shows up here (the sources page once drifted this way)."""
+
+    PAIRS = [("skills/job-search/sources.md", "docs/sources.ru.md"), ("docs/how-it-works.md", "docs/how-it-works.ru.md"),
+             ("README.md", "README.ru.md")]
+
+    def pairs(self):
+        out = list(self.PAIRS)
+        for f in sorted((KIT / "site" / "src" / "content" / "docs").glob("*.md*")):
+            ru = f.parent / "ru" / f.name
+            if ru.exists() and f.name not in ("how-it-works.md", "sources.md"):   # synced from docs/
+                out.append((str(f.relative_to(KIT)), str(ru.relative_to(KIT))))
+        return out
+
+    @staticmethod
+    def marks(path):
+        from collections import Counter
+        t = (KIT / path).read_text(encoding="utf-8")
+        spans = [re.sub(r"<[^<>`]*>", "<>", s) for s in re.findall(r"`[^`\n]+`", t)]
+        spans = [s for s in spans if s not in ("`docs/sources.ru.md`", "`skills/job-search/sources.md`")]
+        links = [re.sub(r"/ru/", "/", u) for u in re.findall(r"https?://[^\s)>\]]+", t)]
+        shape = (len(re.findall(r"^#+ ", t, re.M)), len(re.findall(r"^\|", t, re.M)),
+                 len(re.findall(r"^\s*(?:[-*]|\d+\.) ", t, re.M)), t.count("```"))
+        return Counter(spans), Counter(links), shape
+
+    def test_pairs_match(self):
+        for en, ru in self.pairs():
+            a, b = self.marks(en), self.marks(ru)
+            self.assertEqual(a[2], b[2], f"{en} / {ru}: headings, table rows, list items or code blocks differ")
+            self.assertEqual(a[0], b[0], f"{en} / {ru}: code spans differ: {(a[0]-b[0]) or ''} vs {(b[0]-a[0]) or ''}")
+            self.assertEqual(a[1], b[1], f"{en} / {ru}: links differ")

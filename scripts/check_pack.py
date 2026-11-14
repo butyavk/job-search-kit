@@ -3,6 +3,7 @@
 
 Usage:
     python3 kit/scripts/check_pack.py [--me PATH] [--kit PATH] [--strict] [--ready] [--cv CV] [--mark-synced]
+    python3 kit/scripts/check_pack.py --me PATH --schedules   (only what a scheduled run trusts; before every run)
 
 The pack is --me, else $JOB_SEARCH_ME, else ../me next to the kit folder, else ./me. The script reads
 me/blocks/*.md, me/recipes.md, me/never-say.md and kit/bank/questions.md, and
@@ -14,8 +15,8 @@ reports:
            unknown block types;
   warnings English that breaks the C1 register (contractions, a sentence over 30
            words, more than 13% long words), phrases from never-say.md (the
-           filler list and the English parts of the «never claim» table) found
-           in block text, blocks that cannot stand alone (start with "Then",
+           filler list and the «never claim» table) found in either line of a
+           block (and with --cv in the CV), blocks that cannot stand alone (start with "Then",
            "That", "Потом", "Это"...), confirmed blocks with <placeholders>;
   coverage bank questions with no recipe yet (core ★ first, then role ◆ for the
            candidate's track from profile.yaml); a recipe that uses a block
@@ -201,6 +202,72 @@ def never_claims(path: Path) -> list[tuple[str, set]]:
                 continue  # placeholders and Russian descriptions need a human; their English terms are still checked
             out.append((part, allowed))
     return out
+
+
+def yaml_scalars(text: str) -> tuple[dict[str, str], list[str]]:
+    """The profile's scalar values by their dotted path (`languages.native`), read the way a YAML
+    reader takes them: by indentation, not by the first matching line anywhere. Also the keys set
+    twice under one parent, which a reader would silently take the last of."""
+    values: dict[str, str] = {}
+    dups: list[str] = []
+    stack: list[tuple[int, str]] = []          # (indent, key) of the open mappings
+    seen: dict[str, set[str]] = {}
+    item = 0
+    block_from = None                          # inside a | or > block scalar: lines deeper than this
+    for raw in text.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        ind = len(raw) - len(raw.lstrip())
+        if block_from is not None:
+            if ind > block_from:
+                continue
+            block_from = None
+        line = raw.strip()
+        if line.startswith("- ") or line == "-":   # a list item opens a fresh mapping
+            item += 1
+            while stack and stack[-1][0] >= ind:
+                stack.pop()
+            stack.append((ind, f"[{item}]"))
+            line = line[1:].strip()
+            ind += 2
+            if not line:
+                continue
+        m = re.match(r"""(?:"([^"]+)"|'([^']+)'|([^\s:#][^:#]*?))\s*:(?:\s+|$)(.*)$""", line)
+        if not m:
+            continue
+        key = (m.group(1) or m.group(2) or m.group(3)).strip()
+        while stack and stack[-1][0] >= ind:
+            stack.pop()
+        parent = ".".join(k for _, k in stack)
+        if key in seen.setdefault(parent, set()):
+            dups.append(f"{parent}.{key}" if parent else key)
+        seen[parent].add(key)
+        rest = m.group(4)
+        val = rest if rest[:1] in "\"'" else re.split(r"\s+#", rest, maxsplit=1)[0]
+        val = val.strip()
+        path = f"{parent}.{key}" if parent else key
+        if val[:1] in ("|", ">"):
+            block_from = ind
+            values[path] = ""
+        elif val:
+            values[path] = val.strip("\"'")
+        stack.append((ind, key))
+    return values, dups
+
+
+def native_is_english(value: str) -> bool:
+    """English, English (UK), British English, en, en-GB, en_US — not «Russian, English» or a placeholder."""
+    v = value.strip().strip("\"'").lower()
+    return bool(v and not v.startswith("<") and re.match(
+        r"^(?:(?:british|american|australian|canadian|irish|us|uk)\s+)?english\b(?!\s*(?:,|and|\+|/))"
+        r"|^en(?:[-_][a-z]{2})?$", v))
+
+
+def phrase_pattern(phrase: str) -> re.Pattern:
+    """A never-say or never-claim phrase as the text may write it: any spaces between the words,
+    straight or curly apostrophes on either side, any case. check_pack and english_check share it."""
+    words = [re.escape(w.replace("\u2019", "'")).replace("'", "['\u2019]") for w in phrase.split()]
+    return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)", re.IGNORECASE)
 
 
 LANG_CODES = {"russian": "RU", "ukrainian": "UK", "belarusian": "BE", "german": "DE", "spanish": "ES",
@@ -709,16 +776,12 @@ def main() -> int:
     global NEED_L2
     prof_path = a.me / "profile.yaml"
     if prof_path.exists():
-        mn = re.search(r"^\s*native:[ \t]*([^#\n]*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
-        native_value = mn.group(1).strip().strip("\"'").lower() if mn else ""
-        if native_value and not native_value.startswith("<") and \
-                re.match(r"^(?:(?:british|american|australian|canadian|irish|us|uk)\s+)?english\b(?!\s*(?:,|and|\+|/))"
-                         r"|^en(?:[-_][a-z]{2})?$", native_value):
+        prof_values, prof_dups = yaml_scalars(prof_path.read_text(encoding="utf-8-sig"))
+        if native_is_english(prof_values.get("languages.native", "")):
             NEED_L2 = False   # English, English (UK), en, en-GB, en_US
     expect_code = ""
     if prof_path.exists():
-        mn2 = re.search(r"^\s*native:[ \t]*([^#\n]*)", prof_path.read_text(encoding="utf-8-sig"), re.M)
-        lang = mn2.group(1).strip().strip("\"'").lower() if mn2 else ""
+        lang = prof_values.get("languages.native", "").lower()
         expect_code = LANG_CODES.get(lang, lang.upper() if re.fullmatch(r"[a-z]{2}", lang) else "")
     blocks, errors = parse_blocks(a.me / "blocks")
     questions = parse_questions(a.kit / "bank" / "questions.md")
@@ -730,8 +793,8 @@ def main() -> int:
     track = ""
     prof = a.me / "profile.yaml"
     if prof.exists():
-        mt = re.search(r"^\s*track:\s*([A-Za-z]+)", prof.read_text(encoding="utf-8-sig"), re.M)
-        track = mt.group(1).lower() if mt else ""
+        mt = re.match(r"[A-Za-z]+", yaml_scalars(prof.read_text(encoding="utf-8-sig"))[0].get("target.track", ""))
+        track = mt.group(0).lower() if mt else ""
 
     fact_ids = set(re.findall(r"^\| (F-[\w-]+) \|", (a.me / "facts.md").read_text(encoding="utf-8-sig"), re.M)) \
         if (a.me / "facts.md").exists() else set()
@@ -782,9 +845,7 @@ def main() -> int:
         if DANGLING_EN.match(b["en"]) or DANGLING_RU.match(b["ru"]):
             warnings.append(f"{where}: does not stand alone (starts with a link word); name the project or the subject")
 
-    def loose_pat(phrase: str) -> re.Pattern:   # any spaces between the words, curly or straight apostrophes
-        words = [re.escape(w.replace("’", "'")).replace("'", "['’]") for w in phrase.split()]
-        return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)", re.IGNORECASE)
+    loose_pat = phrase_pattern
 
     for phrase in never_say_phrases(a.me / "never-say.md"):
         pat = loose_pat(phrase)
@@ -860,6 +921,9 @@ def main() -> int:
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8-sig")
         errors += autonomy_errors(ptxt)
+        for k in prof_dups:
+            if not k.startswith("autonomy."):   # autonomy_errors names those itself
+                errors.append(f"profile.yaml: «{k}» is set twice; a reader takes the last one — keep one")
     errors += schedule_problems(a.me, a.kit)
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
         f = a.me / name
@@ -958,17 +1022,28 @@ def _decodes(f: Path) -> bool:
         return False
 
 
-if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except (UnicodeDecodeError, IsADirectoryError, PermissionError, FileNotFoundError, ValueError) as e:
-        # a file that is not UTF-8 text, a folder where a file should be, a broken link, a damaged manifest
+READ_ERRORS = (UnicodeDecodeError, IsADirectoryError, NotADirectoryError, PermissionError, FileNotFoundError, ValueError)
+
+
+def friendly_errors() -> None:
+    """For every kit script: a file that is not UTF-8 text, a folder where a file should be, a broken
+    link or a damaged manifest gives one line saying which file, and exit 1 — never a traceback."""
+    def hook(kind, e, tb):
+        if not isinstance(e, READ_ERRORS):
+            return sys.__excepthook__(kind, e, tb)
         name = getattr(e, "filename", None) or ""
         if isinstance(e, UnicodeDecodeError):   # the error does not carry the file: find the ones that fail
             me_arg = sys.argv[sys.argv.index("--me") + 1] if "--me" in sys.argv[:-1] else "me"
-            bad = [str(f) for f in sorted(Path(me_arg).rglob("*"))
-                   if f.is_file() and f.suffix in (".md", ".yaml", ".yml", ".json")
-                   and not _decodes(f)]
-            name = ", ".join(bad[:5])
-        sys.exit(f"cannot read {name or 'a pack file'}: {type(e).__name__}: {e}. "
-                 "Save it as UTF-8 text (or replace the broken link) and run again.")
+            files = [Path(x) for x in sys.argv[1:] if Path(x).is_file()]
+            files += [f for f in sorted(Path(me_arg).rglob("*")) if f.is_file()
+                      and f.suffix in (".md", ".yaml", ".yml", ".json", ".txt")] if Path(me_arg).is_dir() else []
+            name = ", ".join(str(f) for f in files if not _decodes(f))[:400]
+        print(f"cannot read {name or 'a file'}: {kind.__name__}: {e}. Save it as UTF-8 text "
+              "(or replace the folder or broken link with the file) and run again.", file=sys.stderr)
+        sys.exit(1)
+    sys.excepthook = hook
+
+
+if __name__ == "__main__":
+    friendly_errors()
+    sys.exit(main())
