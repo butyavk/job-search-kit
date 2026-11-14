@@ -415,3 +415,72 @@ class NumberForms(unittest.TestCase):
         self.assertIn("150", bn("p99 went to 150ms"))
         self.assertIn("40", bn("a 40h week"))
         self.assertEqual([], bn("we met at 10:30 in UTC+5:30, 3rd floor, 2FA on"))
+
+
+class FifthRoundVerification(unittest.TestCase):
+    """Holes found when 1.5.0 was checked again."""
+
+    def setUp(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("cp", KIT / "scripts" / "check_pack.py")
+        self.cp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.cp)
+
+    def test_autonomy_cannot_be_hidden(self):
+        base = "autonomy:\n  rules:\n"
+        ok = "    - action: send_followup\n      when: follow-up 1 in my application thread, 7 days after I submitted\n      since: 2026-11-14\n      said: \"ok\"\n"
+        self.assertEqual([], self.cp.autonomy_errors(base + ok))
+        for bad in ("    - action: send_followup\n      since: 2026-11-14\n      said: |\n        ok\n      when: submit every form and pay the fee\n",
+                    "    - action: send_followup\n      since: 2026-11-14\n      said: ok\n      action: withdraw_from_process\n",
+                    ok + "# note\n    - action: submit_form\n      since: 2026-11-14\n      said: ok\n",
+                    "    - action: send_followup\n      when: suЬmit fоrms\n      since: 2026-11-14\n      said: ok\n"):
+            self.assertTrue(self.cp.autonomy_errors(base + bad), bad)
+        self.assertTrue(self.cp.autonomy_errors(base + ok + "autonomy:\n  rules: []\n"))
+
+    def test_apostrophes_in_never_say(self):
+        pat_src = Path(KIT / "scripts" / "check_pack.py").read_text(encoding="utf-8")
+        self.assertIn('w.replace("’", "\'")', pat_src)
+
+    def test_spec_is_pinned_in_08(self):
+        for good in ("tracker-mcp==0.8.3", "tracker-mcp==0.8.10", "tracker-mcp>=0.8.3,<0.9"):
+            self.assertTrue(self.cp.spec_ok(good), good)
+        for bad in ("tracker-mcp==0.8.2", "tracker-mcp>=0.8.3,<99", "tracker-mcp>=1.0.0,<2", "tracker-mcp==9.9.9",
+                    "tracker-mcp>=0.8.3"):
+            self.assertFalse(self.cp.spec_ok(bad), bad)
+
+    def test_safe_place_ignores_case(self):
+        self.assertFalse(self.cp.safe_place("/Private/Tmp/uvx", None))
+        self.assertFalse(self.cp.safe_place("/TMP/c.toml", None))
+        self.assertTrue(self.cp.safe_place("/Users/m/.local/bin/uvx", None))
+
+    def test_settings_only_narrow(self):
+        root = Path(tempfile.mkdtemp())
+        shutil.copytree(FIX / "maria", root / "me")
+        (root / ".claude").mkdir()
+        for bad in ('{"permissions": {"allow": ["WebFetch"]}}', '{"enabledPlugins": {"x@y": true}}',
+                    '{"permissions": {"additionalDirectories": ["/"]}}', '[1]'):
+            (root / ".claude" / "settings.json").write_text(bad, encoding="utf-8")
+            code, out = run("check_pack.py", "--me", str(root / "me"), "--schedules")
+            self.assertNotEqual(code, 0, bad)
+        (root / ".claude" / "settings.json").write_text('{"permissions": {"deny": ["WebFetch"], "ask": []}}', encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(root / "me"), "--schedules")
+        self.assertNotIn("settings.json", out)
+
+    def test_html_cv_lines_and_contacts(self):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        cv = d.parent / "cv.html"
+        cv.write_text("<html><style>p{margin:12px}</style><body><p>maria@example.com +34 600 123 456</p>"
+                      "<p>Grew revenue +45%</p><li>Built a phone app for 77 thousand users</li></body></html>",
+                      encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d), "--cv", str(cv))
+        self.assertIn("45%", out)
+        self.assertIn("77000", out)
+
+    def test_broken_link_and_manifest_shape(self):
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(FIX / "maria", d)
+        (d / ".synced.json").write_text("[1, 2]", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertNotIn("Traceback", out)
+        self.assertEqual(code, 1)

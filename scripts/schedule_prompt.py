@@ -21,14 +21,20 @@ from pathlib import Path
 
 KIT = Path(__file__).resolve().parent.parent
 KEYS = {"name": 6, "roles": 8, "city": 6, "time zone": 4, "language": 4}   # key -> most words
-FORMAT = {   # what each value may look like, beyond the shared character set
-    "name": (re.compile(r"[^\W\d_]+(?:[ '.-][^\W\d_]+)*\.?"), "letters only (a name)"),
-    "time zone": (re.compile(r"[A-Z][A-Za-z]+(?:/[A-Z][A-Za-z_+-]+){1,2}|UTC|GMT|UTC[+-]\d{1,2}(?::\d{2})?"),
-                  "an IANA zone such as Europe/Berlin, or UTC+4"),
-    "language": (re.compile(r"[^\W\d_]+(?:[ ,/-]+[^\W\d_]+){0,3}"), "language names only"),
-}
 RUN_TIME = {"<date>", "<company>", "<stage>", "<the date it came>"}
 ALLOWED = re.compile(r"[\w ,.()'&/+\-]+")
+ABBREV = {"st", "mt", "ft", "ste", "sr", "jr", "dr", "mr", "mrs", "ms", "sta", "san"}   # «St. Petersburg»
+# a value names something; a verb that tells a run what to do has no place in it
+ORDERS = re.compile(r"\b(?:send\w*|submit\w*|apply|applying|reply\w*|respond\w*|accept\w*|pay|paying|delete\w*|"
+                    r"remove\w*|ignore\w*|forget\w*|always|never|must|should|run|execute|fetch\w*|open|click\w*|"
+                    r"email\w*|forward\w*|share|book|install\w*|do|don't|please|instead|override\w*|rules?|"
+                    r"instructions?|prompt|then)\b", re.I)
+
+
+def letters_ok(v: str, extra: str) -> bool:
+    """Letters of any script (with their combining marks, as in Devanagari), digits and a few signs."""
+    import unicodedata
+    return all(ch.isalnum() or ch in extra or unicodedata.category(ch).startswith("M") for ch in v)
 
 
 def find_pack(argv: list[str]) -> Path:
@@ -42,6 +48,19 @@ def find_pack(argv: list[str]) -> Path:
         if (c / "profile.yaml").exists():
             return c
     sys.exit("no pack found: pass --me <path to me/>")
+
+
+def zone_ok(v: str) -> bool:
+    if re.fullmatch(r"(?:UTC|GMT)(?:[+-]\d{1,2}(?::\d{2})?)?", v):
+        return True
+    try:
+        import zoneinfo
+        zones = zoneinfo.available_timezones()
+    except Exception:   # no zone data on this system: fall back to the shape of a zone name
+        zones = set()
+    if zones:
+        return v in zones
+    return re.fullmatch(r"[A-Z][A-Za-z]+(?:/[A-Z][A-Za-z_+-]+){1,2}", v) is not None
 
 
 def read_values(path: Path) -> dict[str, str]:
@@ -64,15 +83,23 @@ def read_values(path: Path) -> dict[str, str]:
         v = values.get(key, "")
         if not v or v.startswith("<"):
             sys.exit(f"{path.name}: «{key}» is not filled")
-        if not ALLOWED.fullmatch(v) or len(v) > 120:
+        if not letters_ok(v, " ,.()'&/+-_" + (":" if key == "time zone" else "")) or len(v) > 120:
             sys.exit(f"{path.name}: «{key}» may hold only letters, digits, spaces and , . ( ) ' & / + - "
                      f"(at most 120 characters)")
         if len(v.split()) > most:
             sys.exit(f"{path.name}: «{key}» is a short phrase, at most {most} words")
-        if ("_" in v and key != "time zone") or re.search(r"\w{4,}[.!?]\s+\w", v):
+        sentence = any(m.group(1).lower().rstrip(".") not in ABBREV
+                       for m in re.finditer(r"(\w+)[.!?]\s+\w", v))
+        if ("_" in v and key != "time zone") or sentence:
             sys.exit(f"{path.name}: «{key}» is a phrase, not sentences or code names")
-        if key in FORMAT and not FORMAT[key][0].fullmatch(v):
-            sys.exit(f"{path.name}: «{key}» must be {FORMAT[key][1]}")
+        if ORDERS.search(v):
+            sys.exit(f"{path.name}: «{key}» names something; «{ORDERS.search(v).group(0)}» tells a run what to do")
+        if key == "name" and not all(letters_ok(w, "'.-") and not any(c.isdigit() for c in w) for w in v.split()):
+            sys.exit(f"{path.name}: «name» must be letters only (a name)")
+        if key == "time zone" and not zone_ok(v):
+            sys.exit(f"{path.name}: «time zone» must be an IANA zone such as Europe/Berlin, or UTC+4 / UTC+5:30")
+        if key == "language" and not all(letters_ok(w, ",/-") and not any(c.isdigit() for c in w) for w in v.split()):
+            sys.exit(f"{path.name}: «language» must be language names only")
     return values
 
 

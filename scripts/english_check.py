@@ -109,7 +109,7 @@ print(f"idioms: {found or 'none'}" + (" (native English: fine)" if native_en and
 print(f"AI words: {ai or 'none'}")
 if me is not None:
     def loose(p):  # any run of spaces or line breaks between the words
-        return r"(?<!\w)" + r"\s+".join(re.escape(w).replace("'", "['’]") for w in p.split()) + r"(?!\w)"
+        return r"(?<!\w)" + r"\s+".join(re.escape(w.replace("’", "'")).replace("'", "['’]") for w in p.split()) + r"(?!\w)"
     hits = [p for p, _ in never_claims(me / "never-say.md") if re.search(loose(p), t, re.I)]
     fillers = [p for p in never_say_phrases(me / "never-say.md") if re.search(loose(p), t, re.I)]
     print(f"never-claim ({me}): {hits or 'none'}")

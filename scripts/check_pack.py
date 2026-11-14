@@ -252,7 +252,8 @@ NOT_AMOUNTS = re.compile(
     r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
     r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgre(?:s|SQL)|MySQL|Terraform|Rust|TypeScript|Spark|Windows|iOS|Android|"
     r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
-    r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI)\s?/?\d[\d.]*"  # versions and standards
+    r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI|Kafka|Elasticsearch|Redis|OAuth|Spring ?Boot|C#|macOS|WCAG|log4j|"
+    r"Node|Go|PostgreSQL|Angular|Laravel|Symfony|Unity|Xcode|Gradle|Scala|Hadoop|Flink|Cassandra|MongoDB)\s?/?\d[\d.]*"  # versions and standards
     r"|\b\d+/\d+\b"                                          # ratios and rules: 80/20, 24/7
     r"|\b\d+(?:st|nd|rd|th)\b|\b\d+(?:signals|FA|D)\b"         # ordinals and names: 3rd, 37signals, 2FA, 3D
     r"|\bUTC[+-]\d{1,2}(?::\d{2})?|\b\d{1,2}:\d{2}\b")         # time zones and clock times: UTC+5:30, 10:30
@@ -362,7 +363,7 @@ def read_cv(path: Path) -> str | None:
         try:
             z = zipfile.ZipFile(path)
             parts = ["word/document.xml"] + sorted(n for n in z.namelist()
-                                                   if re.fullmatch(r"word/(header|footer)\d*\.xml", n))
+                                                   if re.fullmatch(r"word/(?:header\d*|footer\d*|footnotes|endnotes)\.xml", n))
             xml = "\n".join(z.read(n).decode("utf-8", "replace") for n in parts)
         except (zipfile.BadZipFile, KeyError, OSError):
             return None
@@ -373,6 +374,8 @@ def read_cv(path: Path) -> str | None:
     raw = path.read_bytes()
     if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):   # saved as UTF-16 by some editors
         text = raw.decode("utf-16", "replace")
+    elif len(raw) > 3 and raw.count(b"\x00") > len(raw) // 4:   # UTF-16 without its mark
+        text = raw.decode("utf-16-le" if raw[1:2] == b"\x00" else "utf-16-be", "replace")
     else:
         text = raw.decode("utf-8-sig", "replace")
     if path.suffix.lower() == ".tex":   # the document body only, without comments, layout sizes and commands
@@ -389,58 +392,104 @@ def read_cv(path: Path) -> str | None:
     elif path.suffix.lower() in (".html", ".htm"):
         import html
         text = re.sub(r"(?is)<(style|script)\b.*?</\1\s*>|<!--.*?-->", " ", text)
+        text = re.sub(r"(?i)<br\s*/?>|</(?:p|li|div|h\d|tr|td|section|ul|ol)\s*>", "\n", text)
         text = html.unescape(re.sub(r"<[^>]+>", " ", text))
     return text
 
 
-NO_RULE = re.compile(r"password|account|payment|\bpay\b|money|salary|offer|accept|consent|terms|delete|"
-                     r"submit|(?<![a-z])forms?(?![a-z])|(?<![a-z])appl(?:y|ies|ication)|(?<![a-z])sign", re.I)
+NO_RULE = re.compile(
+    r"password|\baccounts?\b|payment|\bpay(?:s|ing)?\b|money|salary|\boffers?\b|\baccept(?:s|ing)?\b|consent|"
+    r"\bterms\b|\bdelet\w*|\bremov\w*|\bwithdraw\w*|\bbook\w*\s+(?:a\s+|the\s+)?(?:call|meeting|slot|interview)|"
+    r"\bsubmit\w*\s+(?:\w+\s+){0,3}?(?:forms?|applications?)\b|\b(?:fill\w*|complete\w*)\s+(?:\w+\s+){0,3}?forms?\b|"
+    r"\bforms?\b|\bapply(?:ing)?\s+(?:to|for)\b|\bsign(?:ing)?\s+(?:up|in|on|the|a|an|contracts?|offers?)\b|"
+    r"\bsignatures?\b|\bsubmit\b(?!\w)(?!ted)", re.I)
+NO_RULE_INVISIBLE = re.compile("[­​-‏‪-‮⁠-⁤﻿]")
 
 
 def autonomy_errors(ptxt: str) -> list[str]:
     """Rules in profile.yaml → autonomy.rules: each one a block entry with action, since (a date) and
-    said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5)."""
-    if re.search(r"^autonomy:[ \t]*\{", ptxt, re.M):
+    said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5). The file is read
+    the way a YAML reader would take it, so a duplicate key, a second `autonomy:` or a comment line
+    cannot hide a rule."""
+    import unicodedata
+    lines = ptxt.splitlines()
+    tops = [i for i, l in enumerate(lines) if re.match(r"autonomy:", l)]
+    if len(tops) > 1:
+        return ["profile.yaml: `autonomy:` is written twice; keep one (a reader takes the last)"]
+    if not tops:
+        return []
+    if re.match(r"autonomy:[ \t]*\{", lines[tops[0]]):
         return ["profile.yaml: autonomy must be written as a block with one key per line, not «{…}»"]
-    m = re.search(r"^autonomy:[^\n]*\n((?:[ \t]+[^\n]*\n?|\n)*)", ptxt, re.M)
-    if not m:
+    body = []
+    for l in lines[tops[0] + 1:]:
+        if l.strip() == "" or l.lstrip().startswith("#"):
+            continue   # blank and comment lines, at any indent, do not end the block
+        if not l[:1].isspace():
+            break
+        body.append(l)
+    ri = next((i for i, l in enumerate(body) if re.match(r"[ \t]+rules:", l)), None)
+    if ri is None:
         return []
-    body = "\n".join(l for l in m.group(1).splitlines() if not l.lstrip().startswith("#"))
-    mr = re.search(r"^([ \t]*)rules:[ \t]*(.*)$", body, re.M)
-    if not mr:
-        return []
-    inline = mr.group(2).split("#")[0].strip()
+    inline = body[ri].split(":", 1)[1].split("#")[0].strip()
     if inline and inline not in ("[]", "~", "null"):
         return ["profile.yaml: autonomy.rules must be a list with one key per line (not «" + inline[:40] + "»)"]
-    rest = body[mr.end():]
-    first = re.search(r"^([ \t]*)-(?:[ \t]|$)", rest, re.M)
-    if not first:
-        return []
-    entries = re.split(r"^" + re.escape(first.group(1)) + r"-(?:[ \t]+|$)", rest, flags=re.M)[1:]
+    rind = len(body[ri]) - len(body[ri].lstrip())
+    items: list[list[str]] = []
+    dash = None   # the indent of the list's own «- »
+    for l in body[ri + 1:]:
+        ind = len(l) - len(l.lstrip())
+        if ind <= rind and not l.lstrip().startswith("-"):
+            break   # the next key under autonomy
+        m = re.match(r"([ \t]*)-(?:[ \t]+|$)(.*)", l)
+        if m and (dash is None or len(m.group(1)) == dash):
+            dash = len(m.group(1))
+            items.append([" " * (len(l) - len(m.group(2))) + m.group(2)] if m.group(2) else [])
+        elif items:
+            items[-1].append(l)
+        else:
+            return ["profile.yaml: autonomy.rules must be a list (each rule starts with «- »)"]
     out = []
-    for e in entries:
-        action = re.search(r"(?:^|\n)\s*action:\s*([^\n]+)", "\n" + e)
-        if not action:
+    for e in items:
+        keys: dict[str, str] = {}
+        kind = None
+        cur = None
+        for l in e:
+            if not l.strip():
+                continue
+            ind = len(l) - len(l.lstrip())
+            if kind is None:
+                kind = ind
+            m = re.match(r"([A-Za-z_][\w ]*):(.*)$", l.strip())
+            if ind == kind and m:
+                cur = m.group(1).strip()
+                if cur in keys:
+                    out.append(f"profile.yaml: an autonomy rule sets «{cur}» twice — it does not count")
+                keys[cur] = m.group(2)
+            elif ind > kind and cur is not None:
+                keys[cur] += "\n" + l.strip()   # a continuation: deeper than its key
+            else:
+                out.append("profile.yaml: an autonomy rule has a line out of place: «" + l.strip()[:40] + "»")
+        action = keys.get("action")
+        if action is None:
             out.append("profile.yaml: an autonomy rule without `action:` — it does not count")
             continue
-        said = re.search(r"(?:^|\n)\s*(?:quote|said):[ \t]*([|>][-+]?[ \t]*\n((?:[ \t]+.*\n?)*)|[^\n]*)", "\n" + e)
-        said_text = (said.group(2) if said and said.group(2) is not None else (said.group(1) if said else "")).strip().strip("\"'")
-        if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or not said_text \
-                or said_text.startswith("<"):
+        said_raw = keys.get("said", keys.get("quote", ""))
+        said_text = re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw).split("#")[0] if not said_raw.lstrip().startswith(("|", ">")) \
+            else re.sub(r"^[ \t]*[|>][-+]?[ \t]*", "", said_raw)
+        said_text = said_text.strip().strip("\"'")
+        if not re.match(r"\s*\d{4}-\d{2}-\d{2}", keys.get("since", "")) or not said_text or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
-        import unicodedata
-        def plain(t: str) -> str:   # look-alike letters and invisible characters do not hide a word
-            t = unicodedata.normalize("NFKC", t)
-            return re.sub(r"[­​-‏‪-‮⁠-⁤﻿]", "", t)
-        act = plain(action.group(1).split("#")[0].strip().strip("\"'"))
-        # everything in the entry except the candidate's quote: when, checks, conditions, notes
-        rest_of_entry = e if not said else ("\n" + e).replace(said.group(0), "\n")
-        what = plain(rest_of_entry)
+        act = unicodedata.normalize("NFKC", action.split("#")[0].strip().strip("\"'"))
+        what = " ".join(f"{k}: {v}" for k, v in keys.items() if k not in ("said", "quote"))
+        plain = NO_RULE_INVISIBLE.sub("", unicodedata.normalize("NFKC", what))
         if not re.fullmatch(r"send_followup|send_note", act):
             out.append(f"profile.yaml: autonomy rule «{act[:40]}» — the action is send_followup or send_note; "
                        "nothing else can become a rule")
-        elif NO_RULE.search(what):
-            out.append(f"profile.yaml: autonomy rule «{action.group(1).strip()[:40]}» covers what no rule may "
+        elif re.search(r"[^\x00-\x7f]", plain) and re.search(r"[^\W\d_]", re.sub(r"[\x00-\x7f]", "", plain)):
+            out.append(f"profile.yaml: autonomy rule «{act}»: write its conditions in plain English letters "
+                       "(only `said:` holds the candidate's own words, in any language)")
+        elif NO_RULE.search(plain):
+            out.append(f"profile.yaml: autonomy rule «{act[:40]}» covers what no rule may "
                        "(passwords, accounts, money, offers, terms, consents, forms, deleting) — remove it")
     return out
 
@@ -453,24 +502,23 @@ def safe_place(p: str, search: Path | None) -> bool:
     and not inside the search folder, where a downloaded file could replace it."""
     if ".." in Path(p).parts:
         return False
-    real = os.path.realpath(os.path.expanduser(p))
+    # macOS and Windows disks ignore case: /Private/Tmp is /private/tmp there, so compare without it
+    real = os.path.realpath(os.path.expanduser(p)).casefold()
+    given = os.path.normpath(os.path.expanduser(p)).casefold()
     for t in TMP_DIRS:
-        if real == t or real.startswith(t + "/") or p.startswith(t + "/"):
+        if any(x == t or x.startswith(t + "/") for x in (real, given)):
             return False
     if search is not None:
-        s = os.path.realpath(search)
-        if real == s or real.startswith(s.rstrip("/") + "/"):
+        s = os.path.realpath(search).casefold().rstrip("/")
+        if any(x == s or x.startswith(s + "/") for x in (real, given)):
             return False
     return True
 
 
 def spec_ok(spec: str) -> bool:
     """tracker-mcp 0.8.3 or later in 0.8: the first version whose read-only mode also refuses undo of foreign files."""
-    m = re.fullmatch(r"tracker-mcp(?:==(\d+)\.(\d+)\.(\d+)|>=(\d+)\.(\d+)\.(\d+),<(\d+)(?:\.(\d+))?)", spec)
-    if not m:
-        return False
-    v = tuple(int(x) for x in (m.group(1, 2, 3) if m.group(1) else m.group(4, 5, 6)))
-    return v >= (0, 8, 3)
+    m = re.fullmatch(r"tracker-mcp(?:==0\.8\.(\d+)|>=0\.8\.(\d+),<0\.9)", spec)
+    return bool(m) and int(m.group(1) or m.group(2)) >= 3   # pinned inside 0.8: a new minor is checked first
 
 
 def settings_problems(folder: Path) -> list[str]:
@@ -483,26 +531,45 @@ def settings_problems(folder: Path) -> list[str]:
         except (ValueError, OSError):
             out.append(f"{f.relative_to(folder)}: not readable JSON — a scheduled run here must not start")
             continue
-        bad = sorted(k for k in (data if isinstance(data, dict) else {})
-                     if k in ("hooks", "env", "apiKeyHelper", "mcpServers", "enableAllProjectMcpServers")
-                     or k.endswith("Helper") or k.endswith("Command"))
+        if not isinstance(data, dict):
+            out.append(f"{f.relative_to(folder)}: not a settings object — a scheduled run here must not start")
+            continue
+        # only rules that narrow what a run may do: deny and ask lists; everything else (allows, extra
+        # folders, modes, plugins and marketplaces, hooks, environment, helpers, status lines, MCP
+        # servers) could widen it or run code before the run's own limits apply
+        perms = data.get("permissions", {})
+        bad = sorted(k for k in data if k not in ("$schema", "permissions"))
+        bad += sorted(f"permissions.{k}" for k in (perms if isinstance(perms, dict) else {"?": 0})
+                      if k not in ("deny", "ask"))
         if bad:
-            out.append(f"{f.relative_to(folder)}: has {', '.join(bad)}, which run outside the scheduled run's limits; "
-                       "move them to your own user settings or remove them")
+            out.append(f"{f.relative_to(folder)}: has {', '.join(bad)}; a scheduled run here takes only "
+                       "`permissions.deny` and `permissions.ask` from it — move the rest to your user settings "
+                       "(which the run does not load) or remove it")
     return out
 
 
 def instruction_warnings(folder: Path) -> list[str]:
-    """CLAUDE.md files a run in this folder reads besides the kit's: parent folders, and lines beyond
-    the `@kit/CLAUDE.md` import in the search folder's own."""
+    """Instructions a run in this folder reads besides the kit's: the search folder's CLAUDE.md beyond
+    the `@kit/CLAUDE.md` import, the project's other memory files, nested CLAUDE.md files (a cloned
+    take-home in companies/), project agents, commands and skills, and parent folders' CLAUDE.md."""
     out = []
     own = folder / "CLAUDE.md"
     if own.is_file():
         extra = [l for l in own.read_text(encoding="utf-8-sig", errors="replace").splitlines()
-                 if l.strip() and not l.lstrip().startswith(("#", "<!--")) and l.strip() != "@kit/CLAUDE.md"]
+                 if l.strip() and l.strip() != "@kit/CLAUDE.md"]
         if extra:
             out.append(f"CLAUDE.md in the search folder has {len(extra)} line(s) besides `@kit/CLAUDE.md`; "
                        "a scheduled run reads them as instructions — keep only what you wrote")
+    for name in (".claude/CLAUDE.md", "CLAUDE.local.md"):
+        if (folder / name).is_file():
+            out.append(f"{name}: a scheduled run reads it as instructions; check it is yours")
+    for sub in ("agents", "commands", "skills"):
+        if (folder / ".claude" / sub).is_dir() and any((folder / ".claude" / sub).iterdir()):
+            out.append(f".claude/{sub}/: project {sub} load into every run here; check they are yours")
+    for area in ("companies", "applications", "me"):
+        for f in sorted((folder / area).rglob("CLAUDE.md")) if (folder / area).is_dir() else []:
+            out.append(f"{f.relative_to(folder)}: a CLAUDE.md inside {area}/ (a cloned take-home?) is read when "
+                       "a run opens files there; remove it or move the project out")
     for parent in list(folder.resolve().parents)[:-1]:
         if (parent / "CLAUDE.md").is_file():
             out.append(f"{parent / 'CLAUDE.md'}: a parent folder's CLAUDE.md is read by every run here; check it is yours")
@@ -549,7 +616,9 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
                       and isinstance(env, dict) and set(env) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"}
                       and all(isinstance(v, str) for v in env.values())
                       and all(re.match(r"(/|~/)", env[k]) and safe_place(env[k], None)
-                              for k in ("TRACKER_CONFIG", "TRACKER_BACKUP_DIR") if k in env))
+                              for k in ("TRACKER_CONFIG", "TRACKER_BACKUP_DIR") if k in env)
+                      and ("TRACKER_PATH" not in env or env["TRACKER_PATH"].startswith("https://docs.google.com/")
+                           or (re.match(r"(/|~/)", env["TRACKER_PATH"]) and safe_place(env["TRACKER_PATH"], None))))
             if not ok:
                 out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by an absolute "
                            "uvx path outside temporary folders and the search folder, as `--from \"tracker-mcp>=0.8.3,<0.9\" "
@@ -712,7 +781,7 @@ def main() -> int:
             warnings.append(f"{where}: does not stand alone (starts with a link word); name the project or the subject")
 
     def loose_pat(phrase: str) -> re.Pattern:   # any spaces between the words, curly or straight apostrophes
-        words = [re.escape(w).replace("'", "['’]").replace("’", "['’]") for w in phrase.split()]
+        words = [re.escape(w.replace("’", "'")).replace("'", "['’]") for w in phrase.split()]
         return re.compile(r"(?<!\w)" + r"\s+".join(words) + r"(?!\w)", re.IGNORECASE)
 
     for phrase in never_say_phrases(a.me / "never-say.md"):
@@ -768,8 +837,8 @@ def main() -> int:
             errors.append(f"--cv: cannot read {a.cv} (.tex, .md, .txt, .html, .docx, or a .pdf with a text layer "
                           "and pdftotext installed; a scanned PDF has no text)")
         else:   # contact lines (phone, email, address, links) carry no claims
-            cv_text = "\n".join(l for l in cv_text.splitlines()
-                                if not re.search(r"@|https?://|www\.|linkedin|github|\+\d|\btel\b|\bphone\b", l, re.I))
+            cv_text = re.sub(r"\S+@\S+|https?://\S+|www\.\S+|(?:linkedin|github)\.com/\S*"
+                             r"|(?<![\w%])\+\d[\d\s().-]{6,}\d", " ", cv_text, flags=re.I)   # contacts carry no claims
             cv_loose = [n for n in block_numbers(cv_text) if not known_number(n, known)]
             cv_loose += [n for n in word_numbers(cv_text) if not known_number(n, known, rounded=True)]
             if cv_loose:
@@ -851,6 +920,8 @@ def main() -> int:
     sync_file = a.me / SYNC_FILE
     if sync_file.exists():
         old = json.loads(sync_file.read_text(encoding="utf-8-sig"))
+        if not isinstance(old, dict):
+            raise ValueError(f"{sync_file} is not the manifest --mark-synced writes; delete it and mark again")
         now = pack_hashes(a.me)
         changed = sorted(f for f in now if old.get(f) != now[f]) + sorted(f for f in old if f not in now)
         if changed:
@@ -877,10 +948,25 @@ def main() -> int:
     return 0
 
 
+def _decodes(f: Path) -> bool:
+    try:
+        f.read_bytes().decode("utf-8")
+        return True
+    except (UnicodeDecodeError, OSError):
+        return False
+
+
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except (UnicodeDecodeError, IsADirectoryError, PermissionError, ValueError) as e:
-        # a file that is not UTF-8 text, a folder where a file should be, a damaged sync manifest
+    except (UnicodeDecodeError, IsADirectoryError, PermissionError, FileNotFoundError, ValueError) as e:
+        # a file that is not UTF-8 text, a folder where a file should be, a broken link, a damaged manifest
         name = getattr(e, "filename", None) or ""
-        sys.exit(f"cannot read {name or 'a pack file'}: {type(e).__name__}: {e}. Save it as UTF-8 text and run again.")
+        if isinstance(e, UnicodeDecodeError):   # the error does not carry the file: find the ones that fail
+            me_arg = sys.argv[sys.argv.index("--me") + 1] if "--me" in sys.argv[:-1] else "me"
+            bad = [str(f) for f in sorted(Path(me_arg).rglob("*"))
+                   if f.is_file() and f.suffix in (".md", ".yaml", ".yml", ".json")
+                   and not _decodes(f)]
+            name = ", ".join(bad[:5])
+        sys.exit(f"cannot read {name or 'a pack file'}: {type(e).__name__}: {e}. "
+                 "Save it as UTF-8 text (or replace the broken link) and run again.")

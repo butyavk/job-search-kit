@@ -20,11 +20,11 @@ recorded=$(sed -n 's/^[[:space:]]*pack:[[:space:]]*["'\'']\{0,1\}\([^"'\''#]*\).
 case "$recorded" in "~"*) recorded="$HOME${recorded#\~}" ;; esac   # the value is data: never evaluated
 want=""
 case "$recorded" in
-  /proc/*|/dev/*|/sys/*) want="" ;;                                 # not a folder anyone keeps a pack in
+  //*|*/./*|*/../*|*/.|*/..|*/proc/*|/dev/*|/sys/*) want="" ;;      # a disguised path, or not a folder anyone keeps a pack in
   /*) if [ "$recorded" = "$here" ] || [ "$recorded" = "$(cd "$pack" 2>/dev/null && pwd -L)" ]; then
         want="$here"                                                # the same path, written either way
       else
-        want=$(cd -- "$recorded" 2>/dev/null && pwd -P)
+        want=$(cd / && cd -- "$recorded" 2>/dev/null && pwd -P)      # from /, so a «current folder» link means /
       fi ;;
 esac
 if [ -z "$want" ] || [ "$here" != "$want" ]; then
