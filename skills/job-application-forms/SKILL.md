@@ -12,6 +12,7 @@ Use these without asking. One place: `me/profile.yaml` (`contact`, `availability
 - Contact: <name>; <email>; <phone with country code>; <city, country>; <LinkedIn>; <GitHub or portfolio for project URL fields>.
 - Start date / notice period: <…>.
 - Work authorisation by region and sponsorship: <…>.
+  Read what the sponsorship question is about: «to remain in your current location» is about where the candidate lives now (usually «No» if they already have the right there); «to work in <the job's country>» is about the job. Mixing the two is a common wrong answer.
 - Office / hybrid willingness: <…>.
 - Previously employed by / relatives at the company: No, unless the tracker says otherwise.
 - Salary: numeric field — the floor of your range for this level in the form's currency; free text — your fixed sentence; «depends on the scope» when you said so for this role.
