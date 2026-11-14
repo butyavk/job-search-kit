@@ -34,7 +34,7 @@ forms:                              # only what I am willing to give; leave the 
 money:                              # said aloud only through blocks LOG-*
   say_aloud:                        # the number or range I name myself (block LOG-6)
     remote: "about 9 000 euro a month, gross"
-  floor:                            # I do not go below; never said aloud — for decisions and numeric form fields
+  floor:                            # I do not go below; private by default (kept out of blocks) — for decisions and numeric form fields
     remote: "from 7 500 euro a month, gross"
   current_or_last: "8 000 euro a month"
   form_numeric_field: floor of the level in the form's currency

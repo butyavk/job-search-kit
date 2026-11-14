@@ -5,7 +5,7 @@ Received: <date>, from <who>, by <channel>. Answer due: <date>.
 ## What is in it
 | Part | Offer | My floor / target | Note |
 | --- | --- | --- | --- |
-| Base (currency, gross, per month or year; payments a year where it varies, e.g. 12 or 14) | | floor from `me/profile.yaml`, never said aloud | |
+| Base (currency, gross, per month or year; payments a year where it varies, e.g. 12 or 14) | | floor from `me/profile.yaml`, private by default | |
 | Net per month after tax and social contributions (the employer's or a calculator's figure, with the source) | | | gross and net are not compared with each other |
 | Tax regime that applies (a special expat or contractor regime, its conditions and how long it lasts) | | | |
 | Contract form and country (employee, contractor, EOR) | | | taxes and costs for this form |

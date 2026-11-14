@@ -1,6 +1,6 @@
 # Logistics and questions for the interviewer
 
-Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are one-line templates, not stories. The number for LOG-6 comes from `profile.yaml` → `money.say_aloud`; the floor (`money.floor`) is never said aloud.
+Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are one-line templates, not stories. The number for LOG-6 comes from `profile.yaml` → `money.say_aloud`; the floor (`money.floor`) stays private by default.
 
 #### LOG-1 · Where I am
 `O` · location · ~6 s · draft

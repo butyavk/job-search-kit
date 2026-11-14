@@ -34,7 +34,7 @@ forms:                              # only what I am willing to give; leave the 
 money:                              # said aloud only through blocks LOG-*
   say_aloud:                        # the number or range I name myself (block LOG-6)
     <level or country>: "<about ... a month/year, gross>"
-  floor:                            # I do not go below; never said aloud — for decisions and numeric form fields
+  floor:                            # I do not go below; private by default (kept out of blocks) — for decisions and numeric form fields
     <level or country>: "<from ... gross>"
   current_or_last: "<current or last salary; say it only if asked directly>"
   form_numeric_field: floor of the level in the form's currency

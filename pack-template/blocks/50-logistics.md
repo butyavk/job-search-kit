@@ -1,6 +1,6 @@
 # Logistics and questions for the interviewer
 
-Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are one-line templates, not stories. The number for LOG-6 comes from `profile.yaml` → `money.say_aloud`; the floor (`money.floor`) is never said aloud.
+Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are one-line templates, not stories. The number for LOG-6 comes from `profile.yaml` → `money.say_aloud`; the floor (`money.floor`) stays private by default. A candidate who stays flexible (`money.approach`) starts with LOG-7 and lets the recruiter name the range first.
 
 #### LOG-1 · Where I am
 `O` · location · ~6 s · draft
@@ -25,6 +25,11 @@ Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are o
 #### LOG-6 · Money
 `O` · salary · ~8 s · draft
 - EN: I am looking at about <number> a <month/year>, gross. <If the posting has a range: The posted range works for me.>
+- XX: <…>
+
+#### LOG-7 · Their range first
+`O` · salary · ~5 s · draft
+- EN: I am flexible on the number. What range do you have for this role?
 - XX: <…>
 
 #### ASK-1 · What the team does now

@@ -1075,7 +1075,8 @@ def main() -> int:
             said = set(block_numbers(b["en"]) + block_numbers(b["ru"]) + word_numbers(b["en"]))
             if floor_numbers & said:
                 errors.append(f"{b['file']}:{b['line']} {b['id']}: says the money floor or the current salary "
-                              f"({', '.join(sorted(floor_numbers & said))}) — those are never said aloud")
+                              f"({', '.join(sorted(floor_numbers & said))}) — those stay private by default; to name one aloud, "
+                              "put it in money.say_aloud")
     if (a.me / "facts.md").exists():
         for b in blocks.values():
             if b["draft"]:

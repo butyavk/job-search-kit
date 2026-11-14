@@ -61,7 +61,7 @@ A weak or missing story — do not stretch. Write «—» in the recipe and come
 Questions in one message; answers go to `me/profile.yaml` and `me/search-rules.md`:
 - contacts for forms; where they live; work authorization per country; visa needs;
 - notice period; employment form (employee, contractor);
-- money — two different questions: «what number do you say aloud» (`money.say_aloud`, block LOG-6) and «what is your floor» (`money.floor`, never said aloud); with only a floor, ask what to say;
+- money — three questions: «do you name a number first, or stay flexible and let the recruiter name the range first» (`money.approach`, blocks LOG-7 and LOG-6); «what number do you say when you name one» (`money.say_aloud`, block LOG-6); «what is your floor» (`money.floor`, private by default: the check keeps it out of blocks; a candidate who wants to say it moves it to `say_aloud`). There is no single right way: many candidates do best staying flexible and hearing the range first; with only a floor, ask what to say;
 - native language and English level (`languages`): they set the second language of the blocks and the register targets;
 - employer-form answers they are willing to give (demographics only if they want).
 

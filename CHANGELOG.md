@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.3 — 2026-11-14
+
+Changed
+- Money has no single right way: onboarding asks whether the candidate names a number first or stays flexible and lets the recruiter name the range first (`money.approach`), and the template has a block for that (LOG-7, «I am flexible on the number. What range do you have for this role?»). The floor is private by default rather than «never said»: the check keeps it out of blocks, and a candidate who wants to name it moves it to `money.say_aloud`. Site, offer template and messages say the same.
+
 ## 1.5.2 — 2026-11-14
 
 Changed (a sweep for the kinds of error the fifth review found; `CONTRIBUTING.md`, «Habits that keep old mistakes from coming back»)
