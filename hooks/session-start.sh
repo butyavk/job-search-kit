@@ -17,11 +17,11 @@ echo "job-search-kit: a candidate pack is here. Before anything else, load the j
 # paths.pack in the profile names the candidate's own pack by its absolute path; a me/ that came
 # with a cloned project has another path, a relative one, a placeholder, or none
 # read as YAML would: `pack:` one level inside the top-level `paths:` block, nowhere else
-recorded=$(awk '
+recorded=$(awk -v q="'" '
   /^[^[:space:]#]/ { inpaths = ($0 ~ /^paths:[[:space:]]*(#.*)?$/); next }
   inpaths && /^[[:space:]]+pack:/ {
     v = $0; sub(/^[[:space:]]+pack:[[:space:]]*/, "", v); sub(/[[:space:]]+#.*$/, "", v)
-    gsub(/^["\047]|["\047][[:space:]]*$/, "", v); sub(/[[:space:]]+$/, "", v); print v; exit
+    sub(/[[:space:]]+$/, "", v); gsub("^[\"" q "]|[\"" q "]$", "", v); print v; exit
   }' "$pack/profile.yaml" 2>/dev/null)
 case "$recorded" in "~"*) recorded="$HOME${recorded#\~}" ;; esac   # the value is data: never evaluated
 want=""
