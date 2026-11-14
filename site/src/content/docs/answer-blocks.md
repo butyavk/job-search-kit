@@ -3,7 +3,7 @@ title: Answer blocks
 description: Your answers as small checked sentences — the same facts in every round, any question answered by a chain.
 ---
 
-The pack keeps answers not as texts but as **blocks**: small checked sentences in English and your native language. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview.
+The pack keeps answers not as texts but as **blocks**: small checked sentences in English, plus your native language if it is not English. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview.
 
 | Type | What it is |
 | --- | --- |

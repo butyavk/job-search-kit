@@ -206,7 +206,7 @@ LANG_CODES = {"russian": "RU", "ukrainian": "UK", "belarusian": "BE", "german": 
               "polski": "PL", "türkçe": "TR", "nederlands": "NL"}
 
 # thousands: 450 000 · 450,000 · 65.000 (not «3 100-person»: a group glued to a word is its own number)
-NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,.]\d{3})+(?![\d,.\w-])|\d+(?:[.,]\d+)?)(\s?%)?")
+NUM_RE = re.compile(r"(?<![\w.,])(\d{1,3}(?:[ \u00a0,.]\d{3})+(?![\d\w-]|[,.]\d)|\d+(?:[.,]\d+)?)(\s?%)?")
 
 
 def norm_number(raw: str, pct: str | None) -> str:
@@ -242,7 +242,8 @@ NOT_AMOUNTS = re.compile(
     r"|\b\d{1,2}[/.]\d{4}\b|\b\d{4}-\d{2}(?:-\d{2})?\b"    # 11/2026, 2026-11-14
     r"|\b\d{1,2}(?:st|nd|rd|th)?\s+" + MONTHS + r"|\b" + MONTHS + r"\s+\d{1,2}\b"   # 15 March, March 15
     r"|\b(?:v|Python|Java|Go|Node(?:\.js)?|PHP|Ruby|Scala|Kotlin|Swift|C\+\+|\.NET|Postgres(?:QL)?|MySQL|iOS|Android|"
-    r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv)\s?/?\d[\d.]*"  # versions and standards
+    r"ISO|IEC|SOC|PCI(?: DSS)?|HTTP|TLS|IPv|React|Angular|Vue|Next\.js|Spring|Rails|Django|Ubuntu|Debian|k8s|"
+    r"Kubernetes|Java ?SE|ES|Python ?3|Swift ?UI)\s?/?\d[\d.]*"  # versions and standards
     r"|\b\d{1,3},\d{1,3},\d{1,3}\b")                       # colours like 0,102,204
 SCALED_RE = re.compile(r"(\d+(?:[.,]\d+)?)\s*(million|billion|thousand|M|K|k|bn)\b(?!-)")
 SCALE_OF = {"million": 1_000_000, "billion": 1_000_000_000, "thousand": 1_000, "M": 1_000_000, "K": 1_000,
@@ -345,7 +346,7 @@ def read_cv(path: Path) -> str | None:
             xml = zipfile.ZipFile(path).read("word/document.xml").decode("utf-8", "replace")
         except (zipfile.BadZipFile, KeyError):
             return None
-        return re.sub(r"<[^>]+>", " ", xml.replace("</w:p>", "\n"))
+        return re.sub(r"<[^>]+>", "", xml.replace("</w:p>", "\n").replace("<w:tab/>", " "))
     if path.suffix.lower() not in (".tex", ".md", ".txt", ".html", ".htm"):
         return None
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -363,12 +364,14 @@ def read_cv(path: Path) -> str | None:
 
 
 NO_RULE = re.compile(r"password|account|payment|\bpay\b|money|salary|offer|accept|consent|terms|delete|"
-                     r"submit_form|submit a form|sign", re.I)
+                     r"submit|(?<![a-z])forms?(?![a-z])|(?<![a-z])appl(?:y|ies|ication)|(?<![a-z])sign", re.I)
 
 
 def autonomy_errors(ptxt: str) -> list[str]:
     """Rules in profile.yaml → autonomy.rules: each one a block entry with action, since (a date) and
     said (the candidate's words), and none for what no rule may cover (CLAUDE.md §5)."""
+    if re.search(r"^autonomy:[ \t]*\{", ptxt, re.M):
+        return ["profile.yaml: autonomy must be written as a block with one key per line, not «{…}»"]
     m = re.search(r"^autonomy:[^\n]*\n((?:[ \t]+[^\n]*\n?|\n)*)", ptxt, re.M)
     if not m:
         return []
@@ -377,18 +380,23 @@ def autonomy_errors(ptxt: str) -> list[str]:
     if not mr:
         return []
     inline = mr.group(2).split("#")[0].strip()
-    if inline and inline != "[]":
+    if inline and inline not in ("[]", "~", "null"):
         return ["profile.yaml: autonomy.rules must be a list with one key per line (not «" + inline[:40] + "»)"]
     rest = body[mr.end():]
-    entries = re.split(r"^[ \t]*- (?=\w)", rest, flags=re.M)[1:]
+    first = re.search(r"^([ \t]*)-(?:[ \t]|$)", rest, re.M)
+    if not first:
+        return []
+    entries = re.split(r"^" + re.escape(first.group(1)) + r"-(?:[ \t]+|$)", rest, flags=re.M)[1:]
     out = []
     for e in entries:
         action = re.search(r"(?:^|\n)\s*action:\s*([^\n]+)", "\n" + e)
         if not action:
             out.append("profile.yaml: an autonomy rule without `action:` — it does not count")
             continue
-        if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or \
-                not re.search(r"(?:^|\n)\s*(?:quote|said):\s*\S", "\n" + e):
+        said = re.search(r"(?:^|\n)\s*(?:quote|said):[ \t]*([|>][-+]?[ \t]*\n((?:[ \t]+.*\n?)*)|[^\n]*)", "\n" + e)
+        said_text = (said.group(2) if said and said.group(2) is not None else (said.group(1) if said else "")).strip().strip("\"'")
+        if not re.search(r"(?:^|\n)\s*since:\s*\d{4}-\d{2}-\d{2}", "\n" + e) or not said_text \
+                or said_text.startswith("<"):
             out.append("profile.yaml: an autonomy rule without `since:` (a date) and `said:` (the candidate's words) — it does not count")
         what = action.group(1) + " " + " ".join(re.findall(r"(?:^|\n)\s*when:\s*([^\n]+)", "\n" + e))
         if NO_RULE.search(what):
@@ -397,17 +405,70 @@ def autonomy_errors(ptxt: str) -> list[str]:
     return out
 
 
-def prompt_drift(kit_prompt: Path, filled: Path) -> list[str]:
-    """Lines of a filled schedule prompt that are not the kit's line with its <…> filled in."""
+SLOT_RE = re.compile(r"<[^<>\n]{1,80}>")
+
+
+def _slot(name: str) -> str:
+    # a value is a short phrase: no sentence end, no new clause, no code; the kit path is a path
+    if name == "<kit>":
+        return r"[^\s;`<>]{1,300}"
+    return r"[^.;:!?\n`<>]{1,80}"
+
+
+def prompt_drift(kit_prompt: Path, filled: Path) -> tuple[list[str], list[str]]:
+    """A filled schedule prompt against the kit's: lines that are not a kit line with its <…> filled
+    in (added or changed), and kit lines that have no filled line (deleted)."""
     pats = []
     for line in kit_prompt.read_text(encoding="utf-8").splitlines():
-        parts = re.split(r"<[^<>\n]{1,80}>", line.strip())
-        pats.append(re.compile(r"\s*" + r".+?".join(re.escape(x) for x in parts) + r"\s*$"))
-    extra = []
-    for line in filled.read_text(encoding="utf-8").splitlines():
-        if line.strip() and not any(pt.match(line) for pt in pats):
-            extra.append(line.strip()[:70])
-    return extra
+        if not line.strip():
+            continue
+        text, pos, rx = line.strip(), 0, ""
+        for m in SLOT_RE.finditer(text):
+            rx += re.escape(text[pos:m.start()]) + _slot(m.group(0))
+            pos = m.end()
+        pats.append((text, re.compile(r"\s*" + rx + re.escape(text[pos:]) + r"\s*$")))
+    lines = [l for l in filled.read_text(encoding="utf-8").splitlines() if l.strip()]
+    extra = [l.strip()[:70] for l in lines if not any(pt.match(l) for _, pt in pats)]
+    missing = [t[:70] for t, pt in pats if not any(pt.match(l) for l in lines)]
+    return extra, missing
+
+
+def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
+    """What a scheduled run trusts in the pack: the filled prompts and the read-only tracker entry."""
+    out = []
+    for name in ("daily.md", "weekly.md", "monthly.md"):
+        filled, kit_prompt = me / "schedules" / name, kit / "schedules" / name
+        if filled.exists() and kit_prompt.exists():
+            extra, missing = prompt_drift(kit_prompt, filled)
+            if extra:
+                out.append(f"schedules/{name}: {len(extra)} line(s) are not the kit's prompt with its <…> filled in "
+                           f"(an old copy after a kit update, or an edit nobody asked for): «{extra[0]}»")
+            if missing:
+                out.append(f"schedules/{name}: {len(missing)} line(s) of the kit's prompt are missing: «{missing[0]}»")
+    ro = me / "schedules" / "tracker-ro.mcp.json"
+    if ro.exists() and re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8")) and not strict:
+        pass   # the template, not filled yet: nothing runs from it
+    elif ro.exists():
+        try:
+            servers = json.loads(ro.read_text(encoding="utf-8")).get("mcpServers", {})
+        except ValueError as e:
+            servers, _ = None, out.append(f"schedules/tracker-ro.mcp.json: not valid JSON ({e})")
+        if servers is not None:
+            entry = servers.get("tracker-ro") if list(servers) == ["tracker-ro"] else None
+            args = (entry or {}).get("args", [])
+            ok = (entry is not None and Path(str(entry.get("command", ""))).name in ("uvx", "uvx.exe")
+                  and len(args) == 4 and args[0] == "--from" and str(args[1]).startswith("tracker-mcp")
+                  and args[2] == "tracker-mcp" and args[3] == "--read-only"
+                  and set((entry.get("env") or {})) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"})
+            if not ok:
+                out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by uvx as "
+                           "`--from tracker-mcp… tracker-mcp --read-only` — a scheduled run must not use it")
+    today = __import__("datetime").date.today().isoformat()
+    for f in sorted((me / "runs").glob("*.md")) + sorted((me / "search").glob("*.md")):
+        m = re.match(r"(\d{4}-\d{2}-\d{2})", f.name)
+        if m and m.group(1) > today:
+            out.append(f"{f.parent.name}/{f.name}: dated in the future — not a real run; remove it")
+    return out
 
 
 def register(en: str):
@@ -438,6 +499,9 @@ def main() -> int:
     ap.add_argument("--strict", action="store_true")
     ap.add_argument("--ready", action="store_true",
                     help="fail until the pack can be used: no placeholders in profile and facts, the pitch I01 confirmed")
+    ap.add_argument("--schedules", action="store_true",
+                    help="check only what a scheduled run trusts (the filled prompts, the read-only tracker entry, "
+                         "run files): exit 1 on any problem; run it before every scheduled run")
     ap.add_argument("--cv", type=Path, default=None,
                     help="also check a CV (.tex, .md, .txt, .html, or .pdf with pdftotext): every number in it must be in facts.md")
     ap.add_argument("--mark-synced", action="store_true",
@@ -461,6 +525,12 @@ def main() -> int:
     if not a.me.is_dir():
         print(f"no candidate pack at {a.me}: pass --me <path to me/> or run /start")
         return 1
+    if a.schedules:
+        problems = schedule_problems(a.me, a.kit, strict=True)
+        for pr in problems:
+            print("ERROR  " + pr)
+        print("schedules: OK" if not problems else "schedules: do not run until this is fixed")
+        return 1 if problems else 0
     if not any((a.me / n).exists() for n in ("profile.yaml", "facts.md")):
         print(f"{a.me} has neither profile.yaml nor facts.md, so it is not a pack: "
               "pass --me <path to me/> or run /start")
@@ -472,7 +542,9 @@ def main() -> int:
     prof_path = a.me / "profile.yaml"
     if prof_path.exists():
         mn = re.search(r"^\s*native:\s*([^#\n]+)", prof_path.read_text(encoding="utf-8"), re.M)
-        if mn and re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", mn.group(1).strip().strip("\"'").lower()):
+        native_value = mn.group(1).strip().strip("\"'").lower() if mn else ""
+        if native_value and not native_value.startswith("<") and \
+                re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", native_value):
             NEED_L2 = False   # English, English (UK), en, en-GB, en_US
     expect_code = ""
     if prof_path.exists():
@@ -561,9 +633,22 @@ def main() -> int:
     known = fact_numbers(a.me / "facts.md")
     if prof_path.exists():   # money lives only in the profile (LOG-6 says money.say_aloud)
         mm = re.search(r"^money:[^\n]*\n((?:[ \t]+.*\n?|[ \t]*\n|[ \t]*#.*\n)*)", prof_path.read_text(encoding="utf-8"), re.M)
-        if mm:
-            money = NOT_AMOUNTS.sub(" ", re.sub(r"#.*", "", mm.group(1)))   # values, not the comments
-            known |= {norm_number(m.group(1), m.group(2)) for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, money))}
+        floor_numbers: set[str] = set()
+        if mm:   # only say_aloud is said; the floor and the current salary must never appear in a block
+            money = re.sub(r"#.*", "", mm.group(1))
+            parts = re.split(r"^([ \t]{1,4}[a-z_]+:)", money, flags=re.M)
+            for key, val in zip(parts[1::2], parts[2::2]):
+                nums = {norm_number(m.group(1), m.group(2))
+                        for m in NUM_RE.finditer(SCALED_RE.sub(_scaled, NOT_AMOUNTS.sub(" ", val)))}
+                if key.strip().startswith("say_aloud"):
+                    known |= nums
+                elif key.strip().startswith(("floor", "current_or_last")):
+                    floor_numbers |= {n for n in nums if float(n.rstrip("%")) >= 100}
+        for b in blocks.values():
+            said = set(block_numbers(b["en"]) + block_numbers(b["ru"]))
+            if floor_numbers & said:
+                errors.append(f"{b['file']}:{b['line']} {b['id']}: says the money floor or the current salary "
+                              f"({', '.join(sorted(floor_numbers & said))}) — those are never said aloud")
     if (a.me / "facts.md").exists():
         for b in blocks.values():
             if b["draft"]:
@@ -591,13 +676,7 @@ def main() -> int:
     if prof_path.exists():
         ptxt = prof_path.read_text(encoding="utf-8")
         errors += autonomy_errors(ptxt)
-    for name in ("daily.md", "weekly.md", "monthly.md"):
-        filled, kit_prompt = a.me / "schedules" / name, a.kit / "schedules" / name
-        if filled.exists() and kit_prompt.exists():
-            extra = prompt_drift(kit_prompt, filled)
-            if extra:
-                warnings.append(f"schedules/{name}: {len(extra)} line(s) differ from the kit's prompt beyond the <…> "
-                                f"values (an old copy after a kit update, or an edit nobody asked for): «{extra[0]}»")
+    errors += schedule_problems(a.me, a.kit)
     for name in ("facts.md", "profile.yaml", "search-rules.md"):
         f = a.me / name
         if f.exists():

@@ -96,7 +96,7 @@ A founder, CTO or senior leader: 3 main questions and spares; 30–45-second ans
 
 ## Debrief
 The same day, from the transcript or notes (`templates/debrief.md`): who the interviewer was, the flow by time, what worked, where the interviewer led and how the answer could be stronger, English, form. Then:
-- new facts → `me/facts.md` (ask about anything new or contradictory), phrasings that worked → blocks, failed answers → what to say instead, new questions → `me/questions-extra.md` or the prep document;
+- new facts → `me/facts.md` (ask about anything new or contradictory), phrasings that worked → blocks (during an open process only with a note, so the next round of this company hears the same story), failed answers → what to say instead, new questions → `me/questions-extra.md` or the prep document;
 - lessons go into the next stage's prep at once;
 - the tracker: status, next step, when to expect an answer (skill `tracker`); the follow-up date if there is silence;
 - a rating on the Strong yes / Yes / Lean yes / Lean no / No scale only on request (`templates/assessment.md`).
@@ -119,10 +119,10 @@ An offer is a live response: a separate session at once (above). Claude prepares
 4. **Counter with one number,** tied to the role and its scope, not to needs, without a range. If the base is capped: a review in N months against agreed metrics, with the number and the date in the offer; a signing bonus; equity. Non-cash parts come on top of the cash, not instead of it.
 5. **Other processes:** companies at a final stage hear that there is an offer and its deadline (drafts; the candidate sends). Earlier stages — only if the candidate wants to speed them up.
 6. **Before signing:** the contract against the offer, line by line; terms that limit future work (non-compete, IP on «ideas discussed», governing law) are flagged with a plain explanation. Claude is not a lawyer: for unusual terms, suggest one.
-7. **After the decision:** accept or decline in the candidate's words (drafts); on acceptance — polite withdrawals from the other processes, thanks to references, the tracker closed out, the scheduled tasks paused (`schedules/README.md`), a retro (`templates/retro.md`).
+7. **After the decision:** accept or decline in the candidate's words (drafts); once the contract is signed and its conditions (references, checks) have cleared — polite withdrawals from the other processes, thanks to references, the tracker closed out, the scheduled tasks turned off by the candidate (`schedules/README.md`, «Pause or end»), a retro (`templates/retro.md`).
 
 ## Checklist
-Start: project and context file · guide, reviews, interviewers · weights and plan · references warned · recording rules.
+Start: project and context file · guide, reviews, interviewers · weights and plan · recording rules. After the first screen: references chosen; before the final round: references warned.
 Prep: story split · minute answers with a timer · first line for every value · the learning sheet and a drill a day with marks · trainers by format · 2–3 full mocks · an audit every couple of days.
 Day before: nothing new · the one-page plan by hand · questions for the end.
 After the call: debrief the same day · lessons into the next stage.

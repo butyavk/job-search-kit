@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.1 — 2026-11-14
+
+Safety (a third red-team review and a verification of 1.4.0)
+- Every Claude Code scheduled run starts with `check_pack.py --schedules`, before Claude: it stops the run when a filled prompt is not the kit's prompt with its `<…>` filled in (an added or changed line, a deleted safety line, a sentence hidden in a value — values are short phrases now), when `tracker-ro.mcp.json` is not exactly the read-only server, or when a run file is dated in the future. `/today` runs the same check first.
+- Cron runs: `--setting-sources project` (the candidate's user settings and their allows stay out), reads limited to the search folder and the kit, and the search folder's own files, the kit, company folders and applications denied for edits. The weekly host list is described as a narrowing, not a seal.
+- Desktop-app tasks: drafts, calendar events with guests, Drive sharing and Chrome site permissions join the «ask» list; the tracker extension's «Confirm only in the app's dialog» (tracker-mcp 0.8.1).
+- No autonomy rule covers submitting application forms (CLAUDE.md, `/apply`, `check_pack.py`). A message with pasted text, or one that points at items instead of naming them, gets a read-back of each item and acts only on a separate short yes.
+- The previous summary is the newest dated file not after today.
+- The plugin hook says when a pack is not at the path its profile records (a `me/` that came with a cloned project); the recorded path is never evaluated.
+
+Fixed
+- `check_pack.py`: an unfilled `native:` is not «English»; only `money.say_aloud` counts as a known number, and a block that says the floor or the current salary is an error; «below 7 500.» is 7500; React 18 or Ubuntu 22.04 are versions; .docx runs are joined as written; autonomy rules with nested lists, `rules: ~`, block scalars for `said`, empty or placeholder `said`, `autonomy: {…}`; «send_application», «Submit Form» and «forms» are actions no rule may cover.
+- `english_check.py`: CV bullets with few function words are English (another language is told by its own common words or non-Latin letters); word forms are endings only, so «doubled downloads», «northern» or «landscaping» are not idioms or AI words.
+- Interview prep: withdrawals only after the signed contract and cleared conditions; references chosen after the first screen and warned before the final round; block edits during an open process only with a note. The bank says new questions go to the pack. The three-day path also covers money, logistics and never-say. Native English in README and the site. claude.ai: how Claude rebuilds the folders to run the scripts.
+
 ## 1.4.0 — 2026-11-14
 
 Safety (a red-team review)

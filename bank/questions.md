@@ -54,7 +54,7 @@ Plus always: «Do you have any questions for us?» — section Z.
 How to use it:
 - **A newcomer** goes through the bank with Claude (`/start`): tells it in their own words, Claude asks follow-ups, cuts the answer into blocks and builds the recipe.
 - **Preparing for a company** (`/prep`): Claude takes the stage's questions, puts in the recipes, and shows questions without a recipe as gaps.
-- **A new question from an interview** goes here with the next free ID; numbers are never reused.
+- **A new question from an interview** goes to the candidate's pack, `me/questions-extra.md` (IDs `Q01`…): the bank is part of the kit and an update would overwrite it. A question that belongs in the kit for everyone comes as a pull request, with the next free ID; numbers are never reused.
 
 ## I — about you and motivation · all roles
 

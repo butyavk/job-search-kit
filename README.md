@@ -27,7 +27,7 @@ Everything else is plain words: «compose an answer to B03», «add a fact», «
 ## Your data stays yours
 Everything about you lives in a separate folder, the **pack** `me/`: facts with sources, answer blocks, recipes, what never to say, your profile and search frame. The kit reads it and writes to it only what you confirm. Work per company (`companies/<company>/`: prep, debriefs) and per application (`applications/<date>/`: CVs, form answers) sits next to it in your search folder. None of it goes into this repository (`.gitignore` blocks `me/`, `companies/` and `applications/`).
 
-**Answer blocks** are the heart of the pack: small checked sentences — the whole story, the first line, context, your action, the result, the lesson — in English and your native language. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview. See `examples/example-story.md`.
+**Answer blocks** are the heart of the pack: small checked sentences — the whole story, the first line, context, your action, the result, the lesson — in English, plus your native language if it is not English. Any answer to any question for any company is a chain of them, so your facts stay the same in every interview. See `examples/example-story.md`.
 
 ## Autonomy
 By default Claude asks before every outward action, and you do it: submit, send, accept, book. If you want Claude to send some kind of message itself — say, the first follow-up in an existing ATS thread, from the template — tell it the rule; it writes it into your profile with the date and your words. Rules work only in a live session that you start; scheduled runs never send anything. Passwords, accounts, money and offers are always yours.

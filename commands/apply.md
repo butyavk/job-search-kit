@@ -11,4 +11,4 @@ Vacancy: $ARGUMENTS
 
 Without a browser: everything goes into `FORM-ANSWERS.md` in the order of the form's fields; the candidate pastes it. Before any submit: the «Never twice» check in `job-application-forms`.
 
-Submitting the form and sending the note are the candidate's, unless the candidate says in this message to submit these ready items (`job-application-forms`, «Never submit on your own initiative»), or an `autonomy` rule covers it and the candidate starts it in this session.
+Submitting the form and sending the note are the candidate's, unless the candidate says in this message to submit these ready items (`job-application-forms`, «Never submit on your own initiative»). No autonomy rule covers forms: they carry consents, which the candidate gives. Sending the note can be covered by an `autonomy` rule that the candidate starts in this session.

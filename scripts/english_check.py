@@ -44,28 +44,41 @@ lw = [x for x in w if len(x) >= 8]
 IS_S = {"it's", "that's", "let's", "there's", "here's", "what's", "who's", "he's", "she's", "where's", "how's"}
 contr = [x for x in w if re.search(r"[a-z]'(t|m|re|ve|ll|d|s)$", x, re.I)
          and (not x.lower().endswith("'s") or x.lower() in IS_S)]
-def word_forms(word):  # move → moved, moving, moves; dive → dives; double → doubled
+ONLY_PLURAL = {"landscape", "realm", "cornerstone", "testament"}   # «landscaping» is gardening, not an AI word
+def word_forms(word):  # move → moved, moving, moves; dive → dives; double → doubled; synergy → synergies
     if len(word) <= 3:
-        return re.escape(word)
+        return re.escape(word) + r"(?:s|es|ed|ing)?\b"
+    if word in ONLY_PLURAL:
+        return re.escape(word) + r"s?\b"
     stem = re.sub(r"(e|y)$", "", word)
-    return re.escape(stem) + r"\w*"
+    return re.escape(stem) + r"(?:e|es|ed|ing|s|d|y|ies|ied)?\b"
 def idiom_re(i):  # every word matches its forms: «moving the needle», «deep dives», «doubled down»
     if " " in i or "-" in i:
         tail = "" if i.endswith(",") else r"\b"
         words = re.split(r"[\s-]+", i.rstrip(","))
-        return r"\b" + r"[\s-]+".join(word_forms(x) for x in words) + ("," if i.endswith(",") else "") + tail
+        return r"\b" + r"[\s-]+".join(word_forms(x) for x in words) + ("," if i.endswith(",") else "")
     return r"\b" + word_forms(i)
 # Is it English at all? A Spanish or German text has few of these words; its AI-word «hits»
 # («crucial», «robusto») are its own language, so only never-say is checked there.
 EN_COMMON = {"the", "and", "of", "to", "a", "in", "is", "i", "we", "it", "that", "for", "with", "on", "was", "my"}
-is_english = bool(w) and sum(1 for x in w if x.lower() in EN_COMMON) / len(w) >= 0.08
+OTHER_COMMON = {"el", "la", "los", "las", "que", "y", "por", "para", "con", "una", "del", "der", "die", "das", "und",
+                "ist", "nicht", "mit", "le", "les", "des", "et", "est", "une", "pour", "dans", "os", "da", "do", "não",
+                "il", "che", "di", "het", "een", "en", "och", "att", "och", "na", "się", "jest"}
+letters = re.findall(r"[^\W\d_]", t)
+non_latin = sum(1 for ch in letters if ord(ch) > 0x024F) / max(len(letters), 1)
+en_hits = sum(1 for x in w if x.lower() in EN_COMMON)
+other_hits = sum(1 for x in re.findall(r"[^\W\d_]+", t) if x.lower() in OTHER_COMMON)
+# CV bullets have few function words, so «English» means: Latin letters and no more of another
+# language's common words than of English ones
+is_english = bool(w) and non_latin < 0.2 and other_hits <= en_hits
 found = [i.rstrip(",") for i in IDIOMS if re.search(idiom_re(i), t, re.I)] if is_english else []
 found += ["that said"] if is_english and "that said" not in found and any(re.search(o, t) for o in OPENERS) else []
 ai = [i for i in AI_WORDS if re.search(idiom_re(i), t, re.I)] if is_english else []
 native_en = False   # a native English speaker: contractions and idioms are their own register
 if me is not None and (me / "profile.yaml").exists():
     mn = re.search(r"^\s*native:\s*([^#\n]+)", (me / "profile.yaml").read_text(encoding="utf-8"), re.M)
-    native_en = bool(mn and re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", mn.group(1).strip().strip("\"'").lower()))
+    nv = mn.group(1).strip().strip("\"'").lower() if mn else ""
+    native_en = bool(nv and not nv.startswith("<") and re.search(r"(^|\s)english\b|^en(?:[-_][a-z]{2})?$", nv))
 if not t.strip():
     sys.exit("no text")
 off = []

@@ -85,7 +85,7 @@ The format check does not prove the facts. Once a month (`/review`) and after bi
 Notes from 1:1s and feedback about other people are sources for the candidate's own facts only: they are never quoted, paraphrased or named in anything an employer reads.
 
 ## From an interview into blocks
-After `/debrief`: each new phrasing that worked → a block or a block edit; each speech error → a line in `me/voice.md` or `me/never-say.md`; each new question → a row in `me/questions-extra.md` (next `Q` ID; the kit's bank is not edited from a pack) and a recipe.
+After `/debrief`: each new phrasing that worked → a block or a block edit (during an open process only with a note: `templates/debrief.md`); each speech error → a line in `me/voice.md` or `me/never-say.md`; each new question → a row in `me/questions-extra.md` (next `Q` ID; the kit's bank is not edited from a pack) and a recipe.
 
 ## A cheat sheet
 On request: for the questions of a stage, a table «question → first line → anchor of IDs → one or two numbers». First lines word for word; everything else as anchors.
