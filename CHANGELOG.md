@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.5.6 — 2026-11-14
+
+Fixed
+- Never-say items with a condition — «it depends (without a choice)», «direction (about Sema)», «options (instead of equity)» — were skipped whole, so a confirmed block saying «it depends on the team» passed. They are now checked and shown with their condition to read: an «about X» item only in blocks that name X, an «instead of X» item only in topics that talk about X, any other condition everywhere. `english_check.py` does the same for one text.
+- The template's LOG-8 said «it depends on <…>», which the template's own never-say bans; it now says «what matters more is <…>».
+- `--schedules` names each problem with the read-only tracker entry on its own (the uvx path, the args, TRACKER_PATH in a temporary folder, a file not filled yet) instead of one catch-all line.
+- The template's draft blocks keep their `XX:` lines without errors whatever `languages.native` says; a confirmed block that still has `XX:` is told to rename it (`DE:`).
+- `--strict` ends with «FAIL (--strict): N warning(s)»; a missing file says so instead of advising UTF-8; `check_pack.py | head` exits quietly; `english_check.py` with nothing piped in prints its usage instead of waiting; `check_kit.py --help` and `schedule_prompt.py <unknown name>` answer properly.
+- The money answers agree everywhere: the recruiter-call template, the recruiter mock and onboarding name the flexible way (LOG-7, then LOG-8) beside the number (LOG-6); the voice brief says where «I'm very flexible» belongs.
+- The claude.ai project files carry every skill file, `skills__live-coding__vscode-no-ai-settings.json` too.
+- README: in folder mode the commands are plain words. `uvx tracker-mcp calendar --tracker <file>`. The template pack's README lists `questions-extra.md`, `schedules/` and `runs/`; tools/README names all four scripts.
+
 ## 1.5.5 — 2026-11-14
 
 Changed

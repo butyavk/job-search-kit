@@ -370,16 +370,21 @@ class ScheduleSurroundings(unittest.TestCase):
         base = {"command": "/Users/m/.local/bin/uvx",
                 "args": ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"]}
         import json as _j
-        for bad in ({**base, "command": "/tmp/x/uvx"},
-                    {**base, "command": str(root / "bin" / "uvx")},
-                    {**base, "command": "/Users/m/../../tmp/uvx"},
-                    {**base, "args": ["--from", "tracker-mcp>=0.8,<0.9", "tracker-mcp", "--read-only"]},
-                    {**base, "env": {"TRACKER_CONFIG": "/tmp/c.yaml"}},
-                    {**base, "env": {"TRACKER_BACKUP_DIR": "backups"}}):
+        # each problem is named on its own, so the candidate fixes the right field
+        for bad, says in (({**base, "command": "/tmp/x/uvx"}, "command «/tmp/x/uvx» is in a temporary"),
+                          ({**base, "command": str(root / "bin" / "uvx")}, "is in a temporary, shared or search folder"),
+                          ({**base, "command": "/Users/m/../../tmp/uvx"}, "is in a temporary"),
+                          ({**base, "args": ["--from", "tracker-mcp>=0.8,<0.9", "tracker-mcp", "--read-only"]}, "args must be exactly"),
+                          ({**base, "env": {"TRACKER_CONFIG": "/tmp/c.yaml"}}, "TRACKER_CONFIG «/tmp/c.yaml»"),
+                          ({**base, "env": {"TRACKER_BACKUP_DIR": "backups"}}, "TRACKER_BACKUP_DIR «backups»"),
+                          ({**base, "env": {"TRACKER_PATH": "/tmp/jobs.xlsx"}}, "TRACKER_PATH «/tmp/jobs.xlsx»"),
+                          ({**base, "command": "uvx"}, "command «uvx» is not an absolute path")):
             (root / "me" / "schedules" / "tracker-ro.mcp.json").write_text(
                 _j.dumps({"mcpServers": {"tracker-ro": bad}}), encoding="utf-8")
             code, out = run("check_pack.py", "--me", str(root / "me"), "--schedules")
-            self.assertIn("tracker-ro.mcp.json: not exactly", out, bad)
+            self.assertIn("schedules/tracker-ro.mcp.json: ", out, bad)
+            self.assertIn(says, out, bad)
+            self.assertIn("a scheduled run must not use it", out, bad)
 
 
 class ReadersDoNotCrash(unittest.TestCase):
@@ -570,7 +575,7 @@ class EveryClaimHasATest(unittest.TestCase):
     def test_tracker_file_in_tmp_is_refused(self):
         d = self.pack()
         self.ro(d, TRACKER_PATH="/tmp/jobs.xlsx")
-        self.assertIn("tracker-ro.mcp.json: not exactly", run("check_pack.py", "--me", str(d), "--schedules")[1])
+        self.assertIn("tracker-ro.mcp.json: TRACKER_PATH «/tmp/jobs.xlsx»", run("check_pack.py", "--me", str(d), "--schedules")[1])
         self.ro(d, TRACKER_PATH="https://docs.google.com/spreadsheets/d/abc")
         self.assertNotIn("tracker-ro.mcp.json: not exactly", run("check_pack.py", "--me", str(d), "--schedules")[1])
 
@@ -858,6 +863,99 @@ class SweepTwo(unittest.TestCase):
         self.assertTrue(pat.search(cp.fold("I was the Café lead")))
         self.assertTrue(cp.phrase_pattern("led the team").search(cp.fold("I led\u200b the team")))
         self.assertTrue(cp.phrase_pattern("kind of").search(cp.fold("kind\u00ad of")))
+
+    def test_conditional_filler_is_shown_not_skipped(self):
+        # «it depends (without a choice)» was skipped whole, so a confirmed block saying «it depends on the team» passed
+        d = self.pack()
+        f = d / "blocks" / "50-logistics.md"
+        f.write_text(f.read_text(encoding="utf-8") + "\n#### LOG-9 · Their range works\n`O` · salary · ~6 s\n"
+                     "- EN: Your range works for me; it depends on the scope and the team.\n"
+                     "- RU: Ваша вилка подходит, важна зона ответственности.\n", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("LOG-9: «it depends» in EN", out)
+        self.assertIn("(without a choice)", out)
+        self.assertEqual(self.cp().never_say_phrases(d / "never-say.md").count("it depends"), 0)
+        code, out = run("english_check.py", "--me", str(d), stdin="It depends on the team.")
+        self.assertIn("it depends (without a choice)", out)
+        # a ban for one subject holds where that subject is, not in every block that uses the word
+        ns = d / "never-say.md"
+        ns.write_text(ns.read_text(encoding="utf-8").replace("Let me think", "Let me think · direction (about Lumo) · "
+                      "options (instead of equity)"), encoding="utf-8")
+        f.write_text(f.read_text(encoding="utf-8") + "\n#### LOG-10 · Lumo\n`O` · why · ~6 s\n"
+                     "- EN: At Lumo, I missed a clear direction.\n- RU: В Lumo мне не хватало ясного курса.\n"
+                     "\n#### LOG-11 · Choices\n`O` · how · ~6 s\n"
+                     "- EN: We wrote down the options and a direction for the team.\n- RU: Мы записали варианты.\n",
+                     encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("LOG-10: «direction»", out)
+        self.assertNotIn("LOG-11: «direction»", out)
+        self.assertNotIn("LOG-11: «options»", out)   # no block of LOG talks about equity: the word is just a word
+        f.write_text(f.read_text(encoding="utf-8") + "\n#### LOG-12 · Mix\n`O` · salary · ~6 s\n"
+                     "- EN: I am flexible on base and equity.\n- RU: По базе и equity гибко.\n", encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("LOG-11: «options»", out)      # now the topic talks money: «options» may stand for equity
+        code, out = run("english_check.py", "--me", str(d), stdin="We wrote a direction for the team.")
+        self.assertNotIn("direction (about Lumo)", out)
+        code, out = run("english_check.py", "--me", str(d), stdin="At Lumo, the direction changed.")
+        self.assertIn("direction (about Lumo)", out)
+
+    def test_template_drafts_with_xx_lines_pass_for_any_native_language(self):
+        # a German newcomer who filled only languages.native got 8-14 errors from the untouched drafts
+        d = Path(tempfile.mkdtemp()) / "me"
+        shutil.copytree(KIT / "pack-template", d)
+        prof = d / "profile.yaml"
+        txt = prof.read_text(encoding="utf-8")
+        import re as _re
+        txt2 = _re.sub(r"(?m)^(\s*native:).*$", r"\1 German", txt, count=1)
+        self.assertNotEqual(txt, txt2)
+        prof.write_text(txt2, encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertNotIn("the native-language line is «XX:»", out)
+        f = d / "blocks" / "00-who.md"
+        f.write_text(f.read_text(encoding="utf-8").replace("· draft", "", 1), encoding="utf-8")
+        code, out = run("check_pack.py", "--me", str(d))
+        self.assertIn("rename «XX:» to «DE:»", out)
+
+    def test_plain_answers_for_a_newcomer(self):
+        code, out = run("check_pack.py", "--me", str(KIT / "pack-template"), "--strict")
+        self.assertEqual(code, 1)
+        self.assertIn("FAIL (--strict):", out)          # it used to stop on a WARN line with no verdict
+        code, out = run("english_check.py", "missing-file.txt")
+        self.assertEqual(code, 1)
+        self.assertIn("no such file", out)
+        self.assertNotIn("UTF-8", out)                     # the old advice was about the encoding
+        p = subprocess.run(f"{sys.executable} {KIT / 'scripts' / 'check_pack.py'} --me {FIX / 'maria'} | head -1",
+                           shell=True, capture_output=True, text=True)
+        self.assertNotIn("BrokenPipe", p.stderr)
+        code, out = run("check_pack.py", "--help")
+        self.assertIn("exit 1 on warnings too", out)
+
+    @unittest.skipUnless(hasattr(os, "fork") and sys.platform != "win32", "needs a terminal")
+    def test_english_check_with_nothing_piped_says_how(self):
+        import pty
+        pid, fd = pty.fork()
+        if pid == 0:
+            os.execv(sys.executable, [sys.executable, str(KIT / "scripts" / "english_check.py")])
+        out = b""
+        while True:
+            try:
+                d = os.read(fd, 1024)
+            except OSError:
+                break
+            if not d:
+                break
+            out += d
+        self.assertEqual(os.waitpid(pid, 0)[1] >> 8, 2)
+        self.assertIn(b"Usage:", out)
+
+    def test_help_and_unknown_names(self):
+        code, out = run("schedule_prompt.py", "hourly")
+        self.assertNotEqual(code, 0)
+        self.assertIn("«hourly» is not a schedule", out)
+        code, out = run("check_kit.py", "--help")
+        self.assertEqual(code, 0)
+        self.assertIn("Check the kit itself", out)
+        self.assertNotIn("\nOK", out)                     # the help, not a run of the check
 
     def test_world_writable_folders_are_not_trusted(self):
         cp = self.cp()

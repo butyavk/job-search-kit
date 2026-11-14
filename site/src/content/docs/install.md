@@ -31,7 +31,7 @@ Each connection unlocks a part of the path; the kit works with whatever your Cla
 | Calendar (Google Calendar connector) | interviews this week; free slots for a reply |
 | Claude in Chrome | logged-in LinkedIn (alerts, search, People, messages), sites behind a login, and every application form — filled in your browser; submitted only when you name it and say so |
 | The built-in browser (Claude desktop app) | job sites that block plain fetch (hiring.cafe, levels.fyi), the LinkedIn guest API |
-| [tracker-mcp](https://github.com/butyavk/tracker-mcp) | the tracker, follow-up dates, funnel, calendar export (needs `uv`) |
+| [tracker-mcp](https://github.com/butyavk/tracker-mcp) | the tracker, follow-up dates, funnel, calendar export (needs `uv` and tracker-mcp 0.8.3 or later) |
 | A call recorder with transcripts (optional) | same-day debriefs from the transcript, where the company allows recording |
 | Scheduled tasks | the daily check, the weekly pass, the monthly review |
 

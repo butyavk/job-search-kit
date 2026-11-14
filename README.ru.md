@@ -47,7 +47,7 @@ mkdir job-search && cd job-search
 git clone https://github.com/butyavk/job-search-kit kit
 echo '@kit/CLAUDE.md' >> CLAUDE.md
 ```
-Однострочный `CLAUDE.md` заставляет Claude Code загружать правила набора в каждой сессии, начатой в `job-search/` (сам он `kit/CLAUDE.md` не читает). В другом клиенте начните с «сначала прочитай kit/CLAUDE.md». Потом скажите «начнём поиск работы».
+Однострочный `CLAUDE.md` заставляет Claude Code загружать правила набора в каждой сессии, начатой в `job-search/` (сам он `kit/CLAUDE.md` не читает). В другом клиенте начните с «сначала прочитай kit/CLAUDE.md». Потом скажите «начнём поиск работы». Слэш-команды есть только в плагине: здесь `/find`, `/prep` и остальные — обычные слова («найди вакансии», «подготовь Acme, скрининг»).
 
 **Проект claude.ai:** включите выполнение кода, загрузите архивы навыков и добавьте файлы проекта из последнего [релиза](https://github.com/butyavk/job-search-kit/releases/latest), а `CLAUDE.md` — в инструкцию проекта. Команды — словами; файлы пакета Claude выдаёт по одному. По шагам: [docs/how-it-works.ru.md](docs/how-it-works.ru.md#claudeai).
 

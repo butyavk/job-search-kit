@@ -10,7 +10,7 @@ import re, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_pack import find_pack, fold, friendly_errors, native_is_english, never_claims, never_say_phrases, phrase_pattern, yaml_scalars  # noqa: E402
+from check_pack import find_pack, fold, friendly_errors, native_is_english, never_claims, never_say_phrases, never_say_qualified, phrase_pattern, yaml_scalars  # noqa: E402
 
 friendly_errors()
 args = sys.argv[1:]
@@ -38,6 +38,9 @@ AI_WORDS = ["delve", "robust", "seamless", "holistic", "synergy",
             "testament to", "underscores", "pivotal", "landscape", "realm", "crucial", "furthermore",
             "moreover", "cornerstone", "spearhead", "leverage", "passionate", "proven track record", "genuinely"]
 
+if not args and sys.stdin.isatty():   # nothing piped in: say how to use it instead of waiting in silence
+    print(__doc__.strip())
+    sys.exit(2)
 t = open(args[0], encoding="utf-8").read() if args else sys.stdin.read()
 t = fold(t).replace("\u2019", "'").replace("\u2018", "'")   # curly apostrophes count as straight ones
 s = [x for x in re.split(r'(?<=[.!?])\s+', t.replace('\n', ' ')) if len(x.split()) > 1]
@@ -109,6 +112,12 @@ if me is not None:
     fillers = [p for p in never_say_phrases(me / "never-say.md") if phrase_pattern(p).search(t)]
     print(f"never-claim ({me}): {hits or 'none'}")
     print(f"speech fillers from never-say: {fillers or 'none'} (a slip in speech; in writing, cut them)")
+    for p, w in never_say_qualified(me / "never-say.md"):   # «direction (about Sema)»: only a text that names Sema
+        subj = re.match(r"^(?:про|об?|в истории|about|in the story of|in|for)\s+(.+)$", w, re.I)
+        if phrase_pattern(p).search(t) and (not subj or phrase_pattern(subj.group(1)).search(t)):
+            fillers.append(f"{p} ({w})")
+    if fillers and any("(" in f for f in fillers):
+        print("banned with a condition: " + ", ".join(f for f in fillers if "(" in f) + " — read the line")
 else:
     hits = fillers = []
     print("never-say: no pack found (pass --me <pack>)")

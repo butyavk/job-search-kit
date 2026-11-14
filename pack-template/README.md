@@ -11,5 +11,8 @@ Copy this folder as `me/` next to the kit (`kit/`) and never publish it: it will
 | `never-say.md` | what not to say and why; people not to contact; filler words |
 | `voice.md` | pronunciation and speech errors from mocks and calls |
 | `search-rules.md` | the search frame: roles, geography, money, gate, sources, message rules, timing |
+| `questions-extra.md` | questions met in interviews that are not in the kit's bank |
+| `schedules/` | the values the scheduled runs are filled with, and the read-only tracker entry they load |
+| `runs/` | what scheduled runs wrote: one summary per run |
 
 An example story cut into blocks: `examples/example-story.md` in the kit.

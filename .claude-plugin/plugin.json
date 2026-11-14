@@ -1,7 +1,7 @@
 {
   "name": "job-search-kit",
   "displayName": "Job search kit",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "The whole job search with Claude: a search frame, vacancy search and ranking, people to write to, applications, a tracker with follow-ups, a daily check, interview prep with answer blocks, system design and live coding training, mocks and debriefs. Claude prepares; you send. Your personal data stays in a separate pack.",
   "author": {
     "name": "Ivan Rykov",

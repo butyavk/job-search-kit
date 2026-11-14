@@ -47,7 +47,7 @@ mkdir job-search && cd job-search
 git clone https://github.com/butyavk/job-search-kit kit
 echo '@kit/CLAUDE.md' >> CLAUDE.md
 ```
-The one-line `CLAUDE.md` makes Claude Code load the kit's rules in every session started in `job-search/` (it does not read `kit/CLAUDE.md` on its own). In another client, start with «read kit/CLAUDE.md first». Then say «start my job search».
+The one-line `CLAUDE.md` makes Claude Code load the kit's rules in every session started in `job-search/` (it does not read `kit/CLAUDE.md` on its own). In another client, start with «read kit/CLAUDE.md first». Then say «start my job search». Slash commands exist only in the plugin: here `/find`, `/prep` and the rest are plain words («find vacancies», «prep Acme, the screen»).
 
 **claude.ai project:** turn on code execution, upload the skill zips and add the project files from the latest [release](https://github.com/butyavk/job-search-kit/releases/latest), and put `CLAUDE.md` into the project instructions. Commands become plain words; Claude gives you each pack file to add. Step by step: [docs/how-it-works.md](docs/how-it-works.md#claudeai).
 

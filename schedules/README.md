@@ -35,7 +35,7 @@ Monthly (the 1st, 08:20):
 - macOS: cron cannot read Documents, Desktop or Downloads without Full Disk Access; a launchd agent (or a tracker outside those folders) avoids it.
 - `mkdir -p me/runs me/search` once; cron output goes to the log in `me/runs/`.
 
-**No scheduler:** run `/today` in the morning. Follow-up dates still reach you: the tracker exports them to a calendar file (`uvx tracker-mcp calendar`, or ask Claude «export follow-ups to my calendar»); interviews are in the calendar from the invitations.
+**No scheduler:** run `/today` in the morning. Follow-up dates still reach you: the tracker exports them to a calendar file (`uvx tracker-mcp calendar --tracker <file>`, or ask Claude «export follow-ups to my calendar»); interviews are in the calendar from the invitations.
 
 ## Rules for every scheduled run
 - Read and prepare only. Nothing is sent, submitted, accepted, booked or published, whatever `autonomy` rules say: those work only in a live session.

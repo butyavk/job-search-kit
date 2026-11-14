@@ -51,7 +51,7 @@ Where claude.ai can run code, Claude can also `pip install tracker-mcp` in its s
 - Mail: `match_emails` links messages to rows.
 
 ## 4. Reminders without a scheduler
-`export_followups_calendar` (or `uvx tracker-mcp calendar` in a shell) writes an .ics file with the open follow-ups (overdue ones on today); the candidate imports it into their calendar and re-imports after big changes. With a calendar connector, `calendar_events` gives the same events to add directly. Interviews are already in the calendar from the invitations.
+`export_followups_calendar` (or `uvx tracker-mcp calendar --tracker <file>` in a shell) writes an .ics file with the open follow-ups (overdue ones on today); the candidate imports it into their calendar and re-imports after big changes. With a calendar connector, `calendar_events` gives the same events to add directly. Interviews are already in the calendar from the invitations.
 
 ## 5. Columns worth adding
 `add_column` adds a column and extends dropdowns. Useful ones:

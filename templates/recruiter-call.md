@@ -9,7 +9,7 @@
 
 ## What to say (prepare in advance)
 - A 60-second intro and «why this role» (recipes I01, I02).
-- Money expectations — by the candidate's rules (block LOG-6).
+- Money expectations — by the candidate's rules (`money.approach`): flexible — ask their range first (LOG-7), then «it works, I am flexible» (LOG-8); naming a number — LOG-6.
 - Notice period and contract form — from the profile.
 - Where the candidate is and the hours they can work.
 

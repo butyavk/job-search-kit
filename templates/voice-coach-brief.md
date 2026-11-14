@@ -19,7 +19,7 @@ Typical problems found for the author — check yours:
 3. **An unsure start:** «It depends», «I believe», «actually», «so, yeah», «kind of». The first sentence is the answer.
 4. **Long answers without a full stop.** 30–45 seconds, short sentences.
 5. **Pronunciation of names** of companies, products, clients, terms — a list of your own.
-6. **Extras that hurt:** criticism of past companies, unconfirmed facts, «I'm very flexible» out of place.
+6. **Extras that hurt:** criticism of past companies, unconfirmed facts, «I'm very flexible» out of place (its place is the money answer after they name their range, block LOG-8).
 7. **Logistics in one sentence:** «I am based in <city> (UTC+N). I can work remotely, and I am open to relocation.»
 
 ## Exercises

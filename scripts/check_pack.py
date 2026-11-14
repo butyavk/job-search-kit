@@ -15,8 +15,8 @@ reports:
            unknown block types;
   warnings English that breaks the C1 register (contractions, a sentence over 30
            words, more than 13% long words), phrases from never-say.md (the
-           filler list and the «never claim» table) found in either line of a
-           block (and with --cv in the CV), blocks that cannot stand alone (start with "Then",
+           filler list, its items with a condition shown with it, and the «never
+           claim» table) found in either line of a block (and with --cv in the CV), blocks that cannot stand alone (start with "Then",
            "That", "Потом", "Это"...), confirmed blocks with <placeholders>;
   coverage bank questions with no recipe yet (core ★ first, then role ◆ for the
            candidate's track from profile.yaml); a recipe that uses a block
@@ -164,23 +164,33 @@ def parse_recipes(recipes: Path):
     return rows, empty
 
 
-def never_say_phrases(path: Path) -> list[str]:
+def _filler_items(path: Path) -> list[str]:
     if not path.exists():
         return []
     text = path.read_text(encoding="utf-8-sig")
     m = re.search(r"## (?:Фразы-паразиты|Filler words)[^\n]*\n+(.+?)(\n## |\Z)", text, re.S)
     if not m:
         return []
-    phrases = []
     lines = m.group(1).splitlines()
     bullets = [re.sub(r"^\s*[-*]\s+", "", l) for l in lines if re.match(r"\s*[-*]\s+", l)]
     items = bullets if bullets else m.group(1).replace("\n", " ").split(" · ")
-    for item in items:
-        item = item.strip()
-        if not item or "(" in item:  # qualified items need a human: skip
-            continue
-        phrases.append(item)
-    return phrases
+    return [i.strip() for i in items if i.strip()]
+
+
+def never_say_phrases(path: Path) -> list[str]:
+    """The plain items of the filler list: each one is wrong anywhere."""
+    return [i for i in _filler_items(path) if "(" not in i]
+
+
+def never_say_qualified(path: Path) -> list[tuple[str, str]]:
+    """Items with a condition, «it depends (without a choice)»: (the phrase, the condition).
+    Whether the condition holds needs a reader, so a match is shown with it, never dropped."""
+    out = []
+    for item in _filler_items(path):
+        m = re.match(r"^(.+?)\s*\(([^()]*)\)\s*$", item)
+        if m and m.group(1).strip():
+            out.append((m.group(1).strip(), m.group(2).strip()))
+    return out
 
 
 def never_claims(path: Path) -> list[tuple[str, set]]:
@@ -854,8 +864,10 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
     if not ro.exists():
         if strict:
             out.append("schedules/tracker-ro.mcp.json is missing (skill `tracker`, setup step 4)")
-    elif re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8-sig")) and not strict:
-        pass   # the template, not filled yet: nothing runs from it
+    elif re.search(r"<[a-z][^<>\"\n]*\s[^<>\"\n]*>", ro.read_text(encoding="utf-8-sig")):
+        if strict:   # the template, not filled yet: nothing runs from it
+            out.append("schedules/tracker-ro.mcp.json: not filled yet (<…> left): the uvx path and the tracker's path "
+                       "(skill `tracker`, setup step 4)")
     else:
         try:
             servers = json.loads(ro.read_text(encoding="utf-8-sig")).get("mcpServers", {})
@@ -863,25 +875,7 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
             servers = None
             out.append(f"schedules/tracker-ro.mcp.json: not valid JSON ({e})")
         if servers is not None:
-            entry = servers.get("tracker-ro") if isinstance(servers, dict) and list(servers) == ["tracker-ro"] else None
-            ok = isinstance(entry, dict) and set(entry) <= {"command", "args", "env"}
-            if ok:
-                cmd, args, env = str(entry.get("command", "")), entry.get("args", []), entry.get("env") or {}
-                spec = str(args[1]) if isinstance(args, list) and len(args) > 1 else ""
-                ok = (re.fullmatch(r"(/|~/)[\w./ -]*/uvx(\.exe)?", cmd) is not None and safe_place(cmd, me.parent)
-                      and isinstance(args, list) and len(args) == 4 and args[0] == "--from"
-                      and spec_ok(spec) and args[2] == "tracker-mcp" and args[3] == "--read-only"
-                      and isinstance(env, dict) and set(env) <= {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"}
-                      and all(isinstance(v, str) for v in env.values())
-                      and all(re.match(r"(/|~/)", env[k]) and safe_place(env[k], None)
-                              for k in ("TRACKER_CONFIG", "TRACKER_BACKUP_DIR") if k in env)
-                      and ("TRACKER_PATH" not in env or env["TRACKER_PATH"].startswith("https://docs.google.com/")
-                           or (re.match(r"(/|~/)", env["TRACKER_PATH"]) and safe_place(env["TRACKER_PATH"], None))))
-            if not ok:
-                out.append("schedules/tracker-ro.mcp.json: not exactly one `tracker-ro` server run by an absolute "
-                           "uvx path outside temporary folders and the search folder, as `--from \"tracker-mcp>=0.8.3,<0.9\" "
-                           "tracker-mcp --read-only` (TRACKER_CONFIG and TRACKER_BACKUP_DIR absolute too) — a scheduled "
-                           "run must not use it")
+            out += [f"schedules/tracker-ro.mcp.json: {r} — a scheduled run must not use it" for r in tracker_ro_problems(servers, me)]
     out += settings_problems(me.parent)
     today = __import__("datetime").date.today().isoformat()
     for folder in ("runs", "search"):
@@ -889,6 +883,38 @@ def schedule_problems(me: Path, kit: Path, strict: bool = False) -> list[str]:
             m = re.match(r"(\d{4}-\d{2}-\d{2})", f.name)
             if f.is_file() and m and m.group(1) > today:
                 out.append(f"{folder}/{f.relative_to(me / folder)}: dated in the future — not a real run; remove it")
+    return out
+
+
+def tracker_ro_problems(servers, me: Path) -> list[str]:
+    """What is wrong with the read-only tracker server a scheduled run loads; each reason said on its own."""
+    entry = servers.get("tracker-ro") if isinstance(servers, dict) and list(servers) == ["tracker-ro"] else None
+    if not isinstance(entry, dict):
+        return ["it must hold exactly one server, named `tracker-ro`"]
+    if not set(entry) <= {"command", "args", "env"}:
+        return [f"`tracker-ro` has keys other than command, args and env: {', '.join(sorted(set(entry) - {'command', 'args', 'env'}))}"]
+    cmd, args, env = str(entry.get("command", "")), entry.get("args", []), entry.get("env") or {}
+    out = []
+    if re.fullmatch(r"(/|~/)[\w./ -]*/uvx(\.exe)?", cmd) is None:
+        out.append(f"command «{cmd}» is not an absolute path to uvx")
+    elif not safe_place(cmd, me.parent):
+        out.append(f"command «{cmd}» is in a temporary, shared or search folder")
+    spec = str(args[1]) if isinstance(args, list) and len(args) > 1 else ""
+    if not (isinstance(args, list) and len(args) == 4 and args[0] == "--from" and spec_ok(spec)
+            and args[2] == "tracker-mcp" and args[3] == "--read-only"):
+        out.append('args must be exactly ["--from", "tracker-mcp>=0.8.3,<0.9", "tracker-mcp", "--read-only"]')
+    if not (isinstance(env, dict) and all(isinstance(v, str) for v in env.values())):
+        return out + ["env must map names to text"]
+    extra = set(env) - {"TRACKER_PATH", "TRACKER_CONFIG", "TRACKER_BACKUP_DIR"}
+    if extra:
+        out.append(f"env has names a tracker run does not use: {', '.join(sorted(extra))}")
+    for k in ("TRACKER_CONFIG", "TRACKER_BACKUP_DIR"):
+        if k in env and not (re.match(r"(/|~/)", env[k]) and safe_place(env[k], None)):
+            out.append(f"{k} «{env[k]}» is not an absolute path outside temporary and shared folders")
+    tp = env.get("TRACKER_PATH")
+    if tp is not None and not (tp.startswith("https://docs.google.com/")
+                               or (re.match(r"(/|~/)", tp) and safe_place(tp, None))):
+        out.append(f"TRACKER_PATH «{tp}» is not a Google Sheets link or an absolute path outside temporary and shared folders")
     return out
 
 
@@ -915,9 +941,10 @@ def pack_hashes(me: Path) -> dict[str, str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     kit_default = Path(__file__).resolve().parent.parent
-    ap.add_argument("--kit", type=Path, default=kit_default)
-    ap.add_argument("--me", type=Path, default=None)
-    ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--kit", type=Path, default=kit_default, help="the kit's folder (default: the one this script is in)")
+    ap.add_argument("--me", type=Path, default=None,
+                    help="the pack (default: JOB_SEARCH_ME, then me/ next to the kit or in the working folder)")
+    ap.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     ap.add_argument("--ready", action="store_true",
                     help="fail until the pack can be used: no placeholders in profile and facts, the pitch I01 confirmed")
     ap.add_argument("--schedules", action="store_true",
@@ -1031,8 +1058,11 @@ def main() -> int:
         # one-word slots such as <company> or <city> are filled per vacancy; longer ones are unfinished text
         if not b["draft"] and not b["template"] and re.search(r"<[^<>]*(?:\s|…|\.\.\.)[^<>]*>|\bTODO\b|\bTBD\b|\[[^\]]*\b(?:number|name|date|company|цифра|имя|дата)\b[^\]]*\]", b["en"] + b["ru"]):
             warnings.append(f"{where}: confirmed block still has a placeholder (<…>, TODO, [number])")
-        if expect_code and b.get("l2code") and b["l2code"] != expect_code:
-            errors.append(f"{where}: the native-language line is «{b['l2code']}:», the profile says {expect_code}")
+        if expect_code and b.get("l2code") == "XX" and b["draft"]:
+            pass   # the template's own line, not written yet: counted with the other placeholders below
+        elif expect_code and b.get("l2code") and b["l2code"] != expect_code:
+            fix = f" — rename «XX:» to «{expect_code}:»" if b["l2code"] == "XX" else ""
+            errors.append(f"{where}: the native-language line is «{b['l2code']}:», the profile says {expect_code}{fix}")
         if DANGLING_EN.match(b["en"]) or DANGLING_RU.match(b["ru"]):
             warnings.append(f"{where}: does not stand alone (starts with a link word); name the project or the subject")
 
@@ -1045,6 +1075,28 @@ def main() -> int:
                 if pat.search(fold(b[field])):
                     label = "EN" if field == "en" else (b.get("l2code") or "the native line")
                     warnings.append(f"{b['file']}:{b['line']} {b['id']}: never-say phrase «{phrase}» in {label}")
+
+    topic_text: dict[str, str] = {}
+    for b in blocks.values():
+        topic_text[b["id"].split("-")[0]] = topic_text.get(b["id"].split("-")[0], "") + " " + fold(b["en"] + " " + b["ru"])
+    for phrase, when in never_say_qualified(a.me / "never-say.md"):
+        pat = loose_pat(phrase)
+        # the ban is for one subject: «direction (about Sema)» in the blocks that name Sema; «options
+        # (instead of equity)» in the topics that talk about equity (the slip leaves the word out of the
+        # block itself); «it depends (without a choice)» names none and holds everywhere
+        subj = re.match(r"^(вместо|instead of|про|об?|в истории|about|in the story of|in|for)\s+(.+)$", when, re.I)
+        subj_pat = loose_pat(subj.group(2)) if subj else None
+        whole_topic = bool(subj) and subj.group(1).lower() in ("вместо", "instead of")
+        for b in blocks.values():
+            if subj_pat:
+                where_text = topic_text[b["id"].split("-")[0]] if whole_topic else fold(b["en"] + " " + b["ru"])
+                if not subj_pat.search(where_text):
+                    continue
+            for field in ("en", "ru"):
+                if pat.search(fold(b[field])):
+                    label = "EN" if field == "en" else (b.get("l2code") or "the native line")
+                    warnings.append(f"{b['file']}:{b['line']} {b['id']}: «{phrase}» in {label} — never-say bans it "
+                                    f"({when}); read the line")
 
     for phrase, allowed in never_claims(a.me / "never-say.md"):
         pat = loose_pat(phrase)
@@ -1197,7 +1249,10 @@ def main() -> int:
             print("NOT READY  " + r)
         if not_ready:
             return 1
-    if errors or (a.strict and warnings):
+    if errors:
+        return 1
+    if a.strict and warnings:
+        print(f"FAIL (--strict): {len(warnings)} warning(s)")
         return 1
     print("OK" if not warnings else f"OK with {len(warnings)} warning(s)")
     return 0
@@ -1221,6 +1276,15 @@ def friendly_errors() -> None:
         if not isinstance(e, READ_ERRORS):
             return sys.__excepthook__(kind, e, tb)
         name = getattr(e, "filename", None) or ""
+        if isinstance(e, BrokenPipeError):   # `check_pack.py | head`: the reader stopped, nothing is wrong
+            try:
+                sys.stdout = open(os.devnull, "w")
+            except OSError:
+                pass
+            os._exit(0)
+        if isinstance(e, FileNotFoundError) and name:
+            print(f"cannot read {name}: there is no such file. Check the path and run again.", file=sys.stderr)
+            sys.exit(1)
         if isinstance(e, UnicodeDecodeError):   # the error does not carry the file: find the ones that fail
             me_arg = sys.argv[sys.argv.index("--me") + 1] if "--me" in sys.argv[:-1] else "me"
             files = [Path(x) for x in sys.argv[1:] if Path(x).is_file()]

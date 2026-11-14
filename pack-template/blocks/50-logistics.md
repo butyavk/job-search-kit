@@ -34,7 +34,7 @@ Topics LOG and ASK have IDs without a type letter (`LOG-1`, `ASK-1`): they are o
 
 #### LOG-8 · Their range works
 `O` · salary · ~6 s · draft
-- EN: Your range works for me. The salary is not the most important part for me; it depends on <the scope, the team, the product>. I am very flexible.
+- EN: Your range works for me. The salary is not the most important part for me; what matters more is <the scope, the team, the product>. I am very flexible.
 - XX: <…>
 
 #### ASK-1 · What the team does now

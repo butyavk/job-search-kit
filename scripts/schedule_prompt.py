@@ -130,8 +130,12 @@ def read_values(path: Path) -> dict[str, str]:
 
 
 def main(argv: list[str]) -> int:
+    if argv and argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return 0
     if not argv or argv[0] not in ("daily", "weekly", "monthly"):
-        sys.exit(__doc__)
+        named = f"«{argv[0]}» is not a schedule: the names are daily, weekly and monthly.\n\n" if argv else ""
+        sys.exit(named + __doc__.strip())
     me = find_pack(argv)
     values = read_values(me / "schedules" / "values.yaml")
     text = (KIT / "schedules" / f"{argv[0]}.md").read_text(encoding="utf-8-sig")

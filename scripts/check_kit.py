@@ -126,6 +126,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print(__doc__.strip())
+        sys.exit(0)
     sys.path.insert(0, str(KIT / "scripts"))
     from check_pack import friendly_errors
     friendly_errors()
