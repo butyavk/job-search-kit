@@ -861,3 +861,47 @@ class SweepTwo(unittest.TestCase):
         finally:
             os.chmod(shared, 0o700)
         self.assertFalse(cp.safe_place("/var/lock/uvx", None))
+
+
+class TrackerContract(unittest.TestCase):
+    """What the kit says about tracker-mcp's tools matches the server: the list of write tools that
+    a desktop task must keep on «ask», every tool name the docs use, and every argument they pass.
+    CI installs the tracker the kit pins (KIT_NEEDS_TRACKER=1); without it here, the test is skipped."""
+
+    @classmethod
+    def setUpClass(cls):
+        try:
+            import asyncio
+            import tracker_mcp.server as server
+        except ImportError:
+            if os.environ.get("KIT_NEEDS_TRACKER"):
+                raise
+            raise unittest.SkipTest("tracker-mcp is not installed here (pip install 'tracker-mcp>=0.8.3,<0.9')")
+        tools = asyncio.run(server.mcp.list_tools())
+        cls.tools = {t.name: t for t in tools}
+        cls.writes = {t.name for t in tools if not (t.annotations and t.annotations.read_only_hint)}
+        cls.docs = {f: f.read_text(encoding="utf-8") for f in KIT.rglob("*.md")
+                    if "node_modules" not in f.parts and "tests" not in f.parts}
+
+    def test_ask_list_is_every_write_tool(self):
+        text = (KIT / "schedules" / "README.md").read_text(encoding="utf-8")
+        m = re.search(r"the tracker's write tools \(([^)]*)\)", text)
+        listed = set(re.findall(r"`([a-z_]+)`", m.group(1)))
+        self.assertEqual(listed, self.writes, "schedules/README.md: the «ask» list and the tracker's write tools differ")
+        allowed = re.search(r"read tools such as ([^)]*) may stay allowed", text).group(1)
+        for name in re.findall(r"`([a-z_]+)`", allowed):
+            self.assertIn(name, self.tools)
+            self.assertNotIn(name, self.writes, f"{name} is named as a read tool but writes")
+
+    def test_tool_names_and_arguments_exist(self):
+        verbs = ("add|edit|mark|log|reschedule|set|close|undo|export|fix|list|get|describe|check|match|recent|reply"
+                 "|stale|followups|calendar")
+        for f, text in self.docs.items():
+            for name in set(re.findall(rf"`((?:{verbs})_[a-z_]+)[`(]", text)):
+                self.assertIn(name, self.tools, f"{f.relative_to(KIT)}: `{name}` is not a tracker-mcp tool")
+            for name, args in re.findall(rf"`((?:{verbs})_[a-z_]+)\(([^)`]*)\)", text):
+                tool = self.tools[name]
+                schema = getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None) or {}
+                props = set(schema.get("properties", {}))
+                for kw in re.findall(r"([a-z_]+)\s*=", args):
+                    self.assertIn(kw, props, f"{f.relative_to(KIT)}: {name}() has no argument «{kw}»")
